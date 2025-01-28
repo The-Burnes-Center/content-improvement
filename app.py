@@ -38,7 +38,7 @@ dimension = embeddings.shape[1]
 index = faiss.IndexFlatL2(dimension)
 index.add(np.array(embeddings))
 
-query = "What is the filing deadline for objections to nominating petitions?"
+query = "When does voting start for the primary election?"
 query_embedding = model.encode([query])
 distances, indices = index.search(np.array(query_embedding), k=3)
 
@@ -49,12 +49,12 @@ prompt = f"Based on the following context, answer the query: {query}\n\nContext:
 
 inference_profile_arn = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
 
-query = f"Based on the following context, summarize the main points:\n\n{context}"
+summary = f"Based on the following context, summarize the main points:\n\n{context}"
 
 input_data = {
     "anthropic_version": "bedrock-2023-05-31",
     "messages": [
-        {"role": "user", "content": query}  # Directly set the user input
+        {"role": "user", "content": prompt}  # Directly set the user input
     ],
     "max_tokens": 2048,  # Use `max_tokens` instead of `max_tokens_to_sample`
     "temperature": 0,
