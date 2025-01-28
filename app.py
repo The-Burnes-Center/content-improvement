@@ -2,7 +2,13 @@ from PyPDF2 import PdfReader
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
-from openai import ChatCompletion
+import boto3
+import os
+import json
+
+bedrock_client = boto3.client("bedrock-runtime", region_name="us-east-1")
+model_id = "anthropic.claude-v3.5"
+
 
 # Processes PDFs and extracts text
 def extract_text_from_pdf(file_path):
@@ -41,9 +47,16 @@ relevant_chunks = [chunks[i] for i in indices[0]]
 context = "\n\n".join(relevant_chunks)
 prompt = f"Based on the following context, answer the query: {query}\n\nContext:\n{context}"
 
-response = ChatCompletion.create(
-    model="gpt-4",
-    messages=[{"role": "user", "content": prompt}]
-)
+query = f"Based on the following context, summarize the main points:\n\n{context}"
 
-print(response["choices"][0]["message"]["content"])
+input_data = {
+    "inputText": "What is the main idea of document 1?"
+}
+
+response = bedrock_client.invoke_model(
+    modelId=model_id,
+    body=json.dumps(input_data),
+    contentType="application/json",
+    accept="application/json",
+)
+print(response["body"].read().decode("utf-8"))
