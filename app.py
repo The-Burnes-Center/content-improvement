@@ -7,7 +7,7 @@ import os
 import json
 
 bedrock_client = boto3.client("bedrock-runtime", region_name="us-east-1")
-model_id = "anthropic.claude-v3.5"
+model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"
 
 
 # Processes PDFs and extracts text
@@ -47,16 +47,22 @@ relevant_chunks = [chunks[i] for i in indices[0]]
 context = "\n\n".join(relevant_chunks)
 prompt = f"Based on the following context, answer the query: {query}\n\nContext:\n{context}"
 
+inference_profile_arn = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
+
 query = f"Based on the following context, summarize the main points:\n\n{context}"
 
 input_data = {
-    "inputText": "What is the main idea of document 1?"
+    "anthropic_version": "bedrock-2023-05-31",
+    "messages": [
+        {"role": "user", "content": query}  # Directly set the user input
+    ],
+    "max_tokens": 2048,  # Use `max_tokens` instead of `max_tokens_to_sample`
+    "temperature": 0,
 }
 
 response = bedrock_client.invoke_model(
     modelId=model_id,
     body=json.dumps(input_data),
-    contentType="application/json",
-    accept="application/json",
+    contentType="application/json"
 )
 print(response["body"].read().decode("utf-8"))
