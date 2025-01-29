@@ -60,9 +60,32 @@ input_data = {
     "temperature": 0,
 }
 
-response = bedrock_client.invoke_model(
+response = bedrock_client.invoke_model_with_response_stream(
     modelId=model_id,
     body=json.dumps(input_data),
     contentType="application/json"
 )
-print(response["body"].read().decode("utf-8"))
+"""
+# Read and parse the response body
+decoded_response = json.loads(response["body"].read().decode("utf-8"))
+
+# Extract and print only the generated text
+# llm_output = decoded_response["outputs"][0]["text"]  # Adjust if the key structure differs
+print(decoded_response['content'][0]['text'])"""
+
+
+event_stream = response["body"]
+
+for event in event_stream:
+    event_bytes = event['chunk']['bytes']
+    event_str = event_bytes.decode()
+    if 'delta' in event_str:
+        try:
+            delta_index = event_str.index('text\":')
+            print(event_str[delta_index:][7:-2])
+        except:
+            pass
+    else:
+        pass
+
+print('Stream complete')
