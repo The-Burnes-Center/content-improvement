@@ -52,45 +52,45 @@ while True:
         print("program exited")
         break
     
-inference_profile_arn = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
+    inference_profile_arn = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
 
-summary = f"Based on the following context, summarize the main points:\n\n{context}"
+    summary = f"Based on the following context:\n\n{context}\n\n answer the following question: {prompt}"
 
-input_data = {
-    "anthropic_version": "bedrock-2023-05-31",
-    "messages": [
-        {"role": "user", "content": prompt}  # Directly set the user input
-    ],
-    "max_tokens": 2048,  # Use `max_tokens` instead of `max_tokens_to_sample`
-    "temperature": 0,
-}
+    input_data = {
+        "anthropic_version": "bedrock-2023-05-31",
+        "messages": [
+            {"role": "user", "content": summary}  # Directly set the user input
+        ],
+        "max_tokens": 2048,  # Use `max_tokens` instead of `max_tokens_to_sample`
+        "temperature": 0,
+    }
 
-response = bedrock_client.invoke_model_with_response_stream(
-    modelId=model_id,
-    body=json.dumps(input_data),
-    contentType="application/json"
-)
-"""
-# Read and parse the response body
-decoded_response = json.loads(response["body"].read().decode("utf-8"))
+    response = bedrock_client.invoke_model_with_response_stream(
+        modelId=model_id,
+        body=json.dumps(input_data),
+        contentType="application/json"
+    )
+    """
+    # Read and parse the response body
+    decoded_response = json.loads(response["body"].read().decode("utf-8"))
 
-# Extract and print only the generated text
-# llm_output = decoded_response["outputs"][0]["text"]  # Adjust if the key structure differs
-print(decoded_response['content'][0]['text'])"""
+    # Extract and print only the generated text
+    # llm_output = decoded_response["outputs"][0]["text"]  # Adjust if the key structure differs
+    print(decoded_response['content'][0]['text'])"""
 
 
-event_stream = response["body"]
+    event_stream = response["body"]
 
-for event in event_stream:
-    event_bytes = event['chunk']['bytes']
-    event_str = event_bytes.decode()
-    if 'delta' in event_str:
-        try:
-            delta_index = event_str.index('text\":')
-            print(event_str[delta_index:][7:-2])
-        except:
+    for event in event_stream:
+        event_bytes = event['chunk']['bytes']
+        event_str = event_bytes.decode()
+        if 'delta' in event_str:
+            try:
+                delta_index = event_str.index('text\":')
+                print(event_str[delta_index:][7:-2])
+            except:
+                pass
+        else:
             pass
-    else:
-        pass
 
-print('Stream complete')
+    print('Stream complete')
