@@ -23,7 +23,7 @@ pdf2_text = extract_text_from_pdf("2025-chron-primary-election.pdf")
 combined_text = pdf1_text + "\n" + pdf2_text
 
 # Splits text into chunks
-def chunk_text(text, chunk_size=500):
+def chunk_text(text, chunk_size=200):
     words = text.split()
     return [" ".join(words[i:i+chunk_size]) for i in range(0, len(words), chunk_size)]
 
@@ -45,8 +45,13 @@ distances, indices = index.search(np.array(query_embedding), k=3)
 relevant_chunks = [chunks[i] for i in indices[0]]
 
 context = "\n\n".join(relevant_chunks)
-prompt = f"Based on the following context, answer the query: {query}\n\nContext:\n{context}"
-
+while True: 
+    prompt = input ("Enter question (or type 'exit' to quit):") 
+            # sample question: "When does voting start for the general election?"
+    if query.lower() == "exit":
+        print("program exited")
+        break
+    
 inference_profile_arn = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
 
 summary = f"Based on the following context, summarize the main points:\n\n{context}"
