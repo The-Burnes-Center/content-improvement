@@ -54,12 +54,20 @@ while True:
     
     inference_profile_arn = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
 
+<<<<<<< HEAD
     summary = f"Based on the following context, summarize the main points:\n\n{context}"
+=======
+    summary = f"Based on the following context:\n\n{context}\n\n answer the following question: {prompt}"
+>>>>>>> b65ded4a2194e74f8f193e428b4749798de5f071
 
     input_data = {
         "anthropic_version": "bedrock-2023-05-31",
         "messages": [
+<<<<<<< HEAD
             {"role": "user", "content": prompt}  # Directly set the user input
+=======
+            {"role": "user", "content": summary}  # Directly set the user input
+>>>>>>> b65ded4a2194e74f8f193e428b4749798de5f071
         ],
         "max_tokens": 2048,  # Use `max_tokens` instead of `max_tokens_to_sample`
         "temperature": 0,
