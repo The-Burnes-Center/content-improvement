@@ -69,16 +69,10 @@ while True:
         body=json.dumps(input_data),
         contentType="application/json"
     )
-    """
-    # Read and parse the response body
-    decoded_response = json.loads(response["body"].read().decode("utf-8"))
-
-    # Extract and print only the generated text
-    # llm_output = decoded_response["outputs"][0]["text"]  # Adjust if the key structure differs
-    print(decoded_response['content'][0]['text'])"""
-
 
     event_stream = response["body"]
+
+    print("\n\n")
 
     for event in event_stream:
         event_bytes = event['chunk']['bytes']
@@ -86,10 +80,9 @@ while True:
         if 'delta' in event_str:
             try:
                 delta_index = event_str.index('text\":')
-                print(event_str[delta_index:][7:-2])
+                str = event_str[delta_index:][7:-3]
+                str = str.replace("\\n", "\n")
+                str = str.replace("\\\"", "\"")
+                print(str, end="")
             except:
                 pass
-        else:
-            pass
-
-    print('Stream complete')
