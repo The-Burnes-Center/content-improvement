@@ -5,9 +5,18 @@ import numpy as np
 import boto3
 import os
 import json
+import streamlit as st
 
 bedrock_client = boto3.client("bedrock-runtime", region_name="us-east-1")
 model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"
+
+st.title("💬 Chatbot")
+
+if "messages" not in st.session_state:
+    st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
+
+for msg in st.session_state.messages:
+    st.chat_message(msg["role"]).write(msg["content"])
 
 
 # Processes PDFs and extracts text
@@ -22,8 +31,9 @@ pdf1_text = extract_text_from_pdf("2025-chron-general-election.pdf")
 pdf2_text = extract_text_from_pdf("2025-chron-primary-election.pdf")
 combined_text = pdf1_text + "\n" + pdf2_text
 
+
 # Splits text into chunks
-def chunk_text(text, chunk_size=200):
+def chunk_text(text, chunk_size=30):
     words = text.split()
     return [" ".join(words[i:i+chunk_size]) for i in range(0, len(words), chunk_size)]
 
@@ -45,13 +55,10 @@ distances, indices = index.search(np.array(query_embedding), k=3)
 relevant_chunks = [chunks[i] for i in indices[0]]
 
 context = "\n\n".join(relevant_chunks)
-while True: 
-    prompt = input ("Enter question (or type 'exit' to quit):") 
-            # sample question: "When does voting start for the general election?"
-    if prompt.lower() == "exit":
-        print("program exited")
-        break
-    
+
+
+if prompt := st.chat_input():
+
     inference_profile_arn = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
 
     summary = f"Based on the following context:\n\n{context}\n\n answer the following question: {prompt}"
@@ -71,18 +78,72 @@ while True:
     )
 
     event_stream = response["body"]
-
-    print("\n\n")
-
+    
+    # Display user message
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.chat_message("user").write(prompt)
+    
+    # Stream the assistant's response
+    assistant_response = ""
+    assistant_message = st.chat_message("assistant")
+    response_container = assistant_message.empty()
+    
     for event in event_stream:
-        event_bytes = event['chunk']['bytes']
-        event_str = event_bytes.decode()
+        event_str = event['chunk']['bytes'].decode()
         if 'delta' in event_str:
             try:
                 delta_index = event_str.index('text\":')
                 str = event_str[delta_index:][7:-3]
                 str = str.replace("\\n", "\n")
                 str = str.replace("\\\"", "\"")
-                print(str, end="")
+                assistant_response += str
             except:
                 pass
+        response_container.write(assistant_response)  # Update the displayed text
+    
+    # Store the full assistant response
+    st.session_state.messages.append({"role": "assistant", "content": assistant_response})
+
+
+
+# while True: 
+#     prompt = input ("Enter question (or type 'exit' to quit):") 
+#             # sample question: "When does voting start for the general election?"
+#     if prompt.lower() == "exit":
+#         print("program exited")
+#         break
+    
+#     inference_profile_arn = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
+
+#     summary = f"Based on the following context:\n\n{context}\n\n answer the following question: {prompt}"
+#     input_data = {
+#         "anthropic_version": "bedrock-2023-05-31",
+#         "messages": [
+#             {"role": "user", "content": summary}  # Directly set the user input
+#         ],
+#         "max_tokens": 2048,  # Use `max_tokens` instead of `max_tokens_to_sample`
+#         "temperature": 0,
+#     }
+
+#     response = bedrock_client.invoke_model_with_response_stream(
+#         modelId=model_id,
+#         body=json.dumps(input_data),
+#         contentType="application/json"
+#     )
+
+#     event_stream = response["body"]
+
+#     print("\n\n")
+
+#     for event in event_stream:
+#         event_bytes = event['chunk']['bytes']
+#         event_str = event_bytes.decode()
+        # if 'delta' in event_str:
+        #     try:
+        #         delta_index = event_str.index('text\":')
+        #         str = event_str[delta_index:][7:-3]
+        #         str = str.replace("\\n", "\n")
+        #         str = str.replace("\\\"", "\"")
+        #         print(str, end="")
+        #     except:
+        #         pass
