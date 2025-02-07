@@ -27,6 +27,10 @@ def extract_text_from_pdf(file_path):
         text += page.extract_text()
     return text
 
+
+folder_path = "output"  # Change this to your folder path
+
+
 pdf1_text = extract_text_from_pdf("2025-chron-general-election.pdf")
 pdf2_text = extract_text_from_pdf("2025-chron-primary-election.pdf")
 combined_text = pdf1_text + "\n" + pdf2_text
@@ -39,6 +43,16 @@ def chunk_text(text, chunk_size=30):
 
 chunks = chunk_text(combined_text)
 
+# Loop through all files in the folder
+for filename in os.listdir(folder_path):
+    file_path = os.path.join(folder_path, filename)
+
+    # Check if it's a file (not a directory)
+    if os.path.isfile(file_path):
+        with open(file_path, "r", encoding="utf-8") as file:
+            print(f"Processing {filename}")
+            chunks.append(file.read())
+
 # Embeds chunks using SentenceTransformer
 model = SentenceTransformer("all-MiniLM-L6-v2")
 embeddings = model.encode(chunks)
@@ -49,15 +63,22 @@ index = faiss.IndexFlatL2(dimension)
 index.add(np.array(embeddings))
 
 query = "When does voting start for the primary election?"
-query_embedding = model.encode([query])
-distances, indices = index.search(np.array(query_embedding), k=3)
+# query_embedding = model.encode([query])
+# distances, indices = index.search(np.array(query_embedding), k=3)
 
-relevant_chunks = [chunks[i] for i in indices[0]]
+# relevant_chunks = [chunks[i] for i in indices[0]]
 
-context = "\n\n".join(relevant_chunks)
+# context = "\n\n".join(relevant_chunks)
 
 
 if prompt := st.chat_input():
+
+    query_embedding = model.encode([prompt])
+    distances, indices = index.search(np.array(query_embedding), k=3)
+
+    relevant_chunks = [chunks[i] for i in indices[0]]
+
+    context = "\n\n".join(relevant_chunks)
 
     inference_profile_arn = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
 
