@@ -27,14 +27,10 @@ def extract_text_from_pdf(file_path):
         text += page.extract_text()
     return text
 
+combined_text = ""
+
 
 folder_path = "output"  # Change this to your folder path
-
-
-pdf1_text = extract_text_from_pdf("2025-chron-general-election.pdf")
-pdf2_text = extract_text_from_pdf("2025-chron-primary-election.pdf")
-combined_text = pdf1_text + "\n" + pdf2_text
-
 
 # Splits text into chunks
 def chunk_text(text, chunk_size=30):
@@ -50,7 +46,6 @@ for filename in os.listdir(folder_path):
     # Check if it's a file (not a directory)
     if os.path.isfile(file_path):
         with open(file_path, "r", encoding="utf-8") as file:
-            print(f"Processing {filename}")
             chunks.append(file.read())
 
 # Embeds chunks using SentenceTransformer
@@ -63,15 +58,13 @@ index = faiss.IndexFlatL2(dimension)
 index.add(np.array(embeddings))
 
 query = "When does voting start for the primary election?"
-# query_embedding = model.encode([query])
-# distances, indices = index.search(np.array(query_embedding), k=3)
-
-# relevant_chunks = [chunks[i] for i in indices[0]]
-
-# context = "\n\n".join(relevant_chunks)
 
 
 if prompt := st.chat_input():
+
+    # Display user message
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.chat_message("user").write(prompt)
 
     query_embedding = model.encode([prompt])
     distances, indices = index.search(np.array(query_embedding), k=3)
@@ -82,7 +75,7 @@ if prompt := st.chat_input():
 
     inference_profile_arn = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
 
-    summary = f"Based on the following context:\n\n{context}\n\n answer the following question: {prompt}"
+    summary = f"Based on the following context:\n\n{context}\n\n answer the following question: {prompt}. Include the link to the source. "
     input_data = {
         "anthropic_version": "bedrock-2023-05-31",
         "messages": [
@@ -99,10 +92,6 @@ if prompt := st.chat_input():
     )
 
     event_stream = response["body"]
-    
-    # Display user message
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    st.chat_message("user").write(prompt)
     
     # Stream the assistant's response
     assistant_response = ""
@@ -126,45 +115,3 @@ if prompt := st.chat_input():
     st.session_state.messages.append({"role": "assistant", "content": assistant_response})
 
 
-
-# while True: 
-#     prompt = input ("Enter question (or type 'exit' to quit):") 
-#             # sample question: "When does voting start for the general election?"
-#     if prompt.lower() == "exit":
-#         print("program exited")
-#         break
-    
-#     inference_profile_arn = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
-
-#     summary = f"Based on the following context:\n\n{context}\n\n answer the following question: {prompt}"
-#     input_data = {
-#         "anthropic_version": "bedrock-2023-05-31",
-#         "messages": [
-#             {"role": "user", "content": summary}  # Directly set the user input
-#         ],
-#         "max_tokens": 2048,  # Use `max_tokens` instead of `max_tokens_to_sample`
-#         "temperature": 0,
-#     }
-
-#     response = bedrock_client.invoke_model_with_response_stream(
-#         modelId=model_id,
-#         body=json.dumps(input_data),
-#         contentType="application/json"
-#     )
-
-#     event_stream = response["body"]
-
-#     print("\n\n")
-
-#     for event in event_stream:
-#         event_bytes = event['chunk']['bytes']
-#         event_str = event_bytes.decode()
-        # if 'delta' in event_str:
-        #     try:
-        #         delta_index = event_str.index('text\":')
-        #         str = event_str[delta_index:][7:-3]
-        #         str = str.replace("\\n", "\n")
-        #         str = str.replace("\\\"", "\"")
-        #         print(str, end="")
-        #     except:
-        #         pass
