@@ -1,0 +1,40 @@
+Web Writing Best Practices
+Writing for the web means taking an audience-first approach, understanding how people consume web content.  
+
+Yale’s websites are an important part of how we communicate with our many audiences. Apply these proven best practices to ensure your web content is purposeful and actionable. 
+
+How people read on the web 
+People do not read web content word-by-word. Instead, they scan for keywords that will help them accomplish the goal of their visit. Improving overall readability and scannability of your content will help users consume and recall your site material. 
+
+Readability is a measurement of how hard it is to read a passage of writing. Using simple language makes it easier for all audiences to access your information. It is especially helpful for non-native English speakers and low-literacy populations. 
+
+Readability analyzers like HemingwayApp(Link is external) can help you measure the readability of your content. Aim for grade levels 6-8, but go no higher than grade 12. 
+
+Tactics to ensure content scannability 
+Avoid unnecessary formatting that can distract rather than engage 
+Use boldface and italics judiciously
+Avoid underlining and CAPS 
+Avoid big blocks of text 
+Use headings, subheadings, bulleted lists, short paragraphs, and/or images 
+Avoid complex sentences 
+Let key links stand alone, rather than get lost in running text 
+Knowing your audience 
+By focusing your content on a target audience, you give your content purpose. Writing for an audience means writing for people, so your content should feel natural and conversational where appropriate.  
+
+Ensuring your writing is clear will not only make it more engaging, but also ensure it resonates with how website users read online: 
+
+Be concise 
+Use active voice 
+Use simple words and short sentences 
+Use first-person plural and/or second person point of view 
+Avoid jargon, internal abbreviations or nicknames, or overly technical terminology if not relevant to the audience 
+Avoid unnecessary prepositional phrases, adjectives, adverbs, and superlatives  
+Omit trivial or irrelevant information 
+Avoid repetition 
+Prioritizing user needs 
+YaleSites typically serve multiple audiences. While some pages may have multiple audiences, ensure your focus is on the main user/primary audience. Keep the intended audience – and intended action or next step – for each page in mind while creating content. 
+
+Establish the page purpose (e.g. why are users visiting this page?) 
+Identify tasks to address user needs and, if there are multiple, prioritize 
+As you draft your page content, ensure the most important or “must have” information is at the top of the page. Then provide supporting information and details.  
+
