@@ -3,6 +3,8 @@ import json
 import streamlit as st
 import requests
 
+
+# Helper function to scrape the given website
 def get_source_code(url):
     try:
         headers = {
@@ -16,6 +18,7 @@ def get_source_code(url):
         response_container = assistant_message.empty()
         response_container.write("Please enter a valid URL.")
 
+# Reads in a file and returns the text
 def read_file_text(file_path):
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
@@ -23,6 +26,7 @@ def read_file_text(file_path):
     except Exception as e:
         return f"Error: {e}"
 
+# Takes scrapped website data and a prompt, returns Claude 3.5 Sonnet's response
 def get_pred(scrapped_data, prompt):
     summary = f"Look at the following website source code: {scrapped_data}. {prompt}"
     input_data = {
@@ -86,3 +90,4 @@ if prompt := st.chat_input():
 
     get_pred(scrapped_data, f"Provide suggestions for improving content clarity of the website to align with {content_guidlines}. Feel free to rewrite sections of the website that do not align with the guidelines. For each suggestion, provide an example of a part of the site that could be improved. Do not include HTML in the output, only look at the actual content.")
     get_pred(scrapped_data, "Provide suggestions for improving accessability of the page. Reference WCAG guidelines. For each suggeston, provide an example of a part of the site that could be improved. Also cite specific WCAG guidelines in each suggestion. If you cannot provide a specific element on the webpage as an example, do not include the suggestion. You can include the HTML tags in the output, and your suggestion for how to fix them. Make sure to clearly indicate what part of the website the HTML tags are from.")
+    get_pred(scrapped_data, "Check if there is repetitve content on the given website. Provide examples of the repetitive content and suggest how to improve it. For example, if there are multiple parts of the website where the general election date is given, flag those and suggest a single place for this information.")
