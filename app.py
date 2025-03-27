@@ -2,17 +2,74 @@ import boto3
 import json
 import streamlit as st
 import requests
+from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright
+from openai import OpenAI
+import os
+
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1") 
+S3_BUCKET_NAME = "nj-ai-votes-image"
+
+s3_client = boto3.client("s3", region_name="us-east-1")
+
+#use playwright to capture screen shot 
+def capture_screenshot(url, filepath="screenshot.png"):
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        page.goto(url)
+        page.screenshot(path=filepath, full_page=True)
+        browser.close()
+
+        return filepath
+
+def upload_to_s3(file_path, bucket_name, object_name=None):
+    """Uploads the screenshot to an S3 bucket and returns its URL."""
+    if object_name is None:
+        object_name = os.path.basename(file_path)
+
+    s3_client.upload_file(file_path, bucket_name, object_name, ExtraArgs={'ACL': 'public-read'})  
+    s3_url = f"https://{bucket_name}.s3.{AWS_REGION}.amazonaws.com/{object_name}"
+    return s3_url
 
 
-# Helper function to scrape the given website
-def get_source_code(url):
+def process_image_with_openai(image_url):
+    openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+    #input text 
+    input_text = "Analyze this webpage screenshot and provide accessibility improvements. Provide suggestions for improving accessability of the page. Reference WCAG guidelines.\
+                For each suggeston,  provide an example of a part of the site that could be improved  Also cite specific WCAG guidelines in each suggestion. \
+                If you cannot provide a specific element on the webpage as an example, do not include the suggestion. "
+    
+    #input_text2 = "Analyze this webpage screenshot and based on the most important information for intented audience, please suggest feature rearrangements for the website"
+
+    completion = openai_client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            #if I wanted to add text guidlines, would i edit this or input text
+            {"role": "system", "content": "You are an AI expert in web accessibility. Analyze the image and provide WCAG-compliant suggestions."},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": input_text},
+                    {"type": "image_url", "image_url": {"url": image_url}}
+                    #{"type": "text", "text": input_text2}
+                ],
+            },
+        ]
+    )
+
+    return completion.choices[0].message.content
+
+
+def get_pure_source(url):
     try:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-        }
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Raises an HTTPError for bad responses (4xx and 5xx)
-        return response.text
+        response = requests.get(url)
+        response.raise_for_status()  # Raise exception for HTTP errors
+        source_code = response.text
+        
+        return source_code
+
     except requests.exceptions.RequestException as e:
         print(f"Error fetching the website: {e}")
 
@@ -99,8 +156,6 @@ def get_pred(scrapped_data, prompt):
             except:
                 pass
         response_container.write(assistant_response)  # Update the displayed text
-
-    return assistant_response
     
     # Store the full assistant response
     st.session_state.messages.append({"role": "assistant", "content": assistant_response})
@@ -125,6 +180,14 @@ if prompt := st.chat_input():
 
     content_guidlines = read_file_text("contentclarityguide.txt")
 
-    get_pred(scrapped_data, f"Provide suggestions for improving content clarity of the website to align with {content_guidlines}. Feel free to rewrite sections of the website that do not align with the guidelines. For each suggestion, provide an example of a part of the site that could be improved. Do not include HTML in the output, only look at the actual content.")
-    get_pred(scrapped_data, "Provide suggestions for improving accessability of the page. Reference WCAG guidelines. For each suggeston, provide an example of a part of the site that could be improved. Also cite specific WCAG guidelines in each suggestion. If you cannot provide a specific element on the webpage as an example, do not include the suggestion. You can include the HTML tags in the output, and your suggestion for how to fix them. Make sure to clearly indicate what part of the website the HTML tags are from.")
-    get_pred(scrapped_data, "Check if there is repetitve content on the given website. Provide examples of the repetitive content and suggest how to improve it. For example, if there are multiple parts of the website where the general election date is given, flag those and suggest a single place for this information.")
+    for section in scrapped_data:
+        get_pred(section, f"Provide suggestions for improving the clarity of the provided website text to align with {content_guidlines}. Cite specific examples of text that could be improved. Cite every single instance of text that could be improved that you find. Show the original and provide a revised version. ")
+
+
+    screenshot_path = capture_screenshot(prompt)
+    s3_url = upload_to_s3(screenshot_path, S3_BUCKET_NAME)
+    st.image(s3_url, caption="Website Screenshot")
+    result = process_image_with_openai(s3_url)
+    st.write("OpenAI Response:\n", result)
+
+    get_pred(get_pure_source(prompt), f"Provide suggestions for improving the provided HTML to align with WCAG 2.1 AA standards. Cite specific examples of HTML that could be improved. Cite every single instance of HTML that could be improved that you find. Show the original and provide a revised version. ")
