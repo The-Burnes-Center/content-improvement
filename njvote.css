@@ -1,0 +1,173 @@
+@charset "utf-8";
+/* CSS Document */
+/*  
+Dark background color  		#273640
+Active background color  	#00426b
+Highlight color 			#114f80
+*/
+
+/*--- ##########################################  09-11-2020 Voter Portal --- */
+
+/*  ##################################################################################################  */
+
+.vote-box > h4 					{ margin: 0 ; padding: .4em 1em; font-weight: normal; text-align: center; color: white; background-color:#00426b;  }
+.vote-box > .wrapper 			{ overflow-y: scroll; border: 1px solid #474343; max-height: 150px; height: 150px; background-color: #f0f6fb; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; padding: 10px; margin: 0 0 10px 0; }
+.vote-box > p 					{ margin: 0 ; padding: .4em 1em; font-weight: small;  }
+
+.vote-top						{ text-align: center; }
+.vote-top-box 			{ border: 1px solid #474343; border-radius: 5px 5px 5px 5px; padding: 10px; margin: 0 0 10px 0; }
+.vote-top > p 					{ margin: 0 ; padding: .4em 1em; font-weight: small;  }
+
+.bg-vote-ltblue 				{ background-color: #f0f6fb;  background: #f0f6fb; }
+
+
+
+/* ------ styles for Votes buttons 09-13-2022  ---------------------------------------------------------  */
+
+	.HelpTile-container--secondary  { margin-top:.5rem}
+
+	.Directory-listTitle			{	font-size:1.25rem;
+										line-height:1.2;
+										color:#000;
+										font-weight:600;
+										font-family:Roboto,Helvetica,Arial,sans-serif;
+										color:#273640;
+										font-weight:700
+									} @media (min-width:48rem){.Directory-listTitle{font-size:2rem;line-height:1.19}}	
+	
+	.Directory-listHeading			{	padding-top:0 }
+	
+	.Directory-listHeading			{	padding-top:1rem;
+										padding-bottom:.5rem;
+										display:-webkit-box;
+										display:-ms-flexbox;
+										display:flex;
+										-webkit-box-pack:justify;
+										-ms-flex-pack:justify;
+										justify-content:space-between;
+										-webkit-box-align:baseline;
+										-ms-flex-align:baseline;
+										align-items:baseline;
+										-ms-flex-wrap:wrap;
+										flex-wrap:wrap
+									} @media (max-width:47.9375rem){.Directory-listHeading{-webkit-box-orient:vertical;-webkit-box-direction:normal;-ms-flex-direction:column;flex-direction:column;padding-top:.5rem;padding-bottom:.5rem}}
+	
+	.Directory-listHeading--lowSearchBar	
+									{	text-align:center;
+										background-color:#eaeff5;
+										border-bottom-left-radius:50%;
+										border-bottom-right-radius:50%;
+										padding-top:2.5rem;
+										padding-bottom:3.125rem;
+										-webkit-box-pack:center;
+										-ms-flex-pack:center;
+										justify-content:center
+									} @media (max-width:47.9375rem){.Directory-listHeading--lowSearchBar{-webkit-box-align:center;-ms-flex-align:center;align-items:center}}
+	
+	.Directory-listHeading--withAttribution .Directory-listTitle
+									{	widows: 100%;	}
+	
+	.Directory-listAttribution		{	color:#757575; }
+		@media (max-width:47.9375rem){.Directory-listHeadingLink{padding-top:.25rem;padding-bottom:.25rem}}
+		@media (min-width:48rem){.Directory-listHeadingLink{right:-1em;left:auto}}
+	
+	.Directory-linkSection			{	text-align:right;	}
+	
+	.HelpTile 						{	display:-webkit-box;
+										display:-ms-flexbox;
+										display:flex;
+											-webkit-box-orient:vertical;
+											-webkit-box-direction:normal;
+											-ms-flex-direction:column;
+										flex-direction:column;
+										margin:0 1rem 2rem;
+										background-repeat:no-repeat;
+										border-radius:.5rem;	}
+	
+	.HelpTile-list .HelpTile 		{	width:calc(100% - 2rem)	}
+		@media (min-width:48rem){.HelpTile-list .HelpTile{width:calc(50% - 2rem)}}
+		@media (min-width:62rem){.HelpTile-list .HelpTile{width:calc(50% - 2rem)}}
+		@media (min-width:62rem){.HelpTile-list--4Across .HelpTile{width:calc(50% - 2rem)}}
+	
+	.HelpTile:focus,.HelpTile:hover {	-webkit-box-shadow:0 0 1.25rem 0 rgba(0,0,0,.3),0 0 .25rem 0 rgba(0,0,0,.5);
+										box-shadow:0 0 1.25rem 0 rgba(0,0,0,.3),0 0 .25rem 0 rgba(0,0,0,.5)}
+	
+	.HelpTile-list 					{	display:-webkit-box;display:-ms-flexbox;
+										display:flex;
+											-webkit-box-orient:horizontal;
+											-webkit-box-direction:normal;
+											-ms-flex-flow:row wrap;
+										flex-flow:row wrap;
+										margin:0 -1rem; 
+									} @media (min-width:62rem){.HelpTile-list--centered{-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center}}
+	
+	.HelpTile-description			{	padding:1rem;	}
+	
+	.HelpTile-description ul{list-style-type:disc}
+	
+	.HelpTile-description ol,.HelpTile-description ul{list-style-position:inside;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-ms-flex-direction:column;flex-direction:column}
+	
+	.HelpTile-description ol{list-style-type:decimal}
+	
+	.HelpTile-description strong{font-weight:700}
+	
+	.HelpTile-description em{font-style:italic}
+	
+	.HelpTile-description p{margin-top:1rem}
+	
+	.HelpTile-description a{text-decoration:underline;color:#0f70f0}
+	
+	.HelpTile-description a:focus{color:#0c5ecb;background:rgba(234,239,245,.75);border-radius:.25rem}
+	
+	.HelpTile-description a:focus,.HelpTile-description a:hover{text-decoration:none}
+	
+	.HelpTile--large		{border-radius:.5rem;border:.0625rem solid #273640;padding:2rem 1.5rem;position:relative}
+	
+	.HelpTile--large:focus,.HelpTile--large:hover{-webkit-box-shadow:0 .3125rem 1.875rem .125rem rgba(0,0,0,.08);box-shadow:0 .3125rem 1.875rem .125rem rgba(0,0,0,.08)}
+	
+	.HelpTile--large:focus:after,.HelpTile--large:hover:after{-webkit-transform:rotate(-135deg);transform:rotate(-135deg);content:"\F063";font-family:FontAwesome;color:#fff;background-color:#5983ff;position:absolute;top:.5rem;right:.5rem;height:1.125rem;width:1.125rem;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;border-radius:50%;font-size:.9375rem}
+	
+	.HelpTile--large .HelpTile-wrapper--link{margin:-2rem -1.5rem;padding:2rem 1.5rem;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-ms-flex-direction:column;flex-direction:column}
+	
+	.HelpTile--large .HelpTile-title{font-size:1.5rem;line-height:1.44;width:100%;padding-bottom:.25rem;font-weight:600;text-align:center}
+	
+	.HelpTile--large .HelpTile-image{margin:0 auto 1.375rem;height:10rem;width:11.25rem;background-size:9.5rem;background-repeat:no-repeat;background-position:50%;border-radius:.875rem;-webkit-box-shadow:0 .0625rem .25rem 0 rgba(0,0,0,.17);box-shadow:0 .0625rem .25rem 0 rgba(0,0,0,.17)}
+	
+	.HelpTile--large .HelpTile-description{padding:0;margin-bottom:1.0rem;text-align:center}
+	
+	.HelpTile--large .HelpTile-linkWrapper{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center}
+	
+	.HelpTile--small{border:.0725rem solid #273640; }
+	
+	.HelpTile--small .HelpTile-wrapper{padding:1rem;margin:auto 0}
+	
+	.HelpTile--small .HelpTile-title,.HelpTile--small .HelpTile-wrapper{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center}
+	
+	.HelpTile--small .HelpTile-title{font-size:1.25rem;line-height:1.44;width:calc(100% - 3.625rem);min-height:auto;height:auto;padding:0 0 0 1rem;background-color:#fff;color:#202124;font-weight:600;text-align:left}
+		
+	.HelpTile--small .HelpTile-image{min-height:auto;height:3.625rem;width:3.625rem;background-size:3.625rem;padding:0}
+	
+	.ReportAnError{z-index:10000;position:fixed;left:0;top:21.875rem;background-color:#444;-webkit-box-shadow:0 .125rem .25rem 0 rgba(0,0,0,.5);box-shadow:0 .125rem .25rem 0 rgba(0,0,0,.5);width:7.6875rem;display:none;-webkit-box-align:center;-ms-flex-align:center;align-items:center;padding:.5rem .5rem .5rem}
+	
+	.ReportAnError-image{height:1.0625rem;width:1.1875rem;margin-right:.5rem}
+	
+	.ReportAnError-text{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-ms-flex-direction:column;flex-direction:column;color:#fff;font-size:.75rem}
+
+/* ------ END styles for Votes buttons ---------------------------------------------------------  */
+
+
+/* Site Title Department - Division - Program 
+
+#site-name{}
+#site-name.vote{ border-bottom: thin #00426b; background-color: #f0f6fb;  background: #f0f6fb;}
+#site-name.vote, span.vote { font-size: 1.75rem; font-weight: bold; background-color: #f0f6fb;  background: #f0f6fb; border-radius: 5px;  }
+*/
+/*.vote    { }
+.vote  H2 { line-height: 24px;}	
+.vote  H5 { line-height: 10px; margin-top: 5px;}	
+.vote  H6 { line-height: 10px;}		
+.vote     { background-color: #f0f6fb;}
+*/
+
+.row-media  			{ background: #0c5db4; background-color: #0c5db4; margin: 15px 0 20px 0; padding: 10px; color: #fff; }
+
