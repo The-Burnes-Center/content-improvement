@@ -22,7 +22,8 @@ def capture_screenshot(url, filepath="screenshot.png"):
         browser.close()
 
         return filepath
-
+    
+#uploads image to s3 bucket 
 def upload_to_s3(file_path, bucket_name, object_name=None):
     """Uploads the screenshot to an S3 bucket and returns its URL."""
     if object_name is None:
@@ -180,14 +181,16 @@ if prompt := st.chat_input():
 
     content_guidlines = read_file_text("contentclarityguide.txt")
 
+    # revises content based on text in html code 
     for section in scrapped_data:
         get_pred(section, f"Provide suggestions for improving the clarity of the provided website text to align with {content_guidlines}. Cite specific examples of text that could be improved. Cite every single instance of text that could be improved that you find. Show the original and provide a revised version. ")
 
-
+    # takes a picture and saves to s3 bucket 
     screenshot_path = capture_screenshot(prompt)
     s3_url = upload_to_s3(screenshot_path, S3_BUCKET_NAME)
     st.image(s3_url, caption="Website Screenshot")
     result = process_image_with_openai(s3_url)
     st.write("OpenAI Response:\n", result)
 
+    #provides html code that can be improved 
     get_pred(get_pure_source(prompt), f"Provide suggestions for improving the provided HTML to align with WCAG 2.1 AA standards. Cite specific examples of HTML that could be improved. Cite every single instance of HTML that could be improved that you find. Show the original and provide a revised version. ")
