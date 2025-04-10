@@ -36,12 +36,18 @@ def upload_to_s3(file_path, bucket_name, object_name=None):
 def process_image_with_openai(image_url):
     openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
+    layout = read_file_text("contentlayoutguide.txt")
+
     #input text 
-    input_text = "Analyze this webpage screenshot and provide accessibility improvements. Provide suggestions for improving accessability of the page. Reference WCAG guidelines.\
-                For each suggeston,  provide an example of a part of the site that could be improved  Also cite specific WCAG guidelines in each suggestion. \
-                If you cannot provide a specific element on the webpage as an example, do not include the suggestion. "
+    # input_text = "Analyze this webpage screenshot and provide accessibility improvements. Provide suggestions for improving accessability of the page. Reference WCAG guidelines.\
+    #             For each suggeston,  provide an example of a part of the site that could be improved  Also cite specific WCAG guidelines in each suggestion. \
+    #             If you cannot provide a specific element on the webpage as an example, do not include the suggestion. "
     
     #input_text2 = "Analyze this webpage screenshot and based on the most important information for intented audience, please suggest feature rearrangements for the website"
+
+    input_text = f"Analyze this webpage screenshot and provide improvements for the layout of the page based off of the following guidelines: {layout}. \
+                For each suggestion, provide an example of a part of the site that could be improved. Also cite specific guidelines in each suggestion. \
+                If you cannot provide a specific element on the webpage as an example, do not include the suggestion. "
 
     completion = openai_client.chat.completions.create(
         model="gpt-4o",
@@ -181,15 +187,15 @@ if prompt := st.chat_input():
     content_guidlines = read_file_text("contentclarityguide.txt")
         
 
-    for section in scrapped_data:
-        print("New Section: " + section + "\n")
-        get_pred(section, f"Provide suggestions for improving the clarity of the provided website text to align with {content_guidlines}. Cite specific examples of text that could be improved. Cite every single instance of text that could be improved that you find, but do not be repetitive. This means that every element in the content should only be mentioned once. Show the original and provide a revised version. If you do not have enought content, say 'Not enough content to analyze.' and provide the original text.")
+    # for section in scrapped_data:
+    #     print("New Section: " + section + "\n")
+    #     get_pred(section, f"Provide suggestions for improving the clarity of the provided website text to align with {content_guidlines}. Cite specific examples of text that could be improved. Cite every single instance of text that could be improved that you find, but do not be repetitive. This means that every element in the content should only be mentioned once. Show the original and provide a revised version. If you do not have enought content, say 'Not enough content to analyze.' and provide the original text.")
 
 
-    # screenshot_path = capture_screenshot(prompt)
-    # s3_url = upload_to_s3(screenshot_path, S3_BUCKET_NAME)
-    # st.image(s3_url, caption="Website Screenshot")
-    # result = process_image_with_openai(s3_url)
-    # st.write("OpenAI Response:\n", result)
+    screenshot_path = capture_screenshot(prompt)
+    s3_url = upload_to_s3(screenshot_path, S3_BUCKET_NAME)
+    st.image(s3_url, caption="Website Screenshot")
+    result = process_image_with_openai(s3_url)
+    st.write("OpenAI Response:\n", result)
 
     # get_pred(get_pure_source(prompt), f"Provide suggestions for improving the provided HTML to align with WCAG 2.1 AA standards. Cite specific examples of HTML that could be improved. Cite every single instance of HTML that could be improved that you find. Show the original and provide a revised version. ")
