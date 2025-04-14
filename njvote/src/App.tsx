@@ -31,7 +31,7 @@ function App() {
           style={{
             display: 'flex',
             alignItems: 'center',
-            padding: '0 2rem',
+            padding: '0',
             position: 'relative',
           }}
         >
