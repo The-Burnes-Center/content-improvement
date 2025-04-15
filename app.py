@@ -6,6 +6,8 @@ from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 from openai import OpenAI
 import os
+import pandas as pd
+import re 
 
 
 #use playwright to capture screen shot 
@@ -163,6 +165,8 @@ def get_pred(scrapped_data, prompt):
     # Store the full assistant response
     st.session_state.messages.append({"role": "assistant", "content": assistant_response})
 
+    return assistant_response
+
 bedrock_client = boto3.client("bedrock-runtime", region_name="us-east-1")
 model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"
 
@@ -184,7 +188,17 @@ if prompt := st.chat_input():
     content_guidlines = read_file_text("contentclarityguide.txt")
 
     for section in scrapped_data:
-        get_pred(section, f"Provide suggestions for improving the clarity of the provided website text to align with {content_guidlines}. Cite specific examples of text that could be improved. Cite every single instance of text that could be improved that you find. Show the original and provide a revised version. ")
+        #get_pred(section, f"Provide suggestions for improving the clarity of the provided website text to align with {content_guidlines}. Cite specific examples of text that could be improved. Cite every single instance of text that could be improved that you find. Show the original and provide a revised version. Please format json code, an example format is: ")
+        contentclarity_output = get_pred(
+        section,
+        f"""Provide suggestions for improving the clarity of the provided website text to align with {content_guidlines}. 
+        Cite specific examples of text that could be improved. Cite every single instance of text that could be improved that you find. 
+        Show the original and provide a revised version.""")
+
+
+
+# screenshot code and providing html improvements 
+
 
     # takes a picture and saves to s3 bucket 
     screenshot_path = capture_screenshot(prompt)
@@ -194,3 +208,50 @@ if prompt := st.chat_input():
     st.write("OpenAI Response:\n", result)
 
     get_pred(get_pure_source(prompt), f"Provide suggestions for improving the provided HTML to align with WCAG 2.1 AA standards. Cite specific examples of HTML that could be improved. Cite every single instance of HTML that could be improved that you find. Show the original and provide a revised version. ")
+
+"""
+Format the output in JSON, using the following structure:
+
+        const data = [
+            {{
+                key: '1',
+                area: 'Homepage',
+                suggestion: 'Add a clear call-to-action button',
+                reason: 'Improves user engagement and guides users to key content.',
+            }},
+            {{
+                key: '2',
+                area: 'Navigation Menu',
+                suggestion: 'Simplify menu structure',
+                reason: 'Helps users find content faster and reduces cognitive load.',
+            }},
+            {{
+                key: '3',
+                area: 'Accessibility',
+                suggestion: 'Add alt text for all images',
+                reason: 'Ensures compliance with WCAG and improves screen reader support.',
+            }},
+            ]
+
+           
+       
+    )
+        
+        print("SECTION:", contentclarity_output)
+        match = re.search(r'(\[\s*(\{.*?\},?\s*)+\])', contentclarity_output, re.DOTALL)
+
+        print(match)
+        if match:
+            json_str = match.group(1)  # grab just the JSON array
+            safe_json = re.sub(r'\\(?![nrt"\\/])', r'\\\\', json_str)
+
+            try:
+                data = json.loads(safe_json)
+                print(data)
+            except json.JSONDecodeError as e:
+                print("JSON parsing error:", e)
+        else:
+            print("Pattern not found.")
+        
+
+"""
