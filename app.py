@@ -7,10 +7,6 @@ from playwright.sync_api import sync_playwright
 from openai import OpenAI
 import os
 
-AWS_REGION = os.getenv("AWS_REGION", "us-east-1") 
-S3_BUCKET_NAME = "nj-ai-votes-image"
-
-s3_client = boto3.client("s3", region_name="us-east-1")
 
 #use playwright to capture screen shot 
 def capture_screenshot(url, filepath="screenshot.png"):
@@ -183,7 +179,7 @@ if prompt := st.chat_input():
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
 
-    scrapped_data = scrape_result = get_text_chunks(prompt)
+    scrapped_data = get_text_chunks(prompt)
 
     content_guidlines = read_file_text("contentclarityguide.txt")
 
