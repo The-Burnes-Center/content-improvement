@@ -2,7 +2,10 @@ import './App.css'
 import { useState } from 'react';
 import { Input, Layout, Menu, Radio, Modal, Button, Tooltip } from "antd";
 import Audience from './components/audience';
-import { RightOutlined, PlusSquareOutlined } from '@ant-design/icons';
+import { PlusSquareOutlined } from '@ant-design/icons';
+import ContentClarity from './components/contentclarity';
+import WebDesign from './components/webdesign';
+import Accessability from './components/accessability';
 
 function App() {
 
@@ -31,7 +34,7 @@ function App() {
           style={{
             display: 'flex',
             alignItems: 'center',
-            padding: '0 2rem',
+            padding: '0',
             position: 'relative',
           }}
         >
@@ -92,6 +95,9 @@ function App() {
               </Radio.Group>
             </div>
             {tab == "audience" ? <Audience /> : <></>}
+            {tab == "clarity" ? <ContentClarity/> : <></>} 
+            {tab == "design" ? <WebDesign/> : <></>}
+            {tab == "accessability" ? <Accessability/> : <></>}
           </Content>
         </Layout>
       </Layout>
