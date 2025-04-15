@@ -44,9 +44,35 @@ def process_image_with_openai(image_url):
     
     #input_text2 = "Analyze this webpage screenshot and based on the most important information for intented audience, please suggest feature rearrangements for the website"
 
-    input_text = f"Analyze this webpage screenshot and provide improvements for the layout of the page based off of the following guidelines: {layout}. \
+    input_text = f"""Analyze this webpage screenshot and provide improvements for the layout of the page based off of the following guidelines: {layout}. \
                 For each suggestion, provide an example of a part of the site that could be improved. Also cite specific guidelines in each suggestion. \
-                If you cannot provide a specific element on the webpage as an example, do not include the suggestion. "
+                If you cannot provide a specific element on the webpage as an example, do not include the suggestion. 
+                Format the output in JSON, using the following structure:
+
+                    const data = [
+                        {{
+                            key: '1',
+                            area: 'Homepage',
+                            suggestion: 'Add a clear call-to-action button',
+                            reason: 'Improves user engagement and guides users to key content.',
+                        }},
+                        {{
+                            key: '2',
+                            area: 'Navigation Menu',
+                            suggestion: 'Simplify menu structure',
+                            reason: 'Helps users find content faster and reduces cognitive load.',
+                        }},
+                        {{
+                            key: '3',
+                            area: 'Accessibility',
+                            suggestion: 'Add alt text for all images',
+                            reason: 'Ensures compliance with WCAG and improves screen reader support.',
+                        }},
+                        ] 
+    
+    
+    
+    """
 
     completion = openai_client.chat.completions.create(
         model="gpt-4o",
@@ -205,53 +231,10 @@ if prompt := st.chat_input():
     s3_url = upload_to_s3(screenshot_path, S3_BUCKET_NAME)
     st.image(s3_url, caption="Website Screenshot")
     result = process_image_with_openai(s3_url)
+
+    #result is format  ```json [...] ```
+    
+    print("WEBDESIGN IMPROVEMENTS:", result )
     st.write("OpenAI Response:\n", result)
 
     get_pred(get_pure_source(prompt), f"Provide suggestions for improving the provided HTML to align with WCAG 2.1 AA standards. Cite specific examples of HTML that could be improved. Cite every single instance of HTML that could be improved that you find. Show the original and provide a revised version. ")
-
-"""
-Format the output in JSON, using the following structure:
-
-        const data = [
-            {{
-                key: '1',
-                area: 'Homepage',
-                suggestion: 'Add a clear call-to-action button',
-                reason: 'Improves user engagement and guides users to key content.',
-            }},
-            {{
-                key: '2',
-                area: 'Navigation Menu',
-                suggestion: 'Simplify menu structure',
-                reason: 'Helps users find content faster and reduces cognitive load.',
-            }},
-            {{
-                key: '3',
-                area: 'Accessibility',
-                suggestion: 'Add alt text for all images',
-                reason: 'Ensures compliance with WCAG and improves screen reader support.',
-            }},
-            ]
-
-           
-       
-    )
-        
-        print("SECTION:", contentclarity_output)
-        match = re.search(r'(\[\s*(\{.*?\},?\s*)+\])', contentclarity_output, re.DOTALL)
-
-        print(match)
-        if match:
-            json_str = match.group(1)  # grab just the JSON array
-            safe_json = re.sub(r'\\(?![nrt"\\/])', r'\\\\', json_str)
-
-            try:
-                data = json.loads(safe_json)
-                print(data)
-            except json.JSONDecodeError as e:
-                print("JSON parsing error:", e)
-        else:
-            print("Pattern not found.")
-        
-
-"""
