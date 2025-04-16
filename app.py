@@ -9,6 +9,10 @@ import os
 import pandas as pd
 import re 
 
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1") 
+S3_BUCKET_NAME = "nj-ai-votes-image"
+
+s3_client = boto3.client("s3", region_name="us-east-1")
 
 #use playwright to capture screen shot 
 def capture_screenshot(url, filepath="screenshot.png"):
@@ -46,7 +50,7 @@ def process_image_with_openai(image_url):
 
     input_text = f"""Analyze this webpage screenshot and provide improvements for the layout of the page based off of the following guidelines: {layout}. \
                 For each suggestion, provide an example of a part of the site that could be improved. Also cite specific guidelines in each suggestion. \
-                If you cannot provide a specific element on the webpage as an example, do not include the suggestion. 
+                If you cannot provide a specific element on the webpage as an example, do not include the suggestion. Do not include additional text and 
                 Format the output in JSON, using the following structure:
 
                     const data = [
@@ -136,6 +140,7 @@ def get_text_chunks(url):
             seen.add(chunk)
             unique_chunks.append(chunk)
     
+    # currently 10 unique checks --> 10 is printing out 
     print(len(unique_chunks))
 
     return unique_chunks
@@ -193,6 +198,19 @@ def get_pred(scrapped_data, prompt):
 
     return assistant_response
 
+
+
+def webdesign_extract_text(input_text):
+    """
+    Extracts all substrings enclosed in square brackets (including the brackets themselves).
+    Args:
+        input_text (str): The input string containing potential bracketed content.
+    Returns:
+        str: A single string with only the bracketed content preserved.
+    """
+    matches = re.findall(r'\[[^\[\]]*\]', input_text)
+    return ''.join(matches)
+
 bedrock_client = boto3.client("bedrock-runtime", region_name="us-east-1")
 model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"
 
@@ -204,7 +222,7 @@ if "messages" not in st.session_state:
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
-
+#prompt is the url 
 if prompt := st.chat_input():
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
@@ -223,18 +241,48 @@ if prompt := st.chat_input():
 
 
 
-# screenshot code and providing html improvements 
-
-
+    # screenshot code and providing html improvements 
     # takes a picture and saves to s3 bucket 
     screenshot_path = capture_screenshot(prompt)
     s3_url = upload_to_s3(screenshot_path, S3_BUCKET_NAME)
     st.image(s3_url, caption="Website Screenshot")
     result = process_image_with_openai(s3_url)
 
-    #result is format  ```json [...] ```
-    
-    print("WEBDESIGN IMPROVEMENTS:", result )
+    #result is format  ```json [...] ``` need to do testing 
+    cleaned_webdesign = webdesign_extract_text(result)
+
     st.write("OpenAI Response:\n", result)
 
-    get_pred(get_pure_source(prompt), f"Provide suggestions for improving the provided HTML to align with WCAG 2.1 AA standards. Cite specific examples of HTML that could be improved. Cite every single instance of HTML that could be improved that you find. Show the original and provide a revised version. ")
+    accessibility = get_pred(get_pure_source(prompt), f"""Provide suggestions for improving the provided HTML to align with WCAG 2.1 AA standards. Cite specific examples of HTML that could be improved. Cite every single instance of HTML that could be improved that you find. Show the original and provide a revised version. 
+            Do not include any text. Please format as: 
+             const items: CollapseProps['items'] = [
+            {{
+                key: '1',
+                label: 'This is panel header 1',
+                original content: <p>text</p>,
+                revised content: <p>text</p>,
+                explanation: <p>text</p>,
+            }},
+            {{
+                key: '2',
+                label: 'This is panel header 2',
+                original content: <p>text</p>,
+                revised content: <p>text</p>,
+                explanation: <p>text</p>,
+            }},
+            {{
+                key: '3',
+                label: 'This is panel header 3',
+                original content: <p>text</p>,
+                revised content: <p>text</p>,
+                explanation: <p>text</p>,
+            }},
+        ];"""
+    ) 
+
+
+    #generating user persona based on url, need to give a format 
+    generate_user_persona = get_pred(prompt,"Based on the url provided, please create one user persona of someone who would navigate the website" )
+
+    st.write("AI Generated User Persona: ",generate_user_persona )
+
