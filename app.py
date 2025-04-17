@@ -42,7 +42,7 @@ def process_image_with_openai(image_url):
     layout = read_file_text("contentlayoutguide.txt")
 
     #input text 
-    # input_text = "Analyze this webpage screenshot and provide accessibility improvements. Provide suggestions for improving accessability of the page. Reference WCAG guidelines.\
+    # input_text = "Analyze this webpage screenshot and provide accessibility improvements. Provide suggestions for improving accessibility of the page. Reference WCAG guidelines.\
     #             For each suggeston,  provide an example of a part of the site that could be improved  Also cite specific WCAG guidelines in each suggestion. \
     #             If you cannot provide a specific element on the webpage as an example, do not include the suggestion. "
     
@@ -230,7 +230,7 @@ if prompt := st.chat_input():
     scrapped_data = get_text_chunks(prompt)
 
     content_guidlines = read_file_text("contentclarityguide.txt")
-
+    '''
     for section in scrapped_data:
         #get_pred(section, f"Provide suggestions for improving the clarity of the provided website text to align with {content_guidlines}. Cite specific examples of text that could be improved. Cite every single instance of text that could be improved that you find. Show the original and provide a revised version. Please format json code, an example format is: ")
         contentclarity_output = get_pred(
@@ -254,6 +254,8 @@ if prompt := st.chat_input():
     st.write("OpenAI Response:\n", result)
 
     #improving html code / accessibility 
+    '''
+    '''
     accessibility = get_pred(get_pure_source(prompt), f"""Provide suggestions for improving the provided HTML to align with WCAG 2.1 AA standards. Cite specific examples of HTML that could be improved. Cite every single instance of HTML that could be improved that you find. Show the original and provide a revised version. 
             Do not include any text. Please format as: 
              const items: CollapseProps['items'] = [
@@ -280,10 +282,14 @@ if prompt := st.chat_input():
             }},
         ];"""
     ) 
-
-
+'''
+    
     #generating user persona based on url, need to give a format 
-    generate_user_persona = get_pred(prompt,"Based on the url provided, please create one user persona of someone who would navigate the website" )
+    generate_user_persona = get_pred(prompt,f"""Based on the url provided, please create one user persona of someone who would navigate the website. 
+                                     Include their age, gender, occupation, income level, education level, tech savviness, needs or end goals from the website, 
+                                     challenges they may have using the website. 
+                                     
+                                     """ )
 
     st.write("AI Generated User Persona: ",generate_user_persona )
 

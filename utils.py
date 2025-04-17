@@ -186,7 +186,7 @@ def webdesign_extract_text(input_text):
     matches = re.findall(r'\[[^\[\]]*\]', input_text)
     return ''.join(matches)
 
-##Code Accessability Functions
+##Code accessibility Functions
 
 def get_pure_source(url):
     try:

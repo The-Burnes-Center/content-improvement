@@ -6,7 +6,18 @@ app = Flask(__name__)
 
 @app.route('/audience')
 def Audience():
-    pass
+    url = request.args.get('url')
+    # should format 
+    if url:
+        generate_user_persona = get_pred(url,f"""Based on the url provided, please create one user persona of someone who would navigate the website. 
+                                     Include their age, gender, occupation, income level, education level, tech savviness, needs or end goals from the website, 
+                                     challenges they may have using the website. """ )
+        
+        return generate_user_persona
+    
+    else: 
+        return "No URL provided", 400
+    
 
 @app.route('/content')
 def improveContent():
@@ -46,7 +57,7 @@ def webDesign():
     else:
         return "No URL provided", 400
     
-@app.route('/accessability')
+@app.route('/accessibility')
 def codeAccessibility(): 
 
     url = request.args.get('url')
@@ -78,7 +89,6 @@ def codeAccessibility():
         ];"""
     ) 
         return accessibility
-
 
     else: 
         return "No URL provided", 400
