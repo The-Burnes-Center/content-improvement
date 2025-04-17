@@ -241,7 +241,7 @@ if prompt := st.chat_input():
 
 
 
-    # screenshot code and providing html improvements 
+    # screenshot code 
     # takes a picture and saves to s3 bucket 
     screenshot_path = capture_screenshot(prompt)
     s3_url = upload_to_s3(screenshot_path, S3_BUCKET_NAME)
@@ -253,6 +253,7 @@ if prompt := st.chat_input():
 
     st.write("OpenAI Response:\n", result)
 
+    #improving html code / accessibility 
     accessibility = get_pred(get_pure_source(prompt), f"""Provide suggestions for improving the provided HTML to align with WCAG 2.1 AA standards. Cite specific examples of HTML that could be improved. Cite every single instance of HTML that could be improved that you find. Show the original and provide a revised version. 
             Do not include any text. Please format as: 
              const items: CollapseProps['items'] = [
