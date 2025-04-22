@@ -46,6 +46,8 @@ def analyze_accessibility(url): #add format to prompt
         #response_model = AccessibilitySuggestion,
     )
 
+    output = []
+
 
     for item in resp:
         assert isinstance(item, AccessibilitySuggestion)
@@ -55,8 +57,13 @@ def analyze_accessibility(url): #add format to prompt
         print(f"Revised Content: {item.revised_content}")
         print(f"Explanation: {item.explanation}")
         print()
+        output.append({"key": item.key,
+                        "label": item.label,
+                        "original_content": item.original_content,
+                        "revised_content": item.revised_content,
+                        "explanation": item.explanation})
 
-    return resp 
+    return output
 
 analyze_accessibility(url1)
 
