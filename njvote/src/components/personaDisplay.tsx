@@ -1,13 +1,16 @@
 import { Input, Button } from 'antd';
 import { useState } from 'react';
+import { LoadingOutlined } from '@ant-design/icons';
 
 const PersonaDisplay = () => {
     const { TextArea } = Input;
 
     const [persona, setPersona] = useState('');
     const [output, setOutput] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const handleAudit = async () => {
+        setLoading(true);
         try {
             const response = await fetch('http://localhost:5000/audience', {
                 method: 'POST',
@@ -21,6 +24,7 @@ const PersonaDisplay = () => {
             }).then(response => response.text()).then(text => {
                 console.log(text);
                 setOutput(text);
+                setLoading(false);
             });
         } catch (err) {
             console.error(err);
@@ -56,7 +60,7 @@ const PersonaDisplay = () => {
                         wordWrap: 'break-word',  
                         display: 'block',
                     }}>
-                        {output}
+                        {loading ? <LoadingOutlined /> : output}
                 </div>
 
             </div>
