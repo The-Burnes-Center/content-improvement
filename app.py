@@ -14,6 +14,9 @@ S3_BUCKET_NAME = "nj-ai-votes-image"
 
 s3_client = boto3.client("s3", region_name="us-east-1")
 
+bedrock_client = boto3.client("bedrock-runtime", region_name="us-east-1")
+model_id = "anthropic.claude-3-haiku-20240307-v1:0"
+
 #use playwright to capture screen shot 
 def capture_screenshot(url, filepath="screenshot.png"):
     with sync_playwright() as p:
@@ -211,8 +214,7 @@ def webdesign_extract_text(input_text):
     matches = re.findall(r'\[[^\[\]]*\]', input_text)
     return ''.join(matches)
 
-bedrock_client = boto3.client("bedrock-runtime", region_name="us-east-1")
-model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"
+
 
 st.title("💬 Chatbot")
 

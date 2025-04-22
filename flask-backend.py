@@ -3,6 +3,9 @@ from utils import *
 
 app = Flask(__name__)
 
+@app.route('/helloworld')
+def helloWorld():
+    print("helloworld")
 
 @app.route('/audience')
 def Audience():
@@ -11,7 +14,7 @@ def Audience():
     if url:
         generate_user_persona = get_pred(url,f"""Based on the url provided, please create one user persona of someone who would navigate the website. 
                                      Include their age, gender, occupation, income level, education level, tech savviness, needs or end goals from the website, 
-                                     challenges they may have using the website. """ )
+                                     challenges they may have using the website.""" )
         
         return generate_user_persona
     
