@@ -1,14 +1,16 @@
 from flask import Flask, request
 from utils import *
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/helloworld')
 def helloWorld():
     print("helloworld")
 
-@app.route('/audience')
-def Audience():
+@app.route('/generate-sample-persona')
+def generate_sample_persona():
     url = request.args.get('url')
     # should format 
     if url:
@@ -20,6 +22,16 @@ def Audience():
     
     else: 
         return "No URL provided", 400
+    
+@app.route('/audience', methods=['POST'])
+def audience():
+    data = request.get_json()
+    url = data.get('url')
+    persona = data.get('persona')
+    if url and persona:
+        return get_pred(get_pure_source(url), f"""Based off of the provided URL, please audit the website for the following user persona: {persona}.""")
+    else:
+        return "No URL or persona provided", 400
     
 
 @app.route('/content')
