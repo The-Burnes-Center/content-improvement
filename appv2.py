@@ -34,7 +34,7 @@ def process_image_with_openai(image_url):
     openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
     #input text 
-    input_text = "Analyze this webpage screenshot and provide accessibility improvements. Provide suggestions for improving accessability of the page. Reference WCAG guidelines.\
+    input_text = "Analyze this webpage screenshot and provide accessibility improvements. Provide suggestions for improving accessibility of the page. Reference WCAG guidelines.\
                 For each suggeston,  provide an example of a part of the site that could be improved  Also cite specific WCAG guidelines in each suggestion. \
                 If you cannot provide a specific element on the webpage as an example, do not include the suggestion. "
     

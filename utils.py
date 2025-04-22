@@ -3,6 +3,10 @@ from bs4 import BeautifulSoup
 import boto3
 import os
 import json
+from playwright.sync_api import sync_playwright
+from openai import OpenAI
+import re 
+
 
 
 bedrock_client = boto3.client("bedrock-runtime", region_name="us-east-1")
@@ -91,3 +95,114 @@ def get_text_chunks(url):
     print(len(unique_chunks))
 
     return unique_chunks
+
+
+## Webdesign Functions
+
+#use playwright to capture screen shot 
+def capture_screenshot(url, filepath="screenshot.png"):
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        page.goto(url)
+        page.screenshot(path=filepath, full_page=True)
+        browser.close()
+
+        return filepath
+
+#uploads image to s3 bucket 
+def upload_to_s3(file_path, bucket_name, object_name=None):
+    """Uploads the screenshot to an S3 bucket and returns its URL."""
+    if object_name is None:
+        object_name = os.path.basename(file_path)
+
+    s3_client.upload_file(file_path, bucket_name, object_name, ExtraArgs={'ACL': 'public-read'})  
+    s3_url = f"https://{bucket_name}.s3.{AWS_REGION}.amazonaws.com/{object_name}"
+    return s3_url
+
+def process_image_with_openai(image_url):
+    openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+    layout = read_file_text("contentlayoutguide.txt")
+
+    #prompt and structured format 
+    input_text = f"""Analyze this webpage screenshot and provide improvements for the layout of the page based off of the following guidelines: {layout}. \
+                For each suggestion, provide an example of a part of the site that could be improved. Also cite specific guidelines in each suggestion. \
+                If you cannot provide a specific element on the webpage as an example, do not include the suggestion. Do not include additional text and 
+                Format the output in JSON, using the following structure:
+                    
+                    const data = [
+                        {{
+                            key: '1',
+                            area: 'Homepage',
+                            suggestion: 'Add a clear call-to-action button',
+                            reason: 'Improves user engagement and guides users to key content.',
+                        }},
+                        {{
+                            key: '2',
+                            area: 'Navigation Menu',
+                            suggestion: 'Simplify menu structure',
+                            reason: 'Helps users find content faster and reduces cognitive load.',
+                        }},
+                        {{
+                            key: '3',
+                            area: 'Accessibility',
+                            suggestion: 'Add alt text for all images',
+                            reason: 'Ensures compliance with WCAG and improves screen reader support.',
+                        }},
+                        ] 
+    
+    
+    
+    """
+
+    completion = openai_client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            #if I wanted to add text guidlines, would i edit this or input text
+            {"role": "system", "content": "You are an AI expert in web accessibility. Analyze the image and provide WCAG-compliant suggestions."},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": input_text},
+                    {"type": "image_url", "image_url": {"url": image_url}}
+                    #{"type": "text", "text": input_text2}
+                ],
+            },
+        ]
+    )
+
+    return completion.choices[0].message.content
+
+
+def webdesign_extract_text(input_text):
+    """
+    Extracts all substrings enclosed in square brackets (including the brackets themselves).
+    Args:
+        input_text (str): The input string containing potential bracketed content.
+    Returns:
+        str: A single string with only the bracketed content preserved.
+    """
+    matches = re.findall(r'\[[^\[\]]*\]', input_text)
+    return ''.join(matches)
+
+##Code accessibility Functions
+
+def get_pure_source(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raise exception for HTTP errors
+        source_code = response.text
+        
+        return source_code
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching the website: {e}")
+
+
+
+
+
+
+
+
