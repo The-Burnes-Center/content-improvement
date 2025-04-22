@@ -21,6 +21,6 @@ def improveContent():
     else:
         return "No URL provided", 400
 
-@app.route('/webdesign')
-def webDesign():
-    
+@app.route('/hello')
+def hello():
+    return "Hello, World!"
