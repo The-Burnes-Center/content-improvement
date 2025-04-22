@@ -1,6 +1,5 @@
 import { Typography, Row, Col } from 'antd';
 import { ExclamationCircleFilled, CheckCircleFilled } from '@ant-design/icons';
-import { useState } from 'react';
 
 const { Text } = Typography;
 
@@ -10,8 +9,13 @@ export interface AccessibilitySuggestionProps {
   explanation: string;
 }
 
-const AccessibilitySuggestion = (props: AccessibilitySuggestionProps) => {
+const preStyle: React.CSSProperties = {
+  whiteSpace: 'pre-wrap',
+  wordBreak: 'break-word',
+  overflow: 'auto',
+};
 
+const AccessibilitySuggestion = (props: AccessibilitySuggestionProps) => {
   return (
     <>
       <Row gutter={16}>
@@ -19,13 +23,13 @@ const AccessibilitySuggestion = (props: AccessibilitySuggestionProps) => {
           <Text strong>
             <ExclamationCircleFilled style={{ color: 'red' }} /> Original
           </Text>
-          <pre>{props.original}</pre>
+          <pre style={preStyle}>{props.original}</pre>
         </Col>
         <Col span={12}>
           <Text strong>
             <CheckCircleFilled style={{ color: 'green' }} /> Revised
           </Text>
-          <pre>{props.revised}</pre>
+          <pre style={preStyle}>{props.revised}</pre>
         </Col>
       </Row>
       <Row gutter={16}>
@@ -34,7 +38,7 @@ const AccessibilitySuggestion = (props: AccessibilitySuggestionProps) => {
           <Text strong>
             <CheckCircleFilled style={{ color: 'green' }} /> Why?
           </Text>
-          <pre>{props.explanation}</pre>
+          <pre style={preStyle}>{props.explanation}</pre>
         </Col>
       </Row>
     </>

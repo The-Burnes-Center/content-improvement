@@ -7,10 +7,6 @@ import json
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/helloworld')
-def helloWorld():
-    print("helloworld")
-
 @app.route('/generate-sample-persona')
 def generate_sample_persona():
     url = request.args.get('url')
@@ -36,9 +32,10 @@ def audience():
         return "No URL or persona provided", 400
     
 
-@app.route('/content')
+@app.route('/content', methods=['POST'])
 def improveContent():
-    url = request.args.get('url')
+    data = request.get_json()
+    url = data.get('url')
     if url:
         scrapped_data = get_text_chunks(url)
 
@@ -49,8 +46,9 @@ def improveContent():
         for section in scrapped_data:
             suggestions.append(get_pred(section, f"Provide suggestions for improving the clarity of the provided website text to align with {content_guidlines}. Cite specific examples of text that could be improved. Cite every single instance of text that could be improved that you find. Show the original and provide a revised version. "))
         
-        return suggestions
+        output = {"oringalText": scrapped_data, "suggestions": suggestions}
 
+        return output
     else:
         return "No URL provided", 400
 

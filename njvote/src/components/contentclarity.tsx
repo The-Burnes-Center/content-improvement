@@ -1,6 +1,36 @@
 import { Row, Col, Card } from 'antd';
+import { useState, useEffect } from 'react';
+
 
 const ContentClarity = () => {
+
+  const [content, setContent] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
+
+    const handleAudit = async () => {
+      try {
+          const response = await fetch('http://localhost:5000/content', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                  url: 'https://www.nj.gov/state/elections/vote.shtml',
+              }),
+          }).then(rsp => rsp.json()).then(rsp => {
+            console.log(rsp)
+            setContent(rsp.oringalText);
+            setSuggestions(rsp.suggestions);
+          })
+      } catch (err) {
+          console.error(err);
+      }
+    };
+  
+    useEffect(() => {
+      handleAudit();
+    }, []);
+
     return (
         <div style={{ padding: '2rem' }}>
           <Row gutter={24}>
@@ -10,6 +40,11 @@ const ContentClarity = () => {
                 title="Original Website Content"
                 style={{ minHeight: '400px' }}
               >
+                {content.map((item, index) => (
+                  <p key={index}>
+                    {item}
+                  </p>
+                ))}
               </Card>
             </Col>
     
@@ -19,12 +54,11 @@ const ContentClarity = () => {
                 title="Suggested Improvements"
                 style={{ minHeight: '400px', backgroundColor: '#f6ffed' }}
               >
-                <p>
-                  ✅ Clear call-to-action buttons for voter registration.<br />
-                  ✅ Integrated search bar for FAQs and resources.<br />
-                  ✅ Highlighted help section with chatbot support.<br />
-                  ✅ Modern layout with accessibility enhancements.
-                </p>
+                {suggestions.map((item, index) => (
+                  <p key={index}>
+                    {item}
+                  </p>
+                ))}
               </Card>
             </Col>
           </Row>
