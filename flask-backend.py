@@ -1,6 +1,8 @@
 from flask import Flask, request
 from utils import *
 from flask_cors import CORS
+from accessibilityStructuredPrompt import analyze_accessibility
+import json
 
 app = Flask(__name__)
 CORS(app)
@@ -72,38 +74,13 @@ def webDesign():
     else:
         return "No URL provided", 400
     
-@app.route('/accessibility')
+@app.route('/accessibility', methods=['POST'])
 def codeAccessibility(): 
-
-    url = request.args.get('url')
+    data = request.get_json()
+    url = data.get('url')
     if url:
-        accessibility = get_pred(get_pure_source(url), f"""Provide suggestions for improving the provided HTML to align with WCAG 2.1 AA standards. Cite specific examples of HTML that could be improved. Cite every single instance of HTML that could be improved that you find. Show the original and provide a revised version. 
-            Do not include any text. Please format as: 
-             const items: CollapseProps['items'] = [
-            {{
-                key: '1',
-                label: 'This is panel header 1',
-                original content: <p>text</p>,
-                revised content: <p>text</p>,
-                explanation: <p>text</p>,
-            }},
-            {{
-                key: '2',
-                label: 'This is panel header 2',
-                original content: <p>text</p>,
-                revised content: <p>text</p>,
-                explanation: <p>text</p>,
-            }},
-            {{
-                key: '3',
-                label: 'This is panel header 3',
-                original content: <p>text</p>,
-                revised content: <p>text</p>,
-                explanation: <p>text</p>,
-            }},
-        ];"""
-    ) 
-        return accessibility
+        print(url)
+        return json.dumps(analyze_accessibility(url))
 
     else: 
         return "No URL provided", 400
