@@ -54,22 +54,18 @@ def analyze_webdesign(url):
 
     for item in resp:
         assert isinstance(item, WebSuggestion)
-        print(f"Key: {item.key}")
-        print(f"Area: {item.area}")
-        print(f"Suggestion: {item.suggestion}")
-        print(f"Reason: {item.reason}")
-        print()
+        # print(f"Key: {item.key}")
+        # print(f"Area: {item.area}")
+        # print(f"Suggestion: {item.suggestion}")
+        # print(f"Reason: {item.reason}")
+        # print()
         output.append({"key": item.key,
                         "area": item.area,
                         "suggestion": item.suggestion,
-                        "reason": item.reason,})
+                        "reason": item.reason})
 
     return output
 
     
 
-    return resp
-
-
-analyze_webdesign(url1)
     
