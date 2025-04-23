@@ -94,7 +94,7 @@ function App() {
                 </Tooltip>
               </Radio.Group>
             </div>
-            {tab == "audience" ? <Audience /> : <></>}
+            {tab == "audience" ? <Audience projectId={1}/> : <></>}
             {tab == "clarity" ? <ContentClarity/> : <></>} 
             {tab == "design" ? <WebDesign/> : <></>}
             {tab == "accessibility" ? <Accessibility/> : <></>}
