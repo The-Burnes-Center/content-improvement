@@ -23,8 +23,8 @@ def analyze_accessibility(url): #add format to prompt
                 [{{
                     key: '1',
                     label: 'This is panel header 1',
-                    original content: <p>text</p>,
-                    revised content: <p>text</p>,
+                    original_content: <p>text</p>,
+                    revised_content: <p>text</p>,
                     explanation: <p>text</p> }}
                     ] '''
 
@@ -51,12 +51,12 @@ def analyze_accessibility(url): #add format to prompt
 
     for item in resp:
         assert isinstance(item, AccessibilitySuggestion)
-        print(f"Key: {item.key}")
-        print(f"Label: {item.label}")
-        print(f"Original Content: {item.original_content}")
-        print(f"Revised Content: {item.revised_content}")
-        print(f"Explanation: {item.explanation}")
-        print()
+        # print(f"Key: {item.key}")
+        # print(f"Label: {item.label}")
+        # print(f"Original Content: {item.original_content}")
+        # print(f"Revised Content: {item.revised_content}")
+        # print(f"Explanation: {item.explanation}")
+        # print()
         output.append({"key": item.key,
                         "label": item.label,
                         "original_content": item.original_content,
@@ -64,8 +64,6 @@ def analyze_accessibility(url): #add format to prompt
                         "explanation": item.explanation})
 
     return output
-
-analyze_accessibility(url1)
 
 
 
