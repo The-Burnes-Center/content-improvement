@@ -9,7 +9,7 @@ const ContentClarity = () => {
 
     const handleAudit = async () => {
       try {
-          const response = await fetch('http://localhost:5000/content', {
+          const response = await fetch('api/content', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',

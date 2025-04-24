@@ -21,7 +21,7 @@ interface WebDesignSuggestion {
     const [suggestions, setSuggestions] = useState<WebDesignSuggestion[]>([]);
     const handleAudit = async () => {
       try {
-          const response = await fetch('http://127.0.0.1:5000/webdesign', {
+          const response = await fetch('/api/webdesign', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
