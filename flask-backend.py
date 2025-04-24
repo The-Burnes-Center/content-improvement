@@ -6,10 +6,10 @@ from webDesignStructuredPrompt import analyze_webdesign
 import json
 
 app = Flask(__name__)
-# Set up CORS to allow requests from the frontend
+
 CORS(app, origins=["http://localhost:5173"], supports_credentials=True)
 
-
+#is this also a POST request?
 @app.route('/generate-sample-persona')
 def generate_sample_persona():
     url = request.args.get('url')
@@ -24,7 +24,7 @@ def generate_sample_persona():
     else: 
         return "No URL provided", 400
     
-#@app.route('/audience', methods=['POST'])
+
 @app.route('/audience', methods=['POST', 'OPTIONS'])
 def audience():
     if request.method == 'OPTIONS':
