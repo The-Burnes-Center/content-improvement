@@ -2,14 +2,13 @@ from flask import Flask, request
 from utils import *
 from flask_cors import CORS
 from accessibilityStructuredPrompt import analyze_accessibility
+from webDesignStructuredPrompt import analyze_webdesign
 import json
 
 app = Flask(__name__)
-CORS(app)
+# Set up CORS to allow requests from the frontend
+CORS(app, origins=["http://localhost:5173"], supports_credentials=True)
 
-@app.route('/helloworld')
-def helloWorld():
-    print("helloworld")
 
 @app.route('/generate-sample-persona')
 def generate_sample_persona():
@@ -25,8 +24,12 @@ def generate_sample_persona():
     else: 
         return "No URL provided", 400
     
-@app.route('/audience', methods=['POST'])
+#@app.route('/audience', methods=['POST'])
+@app.route('/audience', methods=['POST', 'OPTIONS'])
 def audience():
+    if request.method == 'OPTIONS':
+        return '', 204  # let preflight pass
+
     data = request.get_json()
     url = data.get('url')
     persona = data.get('persona')
@@ -54,38 +57,33 @@ def improveContent():
     else:
         return "No URL provided", 400
 
-@app.route('/webdesign')
+@app.route('/webdesign', methods=['POST','OPTIONS'])
 def webDesign():
-    url = request.args.get('url')
+    if request.method == 'OPTIONS':
+        return '', 204
+    
+    data = request.get_json()
+    url = data.get('url')
     if url:
-        #create screenshot 
-        screenshot_path = capture_screenshot(url)
-       
-        #upload screenshot to S3 bucket 
-        s3_url = upload_to_s3(screenshot_path, S3_BUCKET_NAME)
-        
-        #process image with open AI
-        result = process_image_with_openai(s3_url)
+        print(url)
+        return json.dumps(analyze_webdesign(url))
 
-        #result is format  ```json [...] ``` need to do testing 
-        clean_webdesign_text= webdesign_extract_text(result)
-
-        return clean_webdesign_text
     else:
         return "No URL provided", 400
     
-@app.route('/accessibility', methods=['POST'])
-def codeAccessibility(): 
+@app.route('/accessibility', methods=['POST','OPTIONS'])
+def codeAccessibility():  
+    if request.method == 'OPTIONS':
+        return '', 204
+
     data = request.get_json()
     url = data.get('url')
     if url:
         print(url)
         return json.dumps(analyze_accessibility(url))
-
+    
     else: 
         return "No URL provided", 400
         
-        
-    
 
 
