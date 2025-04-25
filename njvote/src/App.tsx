@@ -5,7 +5,7 @@ import Audience from './components/audience';
 import { PlusSquareOutlined } from '@ant-design/icons';
 import ContentClarity from './components/contentclarity';
 import WebDesign from './components/webdesign';
-import Accessability from './components/accessability';
+import Accessability from './components/accessibility';
 
 function App() {
 
