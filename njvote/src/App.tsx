@@ -1,5 +1,5 @@
 import './App.css'
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Input, Layout, Menu, Radio, Modal, Button, Tooltip } from "antd";
 import Audience from './components/audience';
 import { PlusSquareOutlined } from '@ant-design/icons';
@@ -7,17 +7,22 @@ import ContentClarity from './components/contentclarity';
 import WebDesign from './components/webdesign';
 import Accessability from './components/accessibility';
 
+interface MenuProps {
+  key: number;
+  label: string;
+}
+
 function App() {
 
   const { Header, Content, Sider } = Layout;
 
-  const { Search } = Input;
-
-  const menuItems = [{key: '1', label: 'Home page'}, {key: '2', label: 'Register page'}]
-
   const [openProjModal, setProjModalOpen] = useState(false);
-
   const [tab, setTab] = useState('audience');
+  const [url, setUrl] = useState('');
+  const [name, setName] = useState('');
+  const [menuItems, setMenuItems] = useState<MenuProps[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+  const [webDevSuggestions, setWebDevSuggestions] = useState<any[]>([]);
 
   const showProjModal = () => {
     setProjModalOpen(true);
@@ -26,6 +31,96 @@ function App() {
   const closeProjModal = () => {
     setProjModalOpen(false);
   }
+
+  useEffect(() => {
+    const fetchPersonas = async () => {
+      try {
+        let menuItemsTemp = [];
+        const response = await fetch(`http://127.0.0.1:5000/get_projects?userId=${1}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const data = await response.json();
+        if (response.ok) {
+          menuItemsTemp = data['projects'].map((item: any) => ({
+            key: String(item[0]),
+            label: item[3],
+          }));
+        } else {
+          console.error('Failed to fetch personas.');
+        }
+        setMenuItems(menuItemsTemp);
+        if (menuItemsTemp.length > 0) {
+          setSelectedProjectId(Number(menuItemsTemp[0].key));
+        }
+      } catch (err) {
+        console.error(err);
+        console.error('An error occurred while fetching personas.');
+      }
+    };
+    fetchPersonas();
+  }, []);
+
+  const createProject = async () => {
+    try {
+      // Step 1: Add the project
+      const response = await fetch('/api/add_project', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: 1,
+          url: url,
+          name: name,
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to create project');
+      }
+  
+      // Step 2: Call /webdesign with the URL
+      const webdesignResponse = await fetch('/api/webdesign', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: url,
+          projectId: selectedProjectId,
+        }),
+      });
+  
+      if (!webdesignResponse.ok) {
+        throw new Error('Failed to analyze web design');
+      }
+  
+      const webdesignData = await webdesignResponse.json();
+
+      if (Array.isArray(webdesignData)) {
+        const withKeys = webdesignData.map(item => ({
+          ...item,
+          key: item.key.toString(), // Convert int -> string for AntD
+        }));
+        setWebDevSuggestions(withKeys);
+      } else {
+        console.error("Unexpected response format:", webdesignData);
+      }
+  
+      // Now you have the feedback saved locally
+      console.log('Web Design Feedback:', webdesignData);
+  
+      // Step 3: Close the modal
+      closeProjModal();
+  
+      // (Optional) You could also do something with webdesignData here
+    } catch (err) {
+      console.error('Error creating project or analyzing web design:', err);
+    }
+  };
+  
+  
 
   return (
     <>
@@ -94,9 +189,9 @@ function App() {
                 </Tooltip>
               </Radio.Group>
             </div>
-            {tab == "audience" ? <Audience projectId={1} /> : <></>}
+            {tab == "audience" ? <Audience projectId={10} /> : <></>}
             {tab == "clarity" ? <ContentClarity/> : <></>} 
-            {tab == "design" ? <WebDesign/> : <></>}
+            {tab == "design" ? <WebDesign webDevSuggestions={webDevSuggestions}/> : <></>}
             {tab == "accessability" ? <Accessability/> : <></>}
           </Content>
         </Layout>
@@ -108,13 +203,13 @@ function App() {
         onOk={closeProjModal}
         onCancel={closeProjModal}
         footer={[
-          <Button type="primary" onClick={closeProjModal}>
+          <Button type="primary" onClick={createProject}>
             Create Project
           </Button>
         ]}
       >
-        <Input placeholder="Project Name" />
-        <Input placeholder="URL" style={{marginTop: '1rem'}} />
+        <Input placeholder="Project Name" value={name} onChange={(e) => setName(e.target.value)} />
+        <Input placeholder="URL" style={{marginTop: '1rem'}} value={url} onChange={(e) => setUrl(e.target.value)} />
       </Modal>
     </>
   )

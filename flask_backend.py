@@ -179,8 +179,12 @@ def webDesign():
     ----------------
     Analyzes the design of a webpage by capturing a screenshot and processing it with an AI model.
 
-    Query Parameters:
-        url (str): The URL of the webpage to be analyzed.
+    Expected JSON payload:
+    {
+        "url": str  # The URL of the webpage whose content should be analyzed
+        "projectId": int # The ID of the project associated with the audit
+    }
+
 
     Behavior:
     - Retrieves the 'url' query parameter.
@@ -188,6 +192,8 @@ def webDesign():
     - Uploads the screenshot to an S3 bucket.
     - Sends the image URL to an OpenAI model for analysis.
     - Extracts and cleans up the design feedback from the model output.
+    - Saves the feedback to the database.
+    - Returns the cleaned feedback as a JSON response.
 
     Returns:
         - A cleaned string containing web design feedback if a valid URL is provided.
@@ -203,9 +209,45 @@ def webDesign():
     
     data = request.get_json()
     url = data.get('url')
+    projectId = data.get('projectId')
     if url:
         print(url)
-        return json.dumps(analyze_webdesign(url))
+        output = json.dumps(analyze_webdesign(url))
+        output = json.loads(output)
+        print(output)
+
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO WebDesignAudit (projectId) VALUES (%s)", (projectId,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        # Retrieve the ID of the newly created WebDesignAudit
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        cursor.execute("SELECT LAST_INSERT_ID()")
+        webDesignAuditId = cursor.fetchone()[0]
+        cursor.close()
+        conn.close()
+
+        # Insert each suggestion into the WebDesignSuggestion table
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        for suggestion in output:
+            area = suggestion["area"]
+            suggestion_text = suggestion["suggestion"]
+            reason = suggestion["reason"]
+            cursor.execute(
+            "INSERT INTO WebDesignSuggestion (webDesignAuditId, area, suggestion, reason) VALUES (%s, %s, %s, %s)",
+            (webDesignAuditId, area, suggestion_text, reason)
+            )
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+
+        return output
 
     else:
         return "No URL provided", 400

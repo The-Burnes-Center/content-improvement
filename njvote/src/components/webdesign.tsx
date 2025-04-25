@@ -7,80 +7,89 @@ import {
   BulbOutlined,
 } from '@ant-design/icons';
 
-
 const { Title } = Typography;
 
 interface WebDesignSuggestion {
   label: string;
-  area:string;
+  area: string;
   suggestion: string;
   reason: string;
-
 }
-  const WebDesign = () => {
-    const [suggestions, setSuggestions] = useState<WebDesignSuggestion[]>([]);
-    const handleAudit = async () => {
-      try {
-          const response = await fetch('/api/webdesign', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                  url: 'https://www.nj.gov/state/elections/vote.shtml',
-              }),
-            });
-            const data = await response.json();
-            console.log("Fetched data:", data);
-            
-      
-            if (Array.isArray(data)) {
-              const withKeys = data.map(item => ({
-                ...item,
-                key: item.key.toString(), // Convert int -> string for AntD
-              }));
-              setSuggestions(withKeys);
-            } else {
-              console.error("Unexpected response format:", data);
-            }
-          } catch (err) {
-            console.error("Error fetching audit:", err);
-          }
-        };
-        useEffect(() => {
-          handleAudit();
-        }, []);
-              
-const columns = [
-  {
-    title: (
-      <span>
-        <SearchOutlined /> Area
-      </span>
-    ),
-    dataIndex: 'area',
-    key: 'area',
-    render: (text: string) => <strong>{text}</strong>,
-  },
-  {
-    title: (
-      <span>
-        <ToolOutlined /> Suggestion
-      </span>
-    ),
-    dataIndex: 'suggestion',
-    key: 'suggestion',
-  },
-  {
-    title: (
-      <span>
-        <BulbOutlined /> Reason
-      </span>
-    ),
-    dataIndex: 'reason',
-    key: 'reason',
-  },
-];
+
+export interface WebDesignProps {
+  webDevSuggestions: WebDesignSuggestion[];
+}
+
+const WebDesign = (props: WebDesignProps) => {
+  const [suggestions, setSuggestions] = useState<WebDesignSuggestion[]>(props.webDevSuggestions);
+
+  useEffect(() => {
+    setSuggestions(props.webDevSuggestions);
+  }
+  , [props.webDevSuggestions]);
+
+  // const handleAudit = async () => {
+  //   try {
+  //     const response = await fetch('/api/webdesign', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         url: 'https://www.nj.gov/state/elections/vote.shtml',
+  //       }),
+  //     });
+  //     const data = await response.json();
+  //     console.log("Fetched data:", data);
+
+  //     if (Array.isArray(data)) {
+  //       const withKeys = data.map(item => ({
+  //         ...item,
+  //         key: item.key.toString(), // Convert int -> string for AntD
+  //       }));
+  //       setSuggestions(withKeys);
+  //     } else {
+  //       console.error("Unexpected response format:", data);
+  //     }
+  //   } catch (err) {
+  //     console.error("Error fetching audit:", err);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   handleAudit();
+  // }, []);
+
+  const columns = [
+    {
+      title: (
+        <span>
+          <SearchOutlined /> Area
+        </span>
+      ),
+      dataIndex: 'area',
+      key: 'area',
+      render: (text: string) => <strong>{text}</strong>,
+    },
+    {
+      title: (
+        <span>
+          <ToolOutlined /> Suggestion
+        </span>
+      ),
+      dataIndex: 'suggestion',
+      key: 'suggestion',
+    },
+    {
+      title: (
+        <span>
+          <BulbOutlined /> Reason
+        </span>
+      ),
+      dataIndex: 'reason',
+      key: 'reason',
+    },
+  ];
 
   return (
     <div style={{ padding: '1rem' }}>
