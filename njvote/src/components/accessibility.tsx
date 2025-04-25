@@ -17,7 +17,7 @@ const Accessibility = () => {
 
   const handleAudit = async () => {
     try {
-        await fetch('/api/accessibility', {
+        const response = await fetch('api/webdesign', {
 
             method: 'POST',
             headers: {
