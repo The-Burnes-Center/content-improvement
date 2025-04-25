@@ -17,7 +17,11 @@ const Accessibility = () => {
 
   const handleAudit = async () => {
     try {
+<<<<<<< Updated upstream
         const response = await fetch('http://127.0.0.1:5000/accessibility', {
+=======
+        await fetch('/api/accessibility', {
+>>>>>>> Stashed changes
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

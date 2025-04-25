@@ -93,6 +93,8 @@ def get_text_chunks(url):
             unique_chunks.append(chunk)
     
     print(len(unique_chunks))
+    for i, chunk in enumerate(unique_chunks):
+        print(f'Chunk {i+1} size: {len(chunk)}')
 
     return unique_chunks
 
