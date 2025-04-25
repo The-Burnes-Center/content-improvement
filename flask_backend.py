@@ -78,12 +78,15 @@ def audience():
     {
         "url": str,       # The URL of the website to audit
         "persona": str    # A description of the target user persona (e.g., "first-time voter", "elderly user")
+        "personaAuditId": int # The ID of the persona audit to update
     }
 
     Behavior:
     - Extracts the 'url' and 'persona' from the request body.
     - Retrieves the raw source content of the webpage using `get_pure_source(url)`.
     - Uses a predictive model (`get_pred`) to generate a user-specific audit based on the provided persona.
+    - Updates the PersonaAudit table in the database with the new persona and audit output.
+    - Returns the generated audit commentary.
 
     Returns:
         str: AI-generated audit commentary tailored to the persona and website content.
@@ -100,8 +103,18 @@ def audience():
     data = request.get_json()
     url = data.get('url')
     persona = data.get('persona')
+    personaAuditId = data.get('personaAuditId')
     if url and persona:
-        return get_pred(get_pure_source(url), f"""Based off of the provided URL, please audit the website for the following user persona: {persona}.""")
+        output = get_pred(get_pure_source(url), f"""Based off of the provided URL, please audit the website for the following user persona: {persona}.""")
+
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE PersonaAudit SET persona = %s, output = %s WHERE personaAuditId = %s", (persona, output, personaAuditId))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return output
     else:
         return "No URL or persona provided", 400
     

@@ -22,6 +22,7 @@ const Audience = ({ projectId }: AudienceProps) => {
   const [useAIPersonaGen, setUseAIPersonaGen] = useState(false);
   const [personaName, setPersonaName] = useState('');
 
+
   useEffect(() => {
     const fetchPersonas = async () => {
       try {
@@ -110,6 +111,19 @@ const Audience = ({ projectId }: AudienceProps) => {
     setUseAIPersonaGen(false);
   };
 
+  const updatePersonaField = (id: number, field: 'persona' | 'output', value: string) => {
+    setPersonas((prevPersonas) =>
+      prevPersonas.map((p) =>
+        parseInt(p.key, 10) === id ? { ...p, [field]: value } : p
+      )
+    );
+    if (selectedPersona && parseInt(selectedPersona.key, 10) === id) {
+      setSelectedPersona((prev) => prev ? { ...prev, [field]: value } : prev);
+    }
+  };
+  
+  
+
   return (
     <>
       <div style={{ marginLeft: '2rem' }}>
@@ -127,6 +141,7 @@ const Audience = ({ projectId }: AudienceProps) => {
         persona={selectedPersona?.persona}
         output={selectedPersona?.output}
         id={selectedPersona?.key ? parseInt(selectedPersona.key, 10) : undefined}
+        updatePersonaField={updatePersonaField}
          />
 
       <Modal
