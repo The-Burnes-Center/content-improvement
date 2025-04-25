@@ -64,10 +64,3 @@ def analyze_accessibility(url): #add format to prompt
                         "explanation": item.explanation})
 
     return output
-
-
-
-
-
-
-

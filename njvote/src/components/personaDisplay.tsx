@@ -1,18 +1,31 @@
 import { Input, Button } from 'antd';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
 
-const PersonaDisplay = () => {
+export interface PersonaDisplayProps {
+    persona: string | undefined;
+    output: string | undefined;
+    id: number | undefined;
+}
+
+const PersonaDisplay = (props: PersonaDisplayProps) => {
     const { TextArea } = Input;
 
-    const [persona, setPersona] = useState('');
-    const [output, setOutput] = useState('');
+    const [persona, setPersona] = useState(props.persona);
+    const [output, setOutput] = useState(props.output);
+    const [id, setId] = useState(props.id);
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        setPersona(props.persona);
+        setOutput(props.output);
+        setId(props.id);
+    }, [props.persona, props.output]);
 
     const handleAudit = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://127.0.0.1:5000/audience', {
+            const response = await fetch('http://localhost:5000/audience', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -20,6 +33,7 @@ const PersonaDisplay = () => {
                 body: JSON.stringify({
                     url: 'https://www.nj.gov/state/elections/vote.shtml',
                     persona: persona,
+                    personaAuditId: id
                 }),
             }).then(response => response.text()).then(text => {
                 console.log(text);

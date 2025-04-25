@@ -5,7 +5,7 @@ import Audience from './components/audience';
 import { PlusSquareOutlined } from '@ant-design/icons';
 import ContentClarity from './components/contentclarity';
 import WebDesign from './components/webdesign';
-import Accessibility from './components/accessibility'
+import Accessability from './components/accessability';
 
 function App() {
 
@@ -90,14 +90,14 @@ function App() {
                   <Radio.Button value="web-design" onClick={() => setTab("design")}>Web Design</Radio.Button>
                 </Tooltip>
                 <Tooltip title="Make sure your content is aligned with WCAG guidelines" placement="bottom">
-                  <Radio.Button value="accessibility" onClick={() => setTab("accessibility")}>Code Accessibility</Radio.Button>
+                  <Radio.Button value="accessability" onClick={() => setTab("accessability")}>Code Accessability</Radio.Button>
                 </Tooltip>
               </Radio.Group>
             </div>
-            {tab == "audience" ? <Audience projectId={1}/> : <></>}
+            {tab == "audience" ? <Audience projectId={1} /> : <></>}
             {tab == "clarity" ? <ContentClarity/> : <></>} 
             {tab == "design" ? <WebDesign/> : <></>}
-            {tab == "accessibility" ? <Accessibility/> : <></>}
+            {tab == "accessability" ? <Accessability/> : <></>}
           </Content>
         </Layout>
       </Layout>

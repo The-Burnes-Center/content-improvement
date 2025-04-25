@@ -7,15 +7,17 @@ interface AudienceProps {
   projectId: number;
 }
 
-const Audience = ({ projectId }: AudienceProps) => {
-  const personas: MenuProps['items'] = [
-    { key: '1', label: 'Voter' },
-    { key: '2', label: 'Election Official' },
-    { type: 'divider' },
-    { key: 'new', label: 'New User Persona' },
-  ];
+interface Persona {
+  key: string;
+  label: string,
+  output: string,
+  persona: string
+}
 
-  const [selectedPersona, setSelectedPersona] = useState(personas[0]?.label as string);
+const Audience = ({ projectId }: AudienceProps) => {
+
+  const [personas, setPersonas] = useState<Persona[]>([]);
+  const [selectedPersona, setSelectedPersona] = useState<Persona | null>(personas[0] || null);
   const [openPersonaModal, setOpenPersonaModal] = useState(false);
   const [useAIPersonaGen, setUseAIPersonaGen] = useState(false);
   const [personaName, setPersonaName] = useState('');
@@ -23,20 +25,28 @@ const Audience = ({ projectId }: AudienceProps) => {
   useEffect(() => {
     const fetchPersonas = async () => {
       try {
-        const response = await fetch(`/api/get_personas?projectId=${projectId}`, {
+        let personaItems: MenuProps['items'] = [];
+        const response = await fetch(`http://127.0.0.1:5000/get_personas?projectId=${projectId}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
         const data = await response.json();
         if (response.ok) {
-          const personaItems = data.map((item: any) => ({
-            key: item.id,
-            label: item.name,
+          personaItems = data['personas'].map((item: any) => ({
+            key: String(item[0]),
+            label: item[1],
+            output: item[4],
+            persona: item[3],
           }));
-          setSelectedPersona(personaItems[0]?.label as string);
+          personaItems?.push({ type: 'divider' });
+          personaItems?.push({ key: 'new', label: 'New User Persona' });
         } else {
           message.error('Failed to fetch personas.');
         }
+        console.log(personaItems)
+        setPersonas((personaItems || []).filter((item): item is Persona => !!item && 'key' in item && 'label' in item));
+        const firstPersona = personaItems?.find((item): item is Persona => !!item && 'label' in item);
+        setSelectedPersona(firstPersona || null);
       } catch (err) {
         console.error(err);
         message.error('An error occurred while fetching personas.');
@@ -60,11 +70,12 @@ const Audience = ({ projectId }: AudienceProps) => {
   };
 
   const handleMenuClick: MenuProps['onClick'] = (e) => {
-    const selectedItem = personas.find(item => item?.key === e.key);
+    const selectedItem = personas?.find(item => item?.key === e.key);
+    console.log(e.key)
     if (e.key === 'new') {
       showPersonaModal();
     } else if (selectedItem && 'label' in selectedItem) {
-      setSelectedPersona(selectedItem.label as string);
+      setSelectedPersona(selectedItem);
     }
   };
 
@@ -78,6 +89,14 @@ const Audience = ({ projectId }: AudienceProps) => {
 
       if (res.ok) {
         message.success('Persona created successfully!');
+        const newPersona = { key: String(Date.now()), label: personaName, output: '', persona: '' };
+        setPersonas((prevPersonas) => [
+                  ...(prevPersonas ?? []).slice(0, -2), // Exclude the last two items (divider and "New User Persona")
+                  newPersona,
+                  { key: 'divider', label: 'Divider', output: '', persona: '' },
+                  { key: 'new', label: 'New User Persona', output: '', persona: '' },
+                ]);
+        setSelectedPersona(newPersona);
         closePersonaModal();
       } else {
         message.error('Failed to create persona.');
@@ -97,14 +116,18 @@ const Audience = ({ projectId }: AudienceProps) => {
         <Dropdown menu={{ items: personas, onClick: handleMenuClick }} trigger={['click']}>
           <a onClick={(e) => e.preventDefault()}>
             <Space>
-              {selectedPersona}
+              {selectedPersona?.label}
               <DownOutlined />
             </Space>
           </a>
         </Dropdown>
       </div>
 
-      <PersonaDisplay />
+      <PersonaDisplay 
+        persona={selectedPersona?.persona}
+        output={selectedPersona?.output}
+        id={selectedPersona?.key ? parseInt(selectedPersona.key, 10) : undefined}
+         />
 
       <Modal
         open={openPersonaModal}

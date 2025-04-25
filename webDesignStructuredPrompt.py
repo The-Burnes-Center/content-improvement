@@ -2,9 +2,13 @@ import instructor
 from pydantic import BaseModel, Field 
 from utils import * 
 from typing import List
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 url1 = 'https://www.nj.gov/state/elections/vote.shtml'
-openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 client = instructor.from_openai(openai_client)
 
 class WebSuggestion(BaseModel):
