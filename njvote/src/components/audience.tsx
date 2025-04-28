@@ -4,7 +4,7 @@ import PersonaDisplay from './personaDisplay';
 import { Space, Dropdown, MenuProps, Modal, Button, Input, Checkbox, message } from 'antd';
 
 interface AudienceProps {
-  projectId: number;
+  projectId: number | null;
 }
 
 interface Persona {

@@ -160,6 +160,9 @@ function App() {
                 defaultOpenKeys={['sub1']}
                 style={{ height: '100%' }}
                 items={menuItems}
+                onClick={(e) => {
+                  setSelectedProjectId(Number(e.key));
+                }}
               />
           </Sider>
           <Content
@@ -189,7 +192,7 @@ function App() {
                 </Tooltip>
               </Radio.Group>
             </div>
-            {tab == "audience" ? <Audience projectId={10} /> : <></>}
+            {tab == "audience" ? <Audience projectId={selectedProjectId} /> : <></>}
             {tab == "clarity" ? <ContentClarity/> : <></>} 
             {tab == "design" ? <WebDesign webDevSuggestions={webDevSuggestions}/> : <></>}
             {tab == "accessability" ? <Accessability/> : <></>}

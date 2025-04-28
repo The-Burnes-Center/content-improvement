@@ -413,7 +413,7 @@ def get_personas():
     Retrieves all personas for a given projectId from the PersonaAudit table in the database.
 
     Query Parameters:
-    - projectId (int): The ID of the project to filter personas by.
+    - projectId (int): The ID of the user to filter personas by.
 
     Behavior:
     - Connects to the MySQL database.
@@ -426,13 +426,13 @@ def get_personas():
     Note:
         This function assumes that the PersonaAudit table exists and has valid data.
     """
-    project_id = request.args.get('projectId')
-    if not project_id:
-        return "No projectId provided", 400
+    projectId = request.args.get('projectId')
+    if not projectId:
+        return "No userId provided", 400
 
     conn = mysql.connect()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM PersonaAudit WHERE projectId = %s", (project_id,))
+    cursor.execute("SELECT * FROM PersonaAudit WHERE projectId = %s", (projectId,))
     personas = cursor.fetchall()
     cursor.close()
     conn.close()
