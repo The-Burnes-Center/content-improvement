@@ -28,10 +28,10 @@ const ContentClarity = () => {
 
       const data = await response.json();
       console.log(data);
-      const contentArray: Content[] = data.originalText.map((text: string, index: number) => ({
+      const contentArray: Content[] = data.map((item:any, index:number) => ({
         key: index,
-        original: text,
-        suggestion: data.suggestions?.[index] || '',
+        original: item.original_content,
+        suggestion: item.suggestion,
       }));
       setContent(contentArray);
 

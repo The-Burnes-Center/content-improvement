@@ -150,19 +150,26 @@ def improveContent():
     url = data.get('url')
     if url:
         print(url)
-        scrapped_data = get_text_chunks(url)
+
+        scrapped_data = chunk_html(url)
 
         content_guidlines = read_file_text("contentclarityguide.txt")
 
         suggestions = []
 
+        # testing purposes
+        # i = 0
+
         for section in scrapped_data:
+    
+            #print(f"here {i+1}")
+            sugesstions_list  = anaylze_content_clarity(section, content_guidlines)
+            for item in sugesstions_list:
+                suggestions.append(item)
 
-            suggestions.append(anaylze_content_clarity(section, content_guidlines)) 
-
-        print(suggestions[0])
-        
-        return suggestions
+            #i += 1
+            
+        return suggestions  
     else:
         return "No URL provided", 400
 
