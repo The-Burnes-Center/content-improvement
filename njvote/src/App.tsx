@@ -5,7 +5,7 @@ import Audience from './components/audience';
 import { PlusSquareOutlined } from '@ant-design/icons';
 import ContentClarity from './components/contentclarity';
 import WebDesign from './components/webdesign';
-import Accessability from './components/accessibility';
+import Accessibility from './components/accessibility';
 
 interface MenuProps {
   key: number;
@@ -23,6 +23,7 @@ function App() {
   const [menuItems, setMenuItems] = useState<MenuProps[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [webDevSuggestions, setWebDevSuggestions] = useState<any[]>([]);
+  const [allProjects, setAllProjects] = useState<any[]>([]);
 
   const showProjModal = () => {
     setProjModalOpen(true);
@@ -43,7 +44,7 @@ function App() {
         const data = await response.json();
         if (response.ok) {
           menuItemsTemp = data['projects'].map((item: any) => ({
-            key: String(item[0]),
+            key: item[0],
             label: item[3],
           }));
         } else {
@@ -53,6 +54,7 @@ function App() {
         if (menuItemsTemp.length > 0) {
           setSelectedProjectId(Number(menuItemsTemp[0].key));
         }
+        setAllProjects(data['projects']);
       } catch (err) {
         console.error(err);
         console.error('An error occurred while fetching personas.');
@@ -75,6 +77,22 @@ function App() {
           name: name,
         }),
       });
+
+      let newProjectId = 0;
+
+      if (response.ok) {
+        const data = await response.json();
+        const newMenuItem = {
+          key: String(data['project'][0]),
+          label: name,
+        };
+        setMenuItems((prevMenuItems) => [...prevMenuItems, { ...newMenuItem, key: Number(newMenuItem.key) }]);
+        newProjectId = data['project'][0]; // Assuming the API returns the new project's ID as `projectId`
+        console.log('New Project ID:', newProjectId);
+        setSelectedProjectId(newProjectId);
+      } else {
+        throw new Error('Failed to create project');
+      }
   
       if (!response.ok) {
         throw new Error('Failed to create project');
@@ -88,7 +106,7 @@ function App() {
         },
         body: JSON.stringify({
           url: url,
-          projectId: selectedProjectId,
+          projectId: newProjectId,
         }),
       });
   
@@ -110,6 +128,20 @@ function App() {
   
       // Now you have the feedback saved locally
       console.log('Web Design Feedback:', webdesignData);
+
+      const accessabilityResponse = await fetch('/api/accessibility', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: url,
+          projectId: newProjectId,
+        }),
+      });
+      if (!accessabilityResponse.ok) {
+        throw new Error('Failed to analyze accessability');
+      }
   
       // Step 3: Close the modal
       closeProjModal();
@@ -173,7 +205,7 @@ function App() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <h2 style={{ marginRight: '2%' }}>Project URL: URL here</h2>
+              <h2>Project URL: {allProjects.find(project => project[0] === selectedProjectId)?.[2] || "No URL available"}</h2>
               {/* <Search placeholder='WEBSITE URL' style={{ width: '20rem' }} enterButton={<RightOutlined/>} /> */}
             </div>
             <div className='flex-center'>
@@ -188,14 +220,14 @@ function App() {
                   <Radio.Button value="web-design" onClick={() => setTab("design")}>Web Design</Radio.Button>
                 </Tooltip>
                 <Tooltip title="Make sure your content is aligned with WCAG guidelines" placement="bottom">
-                  <Radio.Button value="accessability" onClick={() => setTab("accessability")}>Code Accessability</Radio.Button>
+                  <Radio.Button value="accessibility" onClick={() => setTab("accessibility")}>Code Accessibility</Radio.Button>
                 </Tooltip>
               </Radio.Group>
             </div>
             {tab == "audience" ? <Audience projectId={selectedProjectId} /> : <></>}
             {tab == "clarity" ? <ContentClarity/> : <></>} 
-            {tab == "design" ? <WebDesign webDevSuggestions={webDevSuggestions}/> : <></>}
-            {tab == "accessability" ? <Accessability/> : <></>}
+            {tab == "design" ? <WebDesign projectId={selectedProjectId}/> : <></>}
+            {tab == "accessibility" ? <Accessibility projectId={selectedProjectId}/> : <></>}
           </Content>
         </Layout>
       </Layout>

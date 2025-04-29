@@ -17,48 +17,58 @@ interface WebDesignSuggestion {
 }
 
 export interface WebDesignProps {
-  webDevSuggestions: WebDesignSuggestion[];
+  projectId: number | null;
 }
 
 const WebDesign = (props: WebDesignProps) => {
-  const [suggestions, setSuggestions] = useState<WebDesignSuggestion[]>(props.webDevSuggestions);
+  const [suggestions, setSuggestions] = useState<WebDesignSuggestion[]>([]);
+
+
+  const fetchWebDevSuggestions = async () => {
+    setSuggestions([]);
+    try {
+      const auditResponse = await fetch(`http://127.0.0.1:5000/get_webdesign_audit?projectId=${props.projectId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (auditResponse.ok) {
+        const auditData = await auditResponse.json();
+        const webDesignAuditId = auditData['web_design_audit'][0];
+
+        console.log("webdesignAuditId", webDesignAuditId)
+
+        const response = await fetch(`http://127.0.0.1:5000/get_webdesign_suggestions?webDesignAuditId=${webDesignAuditId}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          const suggestions = data['suggestions'].map((item: any) => ({
+            label: item[0],
+            area: item[2],
+            suggestion: item[3],
+            reason: item[4],
+          }));
+          setSuggestions(suggestions);
+        } else {
+          console.error('Failed to fetch web design suggestions.');
+        }
+
+      } else {
+        console.error('Failed to fetch web design audit.');
+      }
+    } catch (err) {
+      console.error(err);
+      console.error('An error occurred while fetching web design suggestions.');
+    }
+  };
 
   useEffect(() => {
-    setSuggestions(props.webDevSuggestions);
-  }
-  , [props.webDevSuggestions]);
-
-  // const handleAudit = async () => {
-  //   try {
-  //     const response = await fetch('/api/webdesign', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({
-  //         url: 'https://www.nj.gov/state/elections/vote.shtml',
-  //       }),
-  //     });
-  //     const data = await response.json();
-  //     console.log("Fetched data:", data);
-
-  //     if (Array.isArray(data)) {
-  //       const withKeys = data.map(item => ({
-  //         ...item,
-  //         key: item.key.toString(), // Convert int -> string for AntD
-  //       }));
-  //       setSuggestions(withKeys);
-  //     } else {
-  //       console.error("Unexpected response format:", data);
-  //     }
-  //   } catch (err) {
-  //     console.error("Error fetching audit:", err);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   handleAudit();
-  // }, []);
+    console.log('Fetching web design suggestions...');
+    fetchWebDevSuggestions();
+  }, [props.projectId]);
 
   const columns = [
     {

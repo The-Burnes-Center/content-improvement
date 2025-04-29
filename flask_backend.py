@@ -226,7 +226,7 @@ def webDesign():
         # Retrieve the ID of the newly created WebDesignAudit
         conn = mysql.connect()
         cursor = conn.cursor()
-        cursor.execute("SELECT LAST_INSERT_ID()")
+        cursor.execute("SELECT webDesignAuditId FROM WebDesignAudit WHERE projectId = %s ORDER BY webDesignAuditId DESC LIMIT 1", (projectId,))
         webDesignAuditId = cursor.fetchone()[0]
         cursor.close()
         conn.close()
@@ -258,17 +258,22 @@ def codeAccessibility():
     """
     POST /accessibility
     --------------------
-    Analyzes the accessibility of the webpage at the given URL.
+    Analyzes the accessibility of the webpage at the given URL and saves the output to the database.
 
     Expected JSON payload:
     {
-        "url": str  # The URL of the webpage to be analyzed
+        "url": str  # The URL of the webpage to be analyzed,
+        "projectId": int # The ID of the project associated with the audit
     }
 
     Behavior:
     - Extracts the 'url' from the request JSON.
     - If a URL is provided, calls the `analyze_accessibility(url)` function and returns the results as JSON.
     - If no URL is provided, returns a 400 Bad Request response.
+    - Inserts a new record into the AccessibilityAudit table in the database with the projectId.
+    - Retrieves the ID of the newly created AccessibilityAudit.
+    - Inserts each suggestion into the AccessibilitySuggestion table.
+    - Returns the accessibility analysis results as JSON.
 
     Returns:
         - JSON containing accessibility analysis results if a valid URL is provided.
@@ -278,9 +283,45 @@ def codeAccessibility():
         return '', 204  # let preflight pass
     data = request.get_json()
     url = data.get('url')
+    projectId = data.get('projectId')
     if url:
         print(url)
-        return json.dumps(analyze_accessibility(url))
+        output = json.dumps(analyze_accessibility(url))
+        output = json.loads(output)
+
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO AccessibilityAudit (projectId) VALUES (%s)", (projectId,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        # Retrieve the AccessibilityAudit with the highest ID for the given projectId
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        cursor.execute("SELECT accessibilityAuditId FROM AccessibilityAudit WHERE projectId = %s ORDER BY accessibilityAuditId DESC LIMIT 1", (projectId,))
+        accessibilityAuditId = cursor.fetchone()[0]
+        cursor.close()
+        conn.close()
+
+        # Insert each suggestion into the AccessibilitySuggestion table
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        for suggestion in output:
+            print(suggestion)
+            label = suggestion["label"]
+            original = suggestion["original_content"]
+            revised = suggestion["revised_content"]
+            explanation = suggestion["explanation"]
+            cursor.execute(
+                "INSERT INTO AccessibilitySuggestion (accessibilityAuditId, label, original, revised, explanation) VALUES (%s, %s, %s, %s, %s)",
+                (accessibilityAuditId, label, original, revised, explanation)
+            )
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return output
 
     else: 
         return "No URL provided", 400
@@ -329,10 +370,11 @@ def add_project():
     cursor = conn.cursor()
     cursor.execute("INSERT INTO Project (userId, url, name) VALUES (%s, %s, %s)", (userId, url, name))
     conn.commit()
+    cursor.execute("SELECT * FROM Project WHERE projectId = LAST_INSERT_ID()")
+    created_project = cursor.fetchone()
     cursor.close()
     conn.close()
-
-    return "Project added successfully", 201
+    return {"project": created_project}, 201
 
 @app.route('/get_projects', methods=['GET'])
 def get_projects():
@@ -689,7 +731,7 @@ def get_accessibility_audit():
 
     conn = mysql.connect()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM AccessibilityAudit WHERE projectId = %s", (project_id,))
+    cursor.execute("SELECT * FROM AccessibilityAudit WHERE projectId = %s ORDER BY accessibilityAuditId DESC LIMIT 1", (project_id,))
     accessibility_audit = cursor.fetchone()
     cursor.close()
     conn.close()
