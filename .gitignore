@@ -1,2 +1,5 @@
 voting/
-.env
+.env/
+.venv/
+
+

@@ -27,7 +27,7 @@ const WebDesign = (props: WebDesignProps) => {
   const fetchWebDevSuggestions = async () => {
     setSuggestions([]);
     try {
-      const auditResponse = await fetch(`http://127.0.0.1:5000/get_webdesign_audit?projectId=${props.projectId}`, {
+      const auditResponse = await fetch(`api/get_webdesign_audit?projectId=${props.projectId}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -38,7 +38,7 @@ const WebDesign = (props: WebDesignProps) => {
 
         console.log("webdesignAuditId", webDesignAuditId)
 
-        const response = await fetch(`http://127.0.0.1:5000/get_webdesign_suggestions?webDesignAuditId=${webDesignAuditId}`, {
+        const response = await fetch(`api/get_webdesign_suggestions?webDesignAuditId=${webDesignAuditId}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });

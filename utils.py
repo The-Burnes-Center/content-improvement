@@ -6,6 +6,7 @@ import json
 from playwright.sync_api import sync_playwright
 from openai import OpenAI
 import re 
+import tiktoken
 
 
 
@@ -16,6 +17,7 @@ AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 S3_BUCKET_NAME = "nj-ai-votes-image"
 
 s3_client = boto3.client("s3", region_name="us-east-1")
+tokenizer = tiktoken.get_encoding('cl100k_base')
 
 def get_pred(scrapped_data, prompt):
     summary = f"Look at the following website source code: {scrapped_data}. {prompt}"
@@ -60,41 +62,10 @@ def read_file_text(file_path):
             return file.read()
     except Exception as e:
         return f"Error: {e}"
-
-def get_text_chunks(url):
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, 'html.parser')
-
-    # Focus on the main content area only
-    main = soup.find('main')
-    if not main:
-        main = soup.body  # Fallback if no <main> tag
-
-    chunks = []
-
-    # Go through direct child elements inside <main> that might represent sections
-    for elem in main.find_all(['section', 'div', 'article'], recursive=False):
-        # Ignore elements likely to be navigation or footers by class/id
-        if any(keyword in (elem.get('class') or []) + [elem.get('id') or ''] 
-            for keyword in ['nav', 'navbar', 'footer', 'sidebar']):
-            continue
-
-        # Get cleaned text
-        text = elem.get_text(separator=' ', strip=True)
-        if text:
-            chunks.append(text)
-
-    # Remove duplicates or overlapping text chunks
-    seen = set()
-    unique_chunks = []
-    for chunk in chunks:
-        if chunk not in seen:
-            seen.add(chunk)
-            unique_chunks.append(chunk)
     
-    print(len(unique_chunks))
 
-    return unique_chunks
+
+
 
 
 ## Webdesign Functions
@@ -200,9 +171,66 @@ def get_pure_source(url):
         print(f"Error fetching the website: {e}")
 
 
+#content clarity functions
 
+def num_tokens(text):
+    """Calculate the number of tokens in a string using tiktoken."""
+    return len(tokenizer.encode(text))
 
+def chunk_element(element, max_tokens=5000):
+    """Recursively split an element if its text exceeds max_tokens."""
+    text = element.get_text(separator=' ', strip=True)
+    if num_tokens(text) <= max_tokens:
+        return [text]
+    
+    # If it's too big and has children, try to split further
+    chunks = []
+    for child in element.find_all(['section', 'div', 'article'], recursive=False):
+        child_text = child.get_text(separator=' ', strip=True)
+        if child_text and num_tokens(child_text) <= max_tokens:
+            chunks.append(child_text)
+        elif child_text:
+            # Recursively split again if child is still too big
+            chunks.extend(chunk_element(child, max_tokens))
+    
+    # If no children are found, fallback: just forcibly split the text
+    if not chunks and text:
+        chunks = force_split_text(text, max_tokens)
+    
+    return chunks
 
+def force_split_text(text, max_tokens):
+    """Fallback: split a huge block of text into hard chunks if no more structure."""
+    tokens = tokenizer.encode(text)
+    chunks = []
+    for i in range(0, len(tokens), max_tokens):
+        sub_tokens = tokens[i:i+max_tokens]
+        sub_text = tokenizer.decode(sub_tokens)
+        chunks.append(sub_text)
+    return chunks
 
+def chunk_html(url, max_tokens=5000):
+    """Download HTML and chunk it by token size using structural recursion."""
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    
+    main = soup.find('main')
+    if not main:
+        main = soup.body  # fallback
+    
+    chunks = []
+    # Only start from direct children
+    for elem in main.find_all(['section', 'div', 'article'], recursive=False):
+        text = elem.get_text(separator=' ', strip=True)
+        if not text:
+            continue
+        
+        if num_tokens(text) <= max_tokens:
+            chunks.append(text)
+        else:
+            # Go deeper recursively
+            chunks.extend(chunk_element(elem, max_tokens))
+    
+    return chunks
 
 

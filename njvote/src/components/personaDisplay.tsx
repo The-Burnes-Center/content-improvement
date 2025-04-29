@@ -26,7 +26,7 @@ const PersonaDisplay = (props: PersonaDisplayProps) => {
     const handleAudit = async () => {
         setLoading(true);
         try {
-          const response = await fetch('http://localhost:5000/audience', {
+          const response = await fetch('api/audience', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
