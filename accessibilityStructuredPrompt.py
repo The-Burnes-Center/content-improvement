@@ -18,15 +18,29 @@ class AccessibilitySuggestion(BaseModel):
 
 #print(get_pure_source(url))
 def analyze_accessibility(url): #add format to prompt 
-    input_message = f'''{get_pure_source(url)}, Provide suggestions for improving the provided HTML to align with WCAG 2.1 AA standards. Cite specific examples of HTML that could be improved. Cite every single instance of HTML that could be improved that you find. Show the original and provide a revised version. 
-                Do not include any text. Please' use the format: 
-                [{{
+    input_message = f'''You are a strict accessibility reviewer analyzing the following HTML: {get_pure_source(url)} 
+        Your task is to identify **only real** accessibility issues based on WCAG 2.1 AA guidelines. 
+        Do **not** invent problems. 
+        Only include suggestions when an issue is present in the exact HTML. Cite every single instance of HTML. 
+        Include the original version and provide a revised version of the HTML.
+        For each suggestion, provide a brief explanation of why this change improves accessibility, ideally referencing WCAG principles.
+
+        If something is already accessible, say nothing about it.
+
+        Respond **only** in the following JSON array format. Each object should include:
+        [{{
                     key: '1',
                     label: 'This is panel header 1',
                     original_content: <p>text</p>,
                     revised_content: <p>text</p>,
                     explanation: <p>text</p> }}
-                    ] '''
+                    ]
+
+
+        If there are **no issues**, return an **empty list**: [].
+        Do not include any additional text or explanations outside of the JSON format.
+
+               '''
 
 
 
@@ -50,17 +64,11 @@ def analyze_accessibility(url): #add format to prompt
 
 
     for item in resp:
-        assert isinstance(item, AccessibilitySuggestion)
-        # print(f"Key: {item.key}")
-        # print(f"Label: {item.label}")
-        # print(f"Original Content: {item.original_content}")
-        # print(f"Revised Content: {item.revised_content}")
-        # print(f"Explanation: {item.explanation}")
-        # print()
-        output.append({"key": item.key,
-                        "label": item.label,
-                        "original_content": item.original_content,
-                        "revised_content": item.revised_content,
-                        "explanation": item.explanation})
+        if isinstance(item, AccessibilitySuggestion): 
+            output.append({"key": item.key,
+                            "label": item.label,
+                            "original_content": item.original_content,
+                            "revised_content": item.revised_content,
+                            "explanation": item.explanation})
 
     return output

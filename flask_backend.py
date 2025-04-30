@@ -8,6 +8,8 @@ import json
 from flaskext.mysql import MySQL
 from dotenv import load_dotenv
 import os
+import concurrent.futures
+import time
 
 load_dotenv()
 
@@ -169,18 +171,36 @@ def improveContent():
         content_guidlines = read_file_text("contentclarityguide.txt")
 
         suggestions = []
+        start_time = time.time()
 
-        # testing purposes
-        # i = 0
+        with concurrent.futures.ThreadPoolExecutor(max_workers = 5) as executor:
+            future_to_section = {
+                executor.submit(anaylze_content_clarity, section, content_guidlines): section
+                for section in scrapped_data
+            }
 
-        for section in scrapped_data:
+            for future in concurrent.futures.as_completed(future_to_section):
+                try:
+                    result = future.result()
+                    suggestions.extend(result)
+
+                except Exception as e:
+                    print(f"Error processing a section: {e}")
+                    
+        end_time = time.time()
+        print(f"completed tasks: {end_time - start_time:.2f} seconds")
+        print(len(suggestions))
+
+       
+
+        # for section in scrapped_data:
     
-            #print(f"here {i+1}")
-            sugesstions_list  = anaylze_content_clarity(section, content_guidlines)
-            for item in sugesstions_list:
-                suggestions.append(item)
+        #     #print(f"here {i+1}")
+        #     sugesstions_list  = anaylze_content_clarity(section, content_guidlines)
+        #     for item in sugesstions_list:
+        #         suggestions.append(item)
 
-            #i += 1
+        #     #i += 1
             
         return suggestions  
     else:
