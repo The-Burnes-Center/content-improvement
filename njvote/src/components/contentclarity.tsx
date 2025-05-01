@@ -75,7 +75,9 @@ const ContentClarity = () => {
   ];
 
   return (
+
     <div style={{ padding: '2rem' }}>
+      <h2>Help users understand your content </h2>
       <Table
         columns={columns}
         dataSource={tableData}

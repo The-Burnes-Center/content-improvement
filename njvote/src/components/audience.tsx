@@ -126,6 +126,7 @@ const Audience = ({ projectId }: AudienceProps) => {
 
   return (
     <>
+    <h2>Understand how users interact with your website</h2>
       <div style={{ marginLeft: '2rem' }}>
         <Dropdown menu={{ items: personas, onClick: handleMenuClick }} trigger={['click']}>
           <a onClick={(e) => e.preventDefault()}>

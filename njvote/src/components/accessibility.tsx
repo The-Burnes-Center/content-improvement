@@ -88,6 +88,9 @@ const Accessibility = (props: AccessibilityProps) => {
 
 
   return (
+    
+    <>
+     <h2> Make sure your content is aligned with WCAG guidelines</h2>
     <Collapse accordion style={{ marginTop: '2rem' }}>
         {suggestions.map((suggestion, index) => (
           <Panel header={suggestion.label} key={index}>
@@ -99,6 +102,8 @@ const Accessibility = (props: AccessibilityProps) => {
           </Panel>
         ))}
     </Collapse>
+    </>
+    
   );
 };
 

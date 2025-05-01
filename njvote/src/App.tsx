@@ -210,7 +210,12 @@ function App() {
             </div>
             <div className='flex-center'>
               <Radio.Group defaultValue="audience" buttonStyle="solid" className="big-radio">
-                <Tooltip title="Understand how users interact with your website" placement="bottom">
+                <Radio.Button value="audience" onClick={() => setTab("audience")}>Audience</Radio.Button>
+                <Radio.Button value="content-clarity" onClick={() => setTab("clarity")}>Content Clarity</Radio.Button>
+                <Radio.Button value="web-design" onClick={() => setTab("design")}>Web Design</Radio.Button>
+                <Radio.Button value="accessibility" onClick={() => setTab("accessibility")}>Code Accessibility</Radio.Button>
+
+                {/*<Tooltip title="Understand how users interact with your website" placement="bottom"> 
                   <Radio.Button value="audience" onClick={() => setTab("audience")}>Audience</Radio.Button>
                 </Tooltip>
                 <Tooltip title="Help users understand your content" placement="bottom">
@@ -221,7 +226,7 @@ function App() {
                 </Tooltip>
                 <Tooltip title="Make sure your content is aligned with WCAG guidelines" placement="bottom">
                   <Radio.Button value="accessibility" onClick={() => setTab("accessibility")}>Code Accessibility</Radio.Button>
-                </Tooltip>
+                </Tooltip>*/}
               </Radio.Group>
             </div>
             {tab == "audience" ? <Audience projectId={selectedProjectId} /> : <></>}
