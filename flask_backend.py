@@ -833,3 +833,141 @@ def get_accessibility_suggestions():
     conn.close()
 
     return {"suggestions": suggestions}, 200
+
+@app.route('/create_content_clairity_audit', methods=['POST'])
+def create_content_clairity_audit():
+    """
+    POST /create_content_clairity_audit
+    ----------------------
+    Creates a new content clarity audit entry in the ContentClarityAudit table in the database.
+
+    Expected JSON payload:
+    {
+        "projectId": int,
+    }
+    Behavior:
+    - Parses the incoming JSON payload from the request body.
+    - Extracts `projectId` field.
+    - Inserts the new content clarity audit record into the ContentClarityAudit table.
+    - Returns a success message and HTTP status code 201 on successful insertion.
+    Returns:
+        Tuple[str, int]: A success message and HTTP 201 status code if insertion is successful.
+    Note:
+        This function assumes valid input and does not currently handle errors or validation.
+    """
+    data = request.get_json()
+    projectId = data.get('projectId')
+
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO ContentClarityAudit (projectId) VALUES (%s)", (projectId,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return "Content clarity audit created successfully", 201
+
+@app.route('/get_content_clarity_audit', methods=['GET'])
+def get_content_clarity_audit():
+    """
+    GET /get_content_clarity_audit
+    -----------------
+    Retrieves the content clarity audit associated with a given projectId from the ContentClarityAudit table in the database.
+
+    Query Parameters:
+    - projectId (int): The ID of the project to retrieve the content clarity audit for.
+
+    Behavior:
+    - Connects to the MySQL database.
+    - Executes a SELECT query to fetch the record from the ContentClarityAudit table for the given projectId.
+    - Returns the content clarity audit as a JSON response.
+
+    Returns:
+        Tuple[dict, int]: A JSON object containing the content clarity audit and HTTP 200 status code."""
+    project_id = request.args.get('projectId')
+    if not project_id:
+        return "No projectId provided", 400
+
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM ContentClarityAudit WHERE projectId = %s", (project_id,))
+    content_clarity_audit = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not content_clarity_audit:
+        return "No content clarity audit found for the given projectId", 404
+
+    return {"content_clarity_audit": content_clarity_audit}, 200
+
+@app.route('/create_content_clarity_suggestion', methods=['POST'])
+def create_content_clarity_suggestion():
+    """
+    POST /create_content_clarity_suggestion
+    ----------------------
+    Creates a new content clarity suggestion entry in the ContentClaritySuggestion table in the database.
+    Expected JSON payload:
+    {
+        "contentClarityAuditId": int,  
+        "original": str,   
+        "suggestion": str
+    }
+
+    Behavior:
+    - Parses the incoming JSON payload from the request body.
+    - Extracts `contentClarityAuditId`, `original`, and `suggestion` fields.
+    - Inserts the new content clarity suggestion record into the ContentClaritySuggestion table.
+    - Returns a success message and HTTP status code 201 on successful insertion.
+
+    Returns:
+        Tuple[str, int]: A success message and HTTP 201 status code if insertion is successful.
+
+    Note:
+        This function assumes valid input and does not currently handle errors or validation.
+    """
+    data = request.get_json()
+    contentClarityAuditId = data.get('contentClarityAuditId')
+    original = data.get('original')
+    suggestion = data.get('suggestion')
+
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO ContentClaritySuggestion (contentClarityAuditId, original, suggestion) VALUES (%s, %s, %s)", (contentClarityAuditId, original, suggestion))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return "Content clarity suggestion created successfully", 201
+
+@app.route('/get_content_clarity_suggestions', methods=['GET'])
+def get_content_clarity_suggestions():
+    """
+    GET /get_content_clarity_suggestions
+    -----------------
+    Retrieves all content clarity suggestions associated with a given contentClarityAuditId from the ContentClaritySuggestion table in the database.
+    Query Parameters:
+    - contentClarityAuditId (int): The ID of the content clarity audit to retrieve suggestions for.
+
+    Behavior:
+    - Connects to the MySQL database.
+    - Executes a SELECT query to fetch all records from the ContentClaritySuggestion table for the given contentClarityAuditId.
+    - Returns the list of suggestions as a JSON response.
+
+    Returns:
+        Tuple[dict, int]: A JSON object containing the list of suggestions and HTTP 200 status code.
+
+    Note:
+        This function assumes that the ContentClaritySuggestion table exists and has valid data.
+    """
+    content_clarity_audit_id = request.args.get('contentClarityAuditId')
+    if not content_clarity_audit_id:
+        return "No contentClarityAuditId provided", 400
+
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM ContentClaritySuggestion WHERE contentClarityAuditId = %s", (content_clarity_audit_id,))
+    suggestions = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return {"suggestions": suggestions}, 200
