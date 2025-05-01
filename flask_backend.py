@@ -186,7 +186,7 @@ def improveContent():
 
                 except Exception as e:
                     print(f"Error processing a section: {e}")
-                    
+
         end_time = time.time()
         print(f"completed tasks: {end_time - start_time:.2f} seconds")
         print(len(suggestions))

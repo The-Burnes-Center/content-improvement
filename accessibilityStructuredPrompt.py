@@ -57,7 +57,7 @@ def analyze_accessibility(url): #add format to prompt
             }
         ],
         response_model = List[AccessibilitySuggestion],
-        #response_model = AccessibilitySuggestion,
+        
     )
 
     output = []
