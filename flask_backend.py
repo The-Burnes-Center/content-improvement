@@ -4,12 +4,15 @@ from flask_cors import CORS
 from accessibilityStructuredPrompt import analyze_accessibility
 from webDesignStructuredPrompt import analyze_webdesign
 from ContentClarityStructuredPrompt import anaylze_content_clarity
+from appending_prompts import code_accessibility_review
 import json
 from flaskext.mysql import MySQL
 from dotenv import load_dotenv
 import os
 import concurrent.futures
 import time
+
+
 
 load_dotenv()
 
@@ -191,16 +194,6 @@ def improveContent():
         print(f"completed tasks: {end_time - start_time:.2f} seconds")
         print(len(suggestions))
 
-       
-
-        # for section in scrapped_data:
-    
-        #     #print(f"here {i+1}")
-        #     sugesstions_list  = anaylze_content_clarity(section, content_guidlines)
-        #     for item in sugesstions_list:
-        #         suggestions.append(item)
-
-        #     #i += 1
             
         return suggestions  
     else:
@@ -320,7 +313,11 @@ def codeAccessibility():
     projectId = data.get('projectId')
     if url:
         print(url)
-        output = json.dumps(analyze_accessibility(url))
+        # output = json.dumps(code_accessibility_review(url))
+        print(json.dumps(code_accessibility_review(url)))
+        print("finished all iterations")
+        #output = json.dumps(analyze_accessibility(url))
+        #print(json.dumps(analyze_accessibility(url)))
         output = json.loads(output)
 
         conn = mysql.connect()

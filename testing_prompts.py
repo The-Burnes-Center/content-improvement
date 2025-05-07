@@ -7,13 +7,13 @@ import time
 
 
 url = "https://www.nj.gov/state/elections/vote.shtml"
-# print(analyze_accessibility(url))
+print(analyze_accessibility(url))
 
 
 # # content clarity prmopt testing: 
-nj_scrapped_data = chunk_html(url)
+# nj_scrapped_data = chunk_html(url)
 
-nj_content_guidlines = read_file_text("contentclarityguide.txt")
+# nj_content_guidlines = read_file_text("contentclarityguide.txt")
 
 # suggestions = []
 
@@ -37,6 +37,7 @@ nj_content_guidlines = read_file_text("contentclarityguide.txt")
 def analyze_all_sections_parallel(scrapped_data, content_guidlines, max_workers=5):
     suggestions = []
     start_time = time.time()
+    print(f"number of sections {len(scrapped_data)}")
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_section = {
@@ -56,7 +57,7 @@ def analyze_all_sections_parallel(scrapped_data, content_guidlines, max_workers=
     print(len(suggestions))
     return suggestions
 
-print(analyze_all_sections_parallel(nj_scrapped_data, nj_content_guidlines))
+#print(analyze_all_sections_parallel(nj_scrapped_data, nj_content_guidlines))
 
 # Using ThreadPoolExecutor to download pages concurrently
 #start_time = time.time()
