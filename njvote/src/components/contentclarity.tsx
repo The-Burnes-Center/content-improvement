@@ -102,7 +102,7 @@ const ContentClarity = (props: ContentClarityProps) => {
       <Table
         columns={columns}
         dataSource={tableData}
-        pagination={false}
+        pagination={{pageSize: 4}}
         bordered
       />
     </div>

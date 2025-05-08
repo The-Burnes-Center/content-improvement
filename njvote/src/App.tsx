@@ -1,6 +1,6 @@
 import './App.css'
 import { useEffect, useState } from 'react';
-import { Input, Layout, Menu, Radio, Modal, Button, Tooltip } from "antd";
+import { Input, Layout, Menu, Radio, Modal, Button, Progress } from "antd";
 import Audience from './components/audience';
 import { PlusSquareOutlined } from '@ant-design/icons';
 import ContentClarity from './components/contentclarity';
@@ -22,15 +22,25 @@ function App() {
   const [name, setName] = useState('');
   const [menuItems, setMenuItems] = useState<MenuProps[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-  const [webDevSuggestions, setWebDevSuggestions] = useState<any[]>([]);
   const [allProjects, setAllProjects] = useState<any[]>([]);
+  const [isLoadingNewProj, setIsLoadingNewProj] = useState(false);
+  const [loadingPercent, setLoadingPercent] = useState(0);
+  const [loadingText, setLoadingText] = useState('');
+  const [isDoneCreatingProject, setIsDoneCreatingProject] = useState(false);
 
   const showProjModal = () => {
     setProjModalOpen(true);
   };
 
   const closeProjModal = () => {
-    setProjModalOpen(false);
+    if (!isLoadingNewProj) {
+      setProjModalOpen(false);
+      setIsDoneCreatingProject(false);
+      setLoadingPercent(0);
+      setLoadingText('');
+      setUrl('');
+      setName('');
+    }
   }
 
   useEffect(() => {
@@ -65,6 +75,7 @@ function App() {
 
   const createProject = async () => {
     try {
+      setIsLoadingNewProj(true);
       // Step 1: Add the project
       const response = await fetch('/api/add_project', {
         method: 'POST',
@@ -97,6 +108,8 @@ function App() {
       if (!response.ok) {
         throw new Error('Failed to create project');
       }
+
+      setLoadingText('Analyzing Web Design...');
   
       // Step 2: Call /webdesign with the URL
       const webdesignResponse = await fetch('/api/webdesign', {
@@ -114,20 +127,9 @@ function App() {
         throw new Error('Failed to analyze web design');
       }
   
-      const webdesignData = await webdesignResponse.json();
 
-      if (Array.isArray(webdesignData)) {
-        const withKeys = webdesignData.map(item => ({
-          ...item,
-          key: item.key.toString(), // Convert int -> string for AntD
-        }));
-        setWebDevSuggestions(withKeys);
-      } else {
-        console.error("Unexpected response format:", webdesignData);
-      }
-  
-      // Now you have the feedback saved locally
-      console.log('Web Design Feedback:', webdesignData);
+      setLoadingText('Analyzing Accessibility');
+      setLoadingPercent(33);
 
       const accessabilityResponse = await fetch('/api/accessibility', {
         method: 'POST',
@@ -143,6 +145,10 @@ function App() {
         throw new Error('Failed to analyze accessability');
       }
 
+      setLoadingText('Analyzing Accessibility');
+      setLoadingPercent(66);
+
+
       const contentClarityResponse = await fetch('/api/content', {
         method: 'POST',
         headers: {
@@ -156,9 +162,11 @@ function App() {
       if (!contentClarityResponse.ok) {
         throw new Error('Failed to analyze content clarity');
       }
-  
-      // Step 3: Close the modal
-      closeProjModal();
+
+      setLoadingPercent(100);
+      setLoadingText('Done');
+      setIsDoneCreatingProject(true);
+      setIsLoadingNewProj(false);
   
       // (Optional) You could also do something with webdesignData here
     } catch (err) {
@@ -220,7 +228,6 @@ function App() {
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <h2>Project URL: {allProjects.find(project => project[0] === selectedProjectId)?.[2] || "No URL available"}</h2>
-              {/* <Search placeholder='WEBSITE URL' style={{ width: '20rem' }} enterButton={<RightOutlined/>} /> */}
             </div>
             <div className='flex-center'>
               <Radio.Group defaultValue="audience" buttonStyle="solid" className="big-radio">
@@ -228,19 +235,6 @@ function App() {
                 <Radio.Button value="content-clarity" onClick={() => setTab("clarity")}>Content Clarity</Radio.Button>
                 <Radio.Button value="web-design" onClick={() => setTab("design")}>Web Design</Radio.Button>
                 <Radio.Button value="accessibility" onClick={() => setTab("accessibility")}>Code Accessibility</Radio.Button>
-
-                {/*<Tooltip title="Understand how users interact with your website" placement="bottom"> 
-                  <Radio.Button value="audience" onClick={() => setTab("audience")}>Audience</Radio.Button>
-                </Tooltip>
-                <Tooltip title="Help users understand your content" placement="bottom">
-                  <Radio.Button value="content-clarity" onClick={() => setTab("clarity")}>Content Clarity</Radio.Button>
-                </Tooltip>
-                <Tooltip title="Improve the placement of your content" placement="bottom">
-                  <Radio.Button value="web-design" onClick={() => setTab("design")}>Web Design</Radio.Button>
-                </Tooltip>
-                <Tooltip title="Make sure your content is aligned with WCAG guidelines" placement="bottom">
-                  <Radio.Button value="accessibility" onClick={() => setTab("accessibility")}>Code Accessibility</Radio.Button>
-                </Tooltip>*/}
               </Radio.Group>
             </div>
             {tab == "audience" ? <Audience projectId={selectedProjectId} /> : <></>}
@@ -257,14 +251,40 @@ function App() {
         onOk={closeProjModal}
         onCancel={closeProjModal}
         footer={[
-          <Button type="primary" onClick={createProject}>
-            Create Project
+          <Button
+            type="primary"
+            onClick={isDoneCreatingProject ? closeProjModal : createProject}
+            disabled={isLoadingNewProj}
+            key="create"
+          >
+            {isDoneCreatingProject ? "Close" : "Create Project"}
           </Button>
         ]}
       >
-        <Input placeholder="Project Name" value={name} onChange={(e) => setName(e.target.value)} />
-        <Input placeholder="URL" style={{marginTop: '1rem'}} value={url} onChange={(e) => setUrl(e.target.value)} />
+        {isLoadingNewProj || isDoneCreatingProject ? (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 150 }}>
+            <Progress type="circle" percent={loadingPercent} />
+            <div style={{ marginLeft: '1rem' }}>
+              <h3>{loadingText}</h3>
+            </div>
+          </div>
+        ) : (
+          <>
+            <Input
+              placeholder="Project Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <Input
+              placeholder="URL"
+              style={{ marginTop: '1rem' }}
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+            />
+          </>
+        )}
       </Modal>
+
     </>
   )
 }
