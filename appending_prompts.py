@@ -117,7 +117,7 @@ def code_accessibility_review(url):
         #print(f"suggestion: {suggestion}")
 
             if suggestion == "":
-                print("No accessibility issue found.")
+                print("No suggestion found.")
 
             else: 
 
@@ -126,7 +126,7 @@ def code_accessibility_review(url):
 
                 Only provide an explaination for the identified code issue: {code_issue} and suggested improvement: {suggestion} based on WCAG 2.1 AA guidelines. 
 
-                - if not explaination can be provided, return an empty string: ""
+                - if no explaination can be provided, return an empty string: ""
                 - if no code issue is given, for example an empty string "",  return an empty string: " "
                 - if no suggestion is given, for example an empty string "",  return an empty string: " "
 
@@ -152,11 +152,56 @@ def code_accessibility_review(url):
                 contentType="application/json"
             )
 
+            
         
             response_body3 = json.loads(resp3["body"].read())
             explaination = response_body3["content"][0]["text"]
             accessibility_review["explaination"] = explaination
             #print(len(accessibility_improvements))
+
+            if explaination == "":
+                print("No explaination found.")
+
+            else: 
+
+                prompt4 = f'''You are a strict accessibility reviewer analyzing the following HTML: 
+                Your task is to provide a label for the identified code issue: {code_issue} and suggested improvement: {suggestion} based on WCAG 2.1 AA guidelines and the explaination: {explaination}.
+                Only provide a label for the identified code issue: {code_issue} and suggested improvement: {suggestion} based on WCAG 2.1 AA guidelines and the explaination: {explaination}. 
+
+
+                - if no label can be provided, return an empty string: ""
+                - if no code issue is given, for example an empty string "",  return an empty string: " "
+                - if no suggestion is given, for example an empty string "",  return an empty string: " "
+                - if no explaination is given, for example an empty string "",  return an empty string: " "
+
+                An example of the output is: 
+                'Missing alt text for image'
+
+                '''
+
+            body["messages"].append({
+                "role": "assistant",
+                "content": explaination 
+            })
+
+            body["messages"].append({
+                "role": "user",
+                "content": prompt4.strip()
+            })
+            
+            resp3 = client.invoke_model(
+                modelId=model_id,
+                body=json.dumps(body),
+                contentType="application/json"
+            )
+
+            response_body4 = json.loads(resp3["body"].read())
+            label = response_body4["content"][0]["text"]
+            accessibility_review["label"] = label
+
+            if label == "":
+                print("No label found.")
+
 
             accessibility_improvements.append(accessibility_review)
 
@@ -176,5 +221,5 @@ def code_accessibility_review(url):
 # reviews = code_accessibility_review(url1)
 
 # print(f"reviews: {reviews}") 
-# print(len(reviews))
+# # print(len(reviews))
 
