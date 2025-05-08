@@ -52,7 +52,7 @@ const PersonaDisplay = (props: PersonaDisplayProps) => {
 
     return (
         <>
-            <div className='flex-center' style={{ marginTop: '2%' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '2%' }}>
                 <div style={{ flexDirection: 'column', alignItems: 'stretch', display: 'flex', justifyContent: 'center' }}>
                 <TextArea
                 rows={12}
@@ -73,10 +73,12 @@ const PersonaDisplay = (props: PersonaDisplayProps) => {
                 <div
                     className='grayBox'
                     style={{
+                        flex: 1, 
                         width: '37rem',
                         height: '19.1rem',
                         overflowY: 'auto',
                         marginLeft: '2%',
+                        marginTop: '-0.03rem', 
                         padding: '1rem',
                         backgroundColor: 'lightgray',
                         whiteSpace: 'pre-wrap',
