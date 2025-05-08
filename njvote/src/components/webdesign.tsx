@@ -103,6 +103,7 @@ const WebDesign = (props: WebDesignProps) => {
 
   return (
     <div style={{ padding: '1rem' }}>
+      <h2> Improve the placement of your content</h2>
       <Title level={4}>
         <ExclamationCircleOutlined style={{ color: '#faad14', marginRight: '0.5rem' }} />
         Suggested Improvements (with reasoning)

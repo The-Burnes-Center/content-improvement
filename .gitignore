@@ -1,6 +1,8 @@
 voting/
 .env
 .venv/
+.env
+
 
 
 *.pyc

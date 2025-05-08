@@ -28,7 +28,9 @@ def anaylze_content_clarity(section, content_guidlines):
         - Limit the output to a **maximum of 5 suggestions**.
         - Do **not** include any explanation, reasoning, or commentary.
         - Do **not** suggest changes if the original content is already clear.
-        Return your response as ** ONLY* a raw JSON list, not a string or block of code. Do not format as Markdown or enclose in backticks.
+        Return your response as ** ONLY* a raw JSON list, not a string or block of code. 
+        Do not format as Markdown or enclose in backticks.
+        Do NOT return the list as a string or enclose it in quotes or Markdown.
 
         Return your response **only** as a JSON list in this format:
 
@@ -45,7 +47,6 @@ def anaylze_content_clarity(section, content_guidlines):
     
 
     client = instructor.from_anthropic(AnthropicBedrock())
-
     try: 
     # note that client.chat.completions.create will also work
         resp = client.messages.create(
@@ -60,24 +61,22 @@ def anaylze_content_clarity(section, content_guidlines):
             response_model = List[ContentSuggestion],
             
         )
-
         if not isinstance(resp, list):
                 raise TypeError(f"Expected list, got {type(resp)}")
-
-   
-        output = []
-
-        for item in resp:
-            if isinstance(item, ContentSuggestion): 
-                output.append({
-                            "original_content": item.original_content,
-                            "suggestion": item.suggestion})
-            else: 
-                raise TypeError("Invalid item type in response list.")
-            
         
-        return output
-    # is there other info in the handler that would be useful?
+        else: 
+   
+            output = []
+            for item in resp:
+                if isinstance(item, ContentSuggestion): 
+                    output.append({
+                                "original_content": item.original_content,
+                                "suggestion": item.suggestion})
+                else: 
+                    raise TypeError("Invalid item type in response list.")
+                
+            return output
+   
     except (ValidationError, InstructorRetryException, TypeError) as e:
         print(f"Error processing Claude response:{e} ")
         return []
