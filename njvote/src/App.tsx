@@ -142,6 +142,20 @@ function App() {
       if (!accessabilityResponse.ok) {
         throw new Error('Failed to analyze accessability');
       }
+
+      const contentClarityResponse = await fetch('/api/content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: url,
+          projectId: newProjectId,
+        }),
+      });
+      if (!contentClarityResponse.ok) {
+        throw new Error('Failed to analyze content clarity');
+      }
   
       // Step 3: Close the modal
       closeProjModal();
@@ -230,7 +244,7 @@ function App() {
               </Radio.Group>
             </div>
             {tab == "audience" ? <Audience projectId={selectedProjectId} /> : <></>}
-            {tab == "clarity" ? <ContentClarity/> : <></>} 
+            {tab == "clarity" ? <ContentClarity projectId={selectedProjectId}/> : <></>} 
             {tab == "design" ? <WebDesign projectId={selectedProjectId}/> : <></>}
             {tab == "accessibility" ? <Accessibility projectId={selectedProjectId}/> : <></>}
           </Content>

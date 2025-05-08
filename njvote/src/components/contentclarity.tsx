@@ -5,49 +5,70 @@ import { useState, useEffect } from 'react';
 
 const { Paragraph } = Typography;
 
-const ContentClarity = () => {
+export interface ContentClarityProps {
+  projectId: number | null;
+}
+
+const ContentClarity = (props: ContentClarityProps) => {
   
   interface Content {
     key: number;
     original: string;
     suggestion: string;
   }
-  const [content, setContent] = useState<Content[]>([]);
+  const [suggestions, setSuggestions] = useState<Content[]>([]);
 
-  const handleAudit = async () => {
+  const fetchContentClaritySuggestions = async () => {
+    setSuggestions([]);
     try {
-      const response = await fetch('api/content', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: 'https://www.nj.gov/state/elections/vote.shtml',
-        }),
+      
+      
+      const auditResponse = await fetch(`api/get_content_clarity_audit?projectId=${props.projectId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
       });
 
-      const data = await response.json();
-      console.log(data);
-      const contentArray: Content[] = data.map((item:any, index:number) => ({
-        key: index,
-        original: item.original_content,
-        suggestion: item.suggestion,
-      }));
-      setContent(contentArray);
+      if (auditResponse.ok) {
+        const auditData = await auditResponse.json();
+        console.log("auditData", auditData)
+        const contentClarityAuditId = auditData['content_clarity_audit'][0];
 
-      //console.log(data);
-      
+        console.log("contentClarityAuditId", contentClarityAuditId)
+
+        const response = await fetch(`api/get_content_clarity_suggestions?contentClarityAuditId=${contentClarityAuditId}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        const data = await response.json();
+
+        console.log("data", data)
+        console.log("response", response)
+        if (response.ok) {
+          const suggestions = data['suggestions'].map((item: any) => ({
+            original: item[2],
+            suggestion: item[3],
+          }));
+          setSuggestions(suggestions);
+        } else {
+          console.error('Failed to fetch content clarity suggestions.');
+        }
+
+      } else {
+        console.error('Failed to fetch content clarity audit.');
+      }
     } catch (err) {
       console.error(err);
+      console.error('An error occurred while fetching content clarity suggestions.');
     }
   };
 
   useEffect(() => {
-    handleAudit();
+    fetchContentClaritySuggestions();
   }, []);
 
   // Combine content + suggestion into one row per entry
-  const tableData = content.map((item ) => ({
+  const tableData = suggestions.map((item ) => ({
     key: item.key,
     original: item.original,
     suggestion: item.suggestion || 'No suggestions found.',
