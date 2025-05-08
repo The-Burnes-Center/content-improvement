@@ -40,6 +40,7 @@ const Accessibility = (props: AccessibilityProps) => {
     // }
 
     setSuggestions([]);
+
     try {
       const auditResponse = await fetch(`api/get_accessibility_audit?projectId=${props.projectId}`, {
         method: 'GET',
@@ -86,6 +87,8 @@ const Accessibility = (props: AccessibilityProps) => {
     fetchAccessibilitySuggestions();
   }, []);
 
+  
+
 
   return (
     
@@ -108,3 +111,7 @@ const Accessibility = (props: AccessibilityProps) => {
 };
 
 export default Accessibility;
+
+
+
+

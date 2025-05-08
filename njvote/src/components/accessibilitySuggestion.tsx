@@ -1,5 +1,5 @@
 import { Typography, Row, Col } from 'antd';
-import { ExclamationCircleFilled, CheckCircleFilled } from '@ant-design/icons';
+import { ExclamationCircleFilled, CheckCircleFilled, QuestionCircleOutlined, QuestionCircleTwoTone, BulbOutlined } from '@ant-design/icons';
 
 const { Text } = Typography;
 
@@ -33,13 +33,10 @@ const AccessibilitySuggestion = (props: AccessibilitySuggestionProps) => {
         </Col>
       </Row>
       <Row gutter={16}>
-        <Col span={12}></Col>
-        <Col span={12}>
-          <Text strong>
-            <CheckCircleFilled style={{ color: 'green' }} /> Why?
-          </Text>
-          <pre style={preStyle}>{props.explanation}</pre>
-        </Col>
+        <Text strong>
+          <BulbOutlined style={{ color: '#e6e615' }} /> Why?
+        </Text>
+        <pre style={preStyle}>{props.explanation}</pre>
       </Row>
     </>
   );
