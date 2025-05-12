@@ -321,9 +321,9 @@ def codeAccessibility():
     projectId = data.get('projectId')
     if url:
         print(url)
-        # output = json.dumps(code_accessibility_review(url))
-        print(json.dumps(code_accessibility_review(url)))
-        print("finished all iterations")
+        output = json.dumps(code_accessibility_review(url))
+        #print(json.dumps(code_accessibility_review(url)))
+        #print("finished all iterations")
         output = json.dumps(analyze_accessibility(url))
         #print(json.dumps(analyze_accessibility(url)))
         output = json.loads(output)

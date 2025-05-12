@@ -128,13 +128,15 @@ const Audience = ({ projectId }: AudienceProps) => {
     <>
     <h2>Understand how users interact with your website</h2>
       <div style={{ marginLeft: '2rem' }}>
-        <Dropdown menu={{ items: personas, onClick: handleMenuClick }} trigger={['click']}>
+        <Dropdown menu ={{ items: personas, onClick: handleMenuClick }} trigger={['click']}>
+          <Button>
           <a onClick={(e) => e.preventDefault()}>
             <Space>
               {selectedPersona?.label}
               <DownOutlined />
             </Space>
           </a>
+          </Button>
         </Dropdown>
       </div>
 

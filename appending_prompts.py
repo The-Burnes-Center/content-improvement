@@ -2,21 +2,81 @@ import boto3
 from utils import * 
 import json
 import time 
+from bs4 import BeautifulSoup
+import tiktoken
+import concurrent.futures
 
 client  = boto3.client("bedrock-runtime", region_name="us-east-1")
-#model_id = "anthropic.claude-3-7-sonnet-20250219-v1:0"
 model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"
 
+tokenizer = tiktoken.get_encoding('cl100k_base') 
+
 url1 = "https://www.nj.gov/state/elections/vote.shtml"
+max_issues = 1
 
-def code_accessibility_review(url): 
 
-    html_code = get_pure_source(url)
+def chunk_html_script(html_script, max_tokens = 5000):
+    chunks = []
+
+
+    #whats the best waay to seperate but still maintain structure?
+    soup = BeautifulSoup(html_script, "html.parser")
+    elements = soup.find_all("li", class_=["list-group-item", "list-group-item-action"])
+
+    chunks = []
+    current_chunk = ""
+    current_tokens = 0
+
+    for li in elements:
+        li_html = str(li)
+        li_tokens = num_tokens(li_html)
+
+        if current_tokens + li_tokens > max_tokens:
+            if current_chunk:
+                chunks.append(current_chunk)
+            current_chunk = li_html
+            current_tokens = li_tokens
+        else:
+            current_chunk += li_html
+            current_tokens += li_tokens
+
+    if current_chunk:
+        chunks.append(current_chunk)
+
+    return chunks
+
+def threading_code_accessibility(chunked_html_code):
+    suggestions = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        future_to_section = {
+            executor.submit(code_accessibility_review, section): section
+            for section in chunked_html_code
+        }
+
+        for future in concurrent.futures.as_completed(future_to_section):
+            try:
+                result = future.result()
+                suggestions.extend(result)
+            except Exception as e:
+                print(f"Error processing a section: {e}")
+
+    return suggestions
+
+
+
+
+def code_accessibility_review(html_code): 
+
+    # html_code = get_pure_source(url)
+    # print(f"html_code: {html_code}")
+
+    
+
     start_time = time.time()
     code_issues = []
     accessibility_improvements = []
 
-    for i in range(10):
+    for i in range(max_issues):
         #print(f"\n Iteration {i+1}: Finding next issue")
         accessibility_review = {}
 
@@ -65,6 +125,7 @@ def code_accessibility_review(url):
         if code_issue not in code_issues:
             code_issues.append(code_issue)
         else:
+            print(f"code issue already found: {code_issue}")
             print("Repeating issue, No new accessibility issue found.")
             #end_time = time.time()
             continue
@@ -204,6 +265,8 @@ def code_accessibility_review(url):
 
 
             accessibility_improvements.append(accessibility_review)
+            appending_time = time.time()
+            print(f"appending time: {appending_time - start_time:.2f} seconds")
 
             #print(len(accessibility_improvements))
             #print(accessibility_review)
@@ -217,8 +280,26 @@ def code_accessibility_review(url):
 
     return accessibility_improvements  
 
+
+
 # print("here")
 # reviews = code_accessibility_review(url1)
+
+#print(chunk_html_script(url1))
+html_script = get_pure_source(url1)
+chunked_script = chunk_html_script(html_script)
+
+output = threading_code_accessibility(chunked_script)
+print(output)
+
+# print(f"chunked_script: {chunked_script}")
+# print("length of chunked_script: ", num_tokens(html_script))
+# tokens = 0
+# for chunk in chunked_script:
+#     print(f' length chunk: {num_tokens(chunk)}')
+#     tokens += num_tokens(chunk)
+
+# print(f"total tokens: {tokens}")
 
 # print(f"reviews: {reviews}") 
 # # print(len(reviews))
