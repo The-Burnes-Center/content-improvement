@@ -91,7 +91,7 @@ def code_accessibility_review(html_code):
                 - Cite the exact HTML, if you can not find the exact HTML, do not return it.
                 - If you can not find any issues return "DONE"  
                 - Do not include extra text
-                - Do not include an explaination
+                - Do not include an explanation
 
                 
                 An example of the output is: 
@@ -148,7 +148,7 @@ def code_accessibility_review(html_code):
             - if no code issue is given, for example an empty string "",  return an empty string: " "
             - if not code improvement is possible, return an empty string: ""
             - Do not include extra text
-            - Do not include an explaination
+            - Do not include an explanation
 
 
             An example of the output is: 
@@ -183,11 +183,11 @@ def code_accessibility_review(html_code):
             else: 
 
                 prompt3 = f'''You are a strict accessibility reviewer analyzing the following HTML: 
-                Your task is to provide an explaination for the identified code issue: {code_issue} and suggested improvement: {suggestion} based on WCAG 2.1 AA guidelines. 
+                Your task is to provide an explanation for the identified code issue: {code_issue} and suggested improvement: {suggestion} based on WCAG 2.1 AA guidelines. 
 
-                Only provide an explaination for the identified code issue: {code_issue} and suggested improvement: {suggestion} based on WCAG 2.1 AA guidelines. 
+                Only provide an explanation for the identified code issue: {code_issue} and suggested improvement: {suggestion} based on WCAG 2.1 AA guidelines. 
 
-                - if no explaination can be provided, return an empty string: ""
+                - if no explanation can be provided, return an empty string: ""
                 - if no code issue is given, for example an empty string "",  return an empty string: " "
                 - if no suggestion is given, for example an empty string "",  return an empty string: " "
 
@@ -216,24 +216,24 @@ def code_accessibility_review(html_code):
             
         
             response_body3 = json.loads(resp3["body"].read())
-            explaination = response_body3["content"][0]["text"]
-            accessibility_review["explaination"] = explaination
+            explanation = response_body3["content"][0]["text"]
+            accessibility_review["explanation"] = explanation
             #print(len(accessibility_improvements))
 
-            if explaination == "":
-                print("No explaination found.")
+            if explanation == "":
+                print("No explanation found.")
 
             else: 
 
                 prompt4 = f'''You are a strict accessibility reviewer analyzing the following HTML: 
-                Your task is to provide a label for the identified code issue: {code_issue} and suggested improvement: {suggestion} based on WCAG 2.1 AA guidelines and the explaination: {explaination}.
-                Only provide a label for the identified code issue: {code_issue} and suggested improvement: {suggestion} based on WCAG 2.1 AA guidelines and the explaination: {explaination}. 
+                Your task is to provide a label for the identified code issue: {code_issue} and suggested improvement: {suggestion} based on WCAG 2.1 AA guidelines and the explanation: {explanation}.
+                Only provide a label for the identified code issue: {code_issue} and suggested improvement: {suggestion} based on WCAG 2.1 AA guidelines and the explanation: {explanation}. 
 
 
                 - if no label can be provided, return an empty string: ""
                 - if no code issue is given, for example an empty string "",  return an empty string: " "
                 - if no suggestion is given, for example an empty string "",  return an empty string: " "
-                - if no explaination is given, for example an empty string "",  return an empty string: " "
+                - if no explanation is given, for example an empty string "",  return an empty string: " "
 
                 An example of the output is: 
                 'Missing alt text for image'
@@ -242,7 +242,7 @@ def code_accessibility_review(html_code):
 
             body["messages"].append({
                 "role": "assistant",
-                "content": explaination 
+                "content": explanation 
             })
 
             body["messages"].append({
