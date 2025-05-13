@@ -64,9 +64,51 @@ def generate_sample_persona():
     url = request.args.get('url')
     # should format 
     if url:
-        generate_user_persona = get_pred(url,f"""Based on the url provided, please create one user persona of someone who would navigate the website. 
-                                     Include their age, gender, occupation, income level, education level, tech savviness, needs or end goals from the website, 
-                                     challenges they may have using the website.""" )
+
+        generate_user_persona = get_pred(url,
+                    f"""Based on the url provided, please create one user persona of someone who would navigate the website. 
+                        Include their age, gender, occupation, income level, education level, tech savviness, needs or end goals from the website, 
+                        challenges they may have using the website.
+                    
+
+                        An example of a user persona and formatting is: 
+
+                        Name: '  '
+                        Age: ' '
+                        Gender: '  '
+                        Occupation:  ''
+                        Income Level:  XX per year
+                        Education Level: '   '
+                        Tech Savviness: Beginner/ Moderate / Intermediate / Advance 
+
+                        Example Goals and Needs: 
+
+                        Goals and Needs: 
+                        1. Register to vote in New Jersey
+                        2. Check voter registration status
+                        3. Find the polling place
+                        4. Understand early voting options
+                        5. Request and submit a mail-in ballot
+
+                        Example Challenges Using the Website:
+
+                        Challenges Using the Website: 
+                        1. Navigating through multiple pages to find specific information
+                        2. Understanding legal or technical terminology related to voting procedures
+                        3. Locating and downloading necessary forms for voter registration or mail-in ballots
+                        4. Identifying the most up-to-date information, especially if there are changes to voting procedures
+                        5. Finding clear instructions on how to complete and submit various forms
+                        6. Accessing mobile-friendly versions of the website while using her smartphone
+
+                        Example Summary: 
+                        X  wants to ensure they are properly registered and informed about the voting process in New Jersey. 
+                        They are civic-minded and wants to participate in elections but may struggle with finding time to thoroughly research voting procedures. 
+                        They would benefit from clear, concise information and easy-to-follow instructions on the website.
+
+                                
+                                 
+                        """ )
+        
         
         return generate_user_persona
     
@@ -163,7 +205,7 @@ def improveContent():
     if not url or not projectId:
         return "Missing 'url' or 'projectId'", 400
 
-    scrapped_data = chunk_html(url)
+    scrapped_data = chunk_html_text(url)
     content_guidelines = read_file_text("contentclarityguide.txt")
 
     suggestions = []
@@ -324,7 +366,7 @@ def codeAccessibility():
         output = json.dumps(code_accessibility_review(url))
         #print(json.dumps(code_accessibility_review(url)))
         #print("finished all iterations")
-        output = json.dumps(analyze_accessibility(url))
+        #output = json.dumps(analyze_accessibility(url))
         #print(json.dumps(analyze_accessibility(url)))
         output = json.loads(output)
 
