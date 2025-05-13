@@ -2,7 +2,7 @@ voting/
 .env
 .venv/
 .env
-
+lambda/
 
 
 *.pyc
