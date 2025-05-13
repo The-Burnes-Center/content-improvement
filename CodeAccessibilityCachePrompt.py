@@ -120,5 +120,5 @@ response = client.messages.create(
 print(response.usage.model_dump_json())
 
 # Call the model again with the same inputs up to the cache checkpoint
-response = client.messages.create(.....)
-print(response.usage.model_dump_json())
+# response = client.messages.create(.....)
+# print(response.usage.model_dump_json())

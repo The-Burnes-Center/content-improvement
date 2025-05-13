@@ -309,23 +309,25 @@ for chunk in chunked_script:
 
 
 
-print("text chunking: ")
-text_chunks = chunk_html_text(url1)
-print(text_chunks[0])
-
-for chunk in text_chunks:
-     print(f" length of chunk is {num_tokens(chunk)}")
-
-print(f"number of chunks for html {len(chunked_script)}")
-print(f"number of chunks for text {len(text_chunks)}")
 
 
+# print("text chunking: ")
+# text_chunks = chunk_html_text(url1)
+# print(text_chunks[0])
+
+# for chunk in text_chunks:
+#      print(f" length of chunk is {num_tokens(chunk)}")
+
+# print(f"number of chunks for html {len(chunked_script)}")
+# print(f"number of chunks for text {len(text_chunks)}")
 
 
 
 
-# output = threading_code_accessibility(chunked_script)
-# print(output)
+
+
+output = threading_code_accessibility(chunked_script)
+print(output)
 
 # print(f"chunked_script: {chunked_script}")
 # print("length of chunked_script: ", num_tokens(html_script))
