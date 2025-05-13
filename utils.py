@@ -209,7 +209,7 @@ def force_split_text(text, max_tokens):
         chunks.append(sub_text)
     return chunks
 
-def chunk_html(url, max_tokens=5000):
+def chunk_html_text(url, max_tokens=5000):
     """Download HTML and chunk it by token size using structural recursion."""
     response = requests.get(url)
     soup = BeautifulSoup(response.content, 'html.parser')

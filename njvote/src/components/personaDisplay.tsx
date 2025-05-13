@@ -53,22 +53,37 @@ const PersonaDisplay = (props: PersonaDisplayProps) => {
     return (
         <>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '2%' }}>
-                <div style={{ flexDirection: 'column', alignItems: 'stretch', display: 'flex', justifyContent: 'center' }}>
-                <TextArea
-                rows={12}
-                placeholder="Enter a User Persona"
-                style={{ width: '37rem' }}
-                value={props.persona}
-                onChange={(e) => {
-                    if (props.id !== undefined) {
-                    props.updatePersonaField(props.id, 'persona', e.target.value);
-                    }
-                }}
-                />
+                <div
+                  style={{
+                    //flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between', 
+                    height: '19.1rem', // same height as the right gray box
+                    width: '25rem',
+                    padding: '1rem',
+                    backgroundColor: 'white', // optional
+                    borderRadius: '5px', // optional styling
+                    
+                  }}
+                >
+                  <TextArea
+                    rows={12}
+                    placeholder="Enter a User Persona"
+                    style={{ width: '100%' }}
+                    value={props.persona}
+                    onChange={(e) => {
+                      if (props.id !== undefined) {
+                        props.updatePersonaField(props.id, 'persona', e.target.value);
+                      }
+                    }}
+                  />
 
-                    <Button onClick={handleAudit} type="primary" style={{ marginTop: '1rem' }}>
-                        Audit Site
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button onClick={handleAudit} type="primary">
+                      Audit Site
                     </Button>
+                  </div>
                 </div>
                 <div
                     className='grayBox'
