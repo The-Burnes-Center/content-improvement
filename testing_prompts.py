@@ -54,17 +54,16 @@ generate_user_persona = get_pred(url,
                                  
                         """ )
 
-print(f"user persona: {generate_user_persona}")
-output = get_pred(get_pure_source(url), f"""Based off of the provided URL, please audit the website for the following user persona: {generate_user_persona}.""")
+# print(f"user persona: {generate_user_persona}")
+# output = get_pred(get_pure_source(url), f"""Based off of the provided URL, please audit the website for the following user persona: {generate_user_persona}.""")
 
-print(f"auditing website: {output} ")
+# print(f"auditing website: {output} ")
 
 persona = " Victor a student at Rutgers university looking to register for the first time . confused if he should vote in his home county or at his college county"
 
-output = get_pred(get_pure_source(url), f"""Based off of the provided URL, please audit the website for the following user persona: {persona}.""")
+challenges_output = get_pred(get_pure_source(url), f"""Based off of the provided URL, please audit the website for the following user persona: {persona}. """)
 
-
-print(f"auditing website based on victor: {output} ")
+print(f"auditing website based on victor: {challenges_output} ")
 
 
 

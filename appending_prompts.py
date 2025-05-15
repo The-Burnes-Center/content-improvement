@@ -326,8 +326,8 @@ for chunk in chunked_script:
 
 
 
-output = threading_code_accessibility(chunked_script)
-print(output)
+# output = threading_code_accessibility(chunked_script)
+# print(output)
 
 # print(f"chunked_script: {chunked_script}")
 # print("length of chunked_script: ", num_tokens(html_script))
