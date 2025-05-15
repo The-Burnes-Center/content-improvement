@@ -1,11 +1,13 @@
-import './App.css'
+import './App.css';
 import { useEffect, useState } from 'react';
-import { Input, Layout, Menu, Radio, Modal, Button, Tooltip } from "antd";
-import Audience from './components/audience';
+import { Input, Layout, Menu, Radio, Modal, Button, Progress } from "antd";
 import { PlusSquareOutlined } from '@ant-design/icons';
+
+import Audience from './components/audience';
 import ContentClarity from './components/contentclarity';
 import WebDesign from './components/webdesign';
 import Accessibility from './components/accessibility';
+import GettingStarted from './components/gettingStarted';
 
 interface MenuProps {
   key: number;
@@ -13,7 +15,6 @@ interface MenuProps {
 }
 
 function App() {
-
   const { Header, Content, Sider } = Layout;
 
   const [openProjModal, setProjModalOpen] = useState(false);
@@ -22,232 +23,165 @@ function App() {
   const [name, setName] = useState('');
   const [menuItems, setMenuItems] = useState<MenuProps[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-  const [webDevSuggestions, setWebDevSuggestions] = useState<any[]>([]);
   const [allProjects, setAllProjects] = useState<any[]>([]);
+  const [isLoadingNewProj, setIsLoadingNewProj] = useState(false);
+  const [loadingPercent, setLoadingPercent] = useState(0);
+  const [loadingText, setLoadingText] = useState('');
+  const [isDoneCreatingProject, setIsDoneCreatingProject] = useState(false);
 
-  const showProjModal = () => {
-    setProjModalOpen(true);
-  };
+  const showProjModal = () => setProjModalOpen(true);
 
   const closeProjModal = () => {
-    setProjModalOpen(false);
-  }
+    if (!isLoadingNewProj) {
+      setProjModalOpen(false);
+      setIsDoneCreatingProject(false);
+      setLoadingPercent(0);
+      setLoadingText('');
+      setUrl('');
+      setName('');
+    }
+  };
 
   useEffect(() => {
     const fetchPersonas = async () => {
       try {
-        let menuItemsTemp = [];
-        const response = await fetch(`http://127.0.0.1:5000/get_projects?userId=${1}`, {
+        const response = await fetch(`http://127.0.0.1:5000/get_projects?userId=1`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
+
+        if (!response.ok) throw new Error('Failed to fetch personas');
+
         const data = await response.json();
-        if (response.ok) {
-          menuItemsTemp = data['projects'].map((item: any) => ({
-            key: item[0],
-            label: item[3],
-          }));
-        } else {
-          console.error('Failed to fetch personas.');
-        }
+        const menuItemsTemp = data.projects.map((item: any) => ({
+          key: item[0],
+          label: item[3],
+        }));
+
         setMenuItems(menuItemsTemp);
+        setAllProjects(data.projects);
         if (menuItemsTemp.length > 0) {
           setSelectedProjectId(Number(menuItemsTemp[0].key));
         }
-        setAllProjects(data['projects']);
       } catch (err) {
         console.error(err);
-        console.error('An error occurred while fetching personas.');
       }
     };
+
     fetchPersonas();
   }, []);
 
   const createProject = async () => {
     try {
-      // Step 1: Add the project
+      setIsLoadingNewProj(true);
+
       const response = await fetch('/api/add_project', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: 1,
-          url: url,
-          name: name,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: 1, url, name }),
       });
 
-      let newProjectId = 0;
+      if (!response.ok) throw new Error('Failed to create project');
 
-      if (response.ok) {
-        const data = await response.json();
-        const newMenuItem = {
-          key: String(data['project'][0]),
-          label: name,
-        };
-        setMenuItems((prevMenuItems) => [...prevMenuItems, { ...newMenuItem, key: Number(newMenuItem.key) }]);
-        newProjectId = data['project'][0]; // Assuming the API returns the new project's ID as `projectId`
-        console.log('New Project ID:', newProjectId);
-        setSelectedProjectId(newProjectId);
-      } else {
-        throw new Error('Failed to create project');
-      }
-  
-      if (!response.ok) {
-        throw new Error('Failed to create project');
-      }
-  
-      // Step 2: Call /webdesign with the URL
-      const webdesignResponse = await fetch('/api/webdesign', {
+      const data = await response.json();
+      const newProjectId = data.project[0];
+
+      setMenuItems((prev) => [...prev, { key: newProjectId, label: name }]);
+      setSelectedProjectId(newProjectId);
+
+      setLoadingText('Analyzing Web Design...');
+      await fetch('/api/webdesign', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: url,
-          projectId: newProjectId,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, projectId: newProjectId }),
       });
-  
-      if (!webdesignResponse.ok) {
-        throw new Error('Failed to analyze web design');
-      }
-  
-      const webdesignData = await webdesignResponse.json();
 
-      if (Array.isArray(webdesignData)) {
-        const withKeys = webdesignData.map(item => ({
-          ...item,
-          key: item.key.toString(), // Convert int -> string for AntD
-        }));
-        setWebDevSuggestions(withKeys);
-      } else {
-        console.error("Unexpected response format:", webdesignData);
-      }
-  
-      // Now you have the feedback saved locally
-      console.log('Web Design Feedback:', webdesignData);
+      setLoadingText('Analyzing Accessibility');
+      setLoadingPercent(33);
 
-      const accessabilityResponse = await fetch('/api/accessibility', {
+      await fetch('/api/accessibility', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: url,
-          projectId: newProjectId,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, projectId: newProjectId }),
       });
-      if (!accessabilityResponse.ok) {
-        throw new Error('Failed to analyze accessability');
-      }
 
-      const contentClarityResponse = await fetch('/api/content', {
+      setLoadingText('Analyzing Content Clarity');
+      setLoadingPercent(66);
+
+      await fetch('/api/content', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: url,
-          projectId: newProjectId,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, projectId: newProjectId }),
       });
-      if (!contentClarityResponse.ok) {
-        throw new Error('Failed to analyze content clarity');
-      }
-  
-      // Step 3: Close the modal
-      closeProjModal();
-  
-      // (Optional) You could also do something with webdesignData here
+
+      setAllProjects((prev) => [...prev, { key: newProjectId, label: name }]);
+
+      setLoadingPercent(100);
+      setLoadingText('Done');
+      setIsDoneCreatingProject(true);
+      setIsLoadingNewProj(false);
     } catch (err) {
-      console.error('Error creating project or analyzing web design:', err);
+      console.error('Error creating project or analyzing:', err);
     }
   };
-  
-  
 
   return (
     <>
       <Layout style={{ height: '100vh' }}>
-        <Header
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '0',
-            position: 'relative',
-          }}
-        >
+        <Header style={{ display: 'flex', alignItems: 'center', padding: 0, position: 'relative' }}>
           <img src="images/logo.png" alt="Logo" style={{ height: '70px', width: 'auto' }} />
-          <div
-            style={{
-              position: 'absolute',
-              left: '50%',
-              transform: 'translateX(-50%)',
-            }}
-          >
+          <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
             <h1 style={{ color: 'white', margin: 0 }}>MAX (Machine Assistant for eXperience)</h1>
           </div>
         </Header>
 
-
         <Layout style={{ height: '100vh' }}>
-          <Sider width={200} className="site-layout-background" theme='light'>
+          <Sider width={200} className="site-layout-background" theme="light">
             <div style={{ display: 'flex' }}>
-              <h2 style={{ color: 'rgb(4, 21, 39)', textAlign: 'left', marginTop: '1rem', marginLeft: '1rem' }}>Projects</h2>
+              <h2 style={{ color: 'rgb(4, 21, 39)', marginTop: '1rem', marginLeft: '1rem' }}>Projects</h2>
               <div style={{ marginLeft: 'auto', marginTop: '1.25rem', marginRight: '1rem' }} onClick={showProjModal}>
                 <PlusSquareOutlined />
               </div>
             </div>
             <Menu
-                mode="inline"
-                defaultSelectedKeys={['1']}
-                defaultOpenKeys={['sub1']}
-                style={{ height: '100%' }}
-                items={menuItems}
-                onClick={(e) => {
-                  setSelectedProjectId(Number(e.key));
-                }}
-              />
+              mode="inline"
+              defaultSelectedKeys={['1']}
+              style={{ height: '100%' }}
+              items={menuItems}
+              onClick={(e) => setSelectedProjectId(Number(e.key))}
+            />
           </Sider>
-          <Content
-            style={{
-              padding: 24,
-              margin: 0,
-              minHeight: 280,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <h2>Project URL: {allProjects.find(project => project[0] === selectedProjectId)?.[2] || "No URL available"}</h2>
-              {/* <Search placeholder='WEBSITE URL' style={{ width: '20rem' }} enterButton={<RightOutlined/>} /> */}
-            </div>
-            <div className='flex-center'>
-              <Radio.Group defaultValue="audience" buttonStyle="solid" className="big-radio">
-                <Radio.Button value="audience" onClick={() => setTab("audience")}>Audience</Radio.Button>
-                <Radio.Button value="content-clarity" onClick={() => setTab("clarity")}>Content Clarity</Radio.Button>
-                <Radio.Button value="web-design" onClick={() => setTab("design")}>Web Design</Radio.Button>
-                <Radio.Button value="accessibility" onClick={() => setTab("accessibility")}>Code Accessibility</Radio.Button>
 
-                {/*<Tooltip title="Understand how users interact with your website" placement="bottom"> 
+          {allProjects.length === 0 ? (
+            <Content style={{ padding: 24, margin: 0, height: 'calc(100vh - 64px)' }}>
+              <div className="flex items-center justify-center w-full h-full">
+                <GettingStarted />
+              </div>
+            </Content>
+          ) : (
+            <Content style={{ padding: 24, margin: 0, minHeight: 280 }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <h2>
+                  Project URL:{' '}
+                  {allProjects.find((project) => project[0] === selectedProjectId)?.[2] || "No URL available"}
+                </h2>
+              </div>
+
+              <div className="flex-center">
+                <Radio.Group defaultValue="audience" buttonStyle="solid" className="big-radio">
                   <Radio.Button value="audience" onClick={() => setTab("audience")}>Audience</Radio.Button>
-                </Tooltip>
-                <Tooltip title="Help users understand your content" placement="bottom">
                   <Radio.Button value="content-clarity" onClick={() => setTab("clarity")}>Content Clarity</Radio.Button>
-                </Tooltip>
-                <Tooltip title="Improve the placement of your content" placement="bottom">
                   <Radio.Button value="web-design" onClick={() => setTab("design")}>Web Design</Radio.Button>
-                </Tooltip>
-                <Tooltip title="Make sure your content is aligned with WCAG guidelines" placement="bottom">
                   <Radio.Button value="accessibility" onClick={() => setTab("accessibility")}>Code Accessibility</Radio.Button>
-                </Tooltip>*/}
-              </Radio.Group>
-            </div>
-            {tab == "audience" ? <Audience projectId={selectedProjectId} /> : <></>}
-            {tab == "clarity" ? <ContentClarity projectId={selectedProjectId}/> : <></>} 
-            {tab == "design" ? <WebDesign projectId={selectedProjectId}/> : <></>}
-            {tab == "accessibility" ? <Accessibility projectId={selectedProjectId}/> : <></>}
-          </Content>
+                </Radio.Group>
+              </div>
+
+              {tab === "audience" && <Audience projectId={selectedProjectId} />}
+              {tab === "clarity" && <ContentClarity projectId={selectedProjectId} />}
+              {tab === "design" && <WebDesign projectId={selectedProjectId} />}
+              {tab === "accessibility" && <Accessibility projectId={selectedProjectId} />}
+            </Content>
+          )}
         </Layout>
       </Layout>
 
@@ -257,16 +191,41 @@ function App() {
         onOk={closeProjModal}
         onCancel={closeProjModal}
         footer={[
-          <Button type="primary" onClick={createProject}>
-            Create Project
+          <Button
+            type="primary"
+            onClick={isDoneCreatingProject ? closeProjModal : createProject}
+            disabled={isLoadingNewProj}
+            key="create"
+          >
+            {isDoneCreatingProject ? "Close" : "Create Project"}
           </Button>
         ]}
       >
-        <Input placeholder="Project Name" value={name} onChange={(e) => setName(e.target.value)} />
-        <Input placeholder="URL" style={{marginTop: '1rem'}} value={url} onChange={(e) => setUrl(e.target.value)} />
+        {(isLoadingNewProj || isDoneCreatingProject) ? (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 150 }}>
+            <Progress type="circle" percent={loadingPercent} />
+            <div style={{ marginLeft: '1rem' }}>
+              <h3>{loadingText}</h3>
+            </div>
+          </div>
+        ) : (
+          <>
+            <Input
+              placeholder="Project Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <Input
+              placeholder="URL"
+              style={{ marginTop: '1rem' }}
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+            />
+          </>
+        )}
       </Modal>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
