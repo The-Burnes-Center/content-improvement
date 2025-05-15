@@ -1,6 +1,6 @@
 
 // created a table to show the content clarity suggestions
-import { Table, Typography } from 'antd';
+import { Table, Typography, Button } from 'antd';
 import { useState, useEffect } from 'react';
 
 const { Paragraph } = Typography;
@@ -95,10 +95,39 @@ const ContentClarity = (props: ContentClarityProps) => {
     },
   ];
 
+  const exportToCSV = () => {
+    if (!suggestions.length) return;
+
+    const headers = ['Original Content', 'Suggested Improvement'];
+    const rows = suggestions.map(item => [
+      `"${item.original.replace(/"/g, '""')}"`,
+      `"${item.suggestion.replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent =
+      [headers, ...rows].map(e => e.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'content_clarity_suggestions.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+
   return (
 
     <div style={{ padding: '2rem' }}>
-      <h2>Help users understand your content </h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2 style={{ marginBottom: 0 }}>Help users understand your content</h2>
+        <Button type="primary" onClick={exportToCSV}>
+          Export to CSV
+        </Button>
+      </div>
       <Table
         columns={columns}
         dataSource={tableData}

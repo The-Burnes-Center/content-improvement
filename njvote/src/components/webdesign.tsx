@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Table, Typography } from 'antd';
+import { Table, Typography, Button } from 'antd';
 import {
   ExclamationCircleOutlined,
   SearchOutlined,
   ToolOutlined,
   BulbOutlined,
 } from '@ant-design/icons';
+
 
 const { Title } = Typography;
 
@@ -101,15 +102,46 @@ const WebDesign = (props: WebDesignProps) => {
     },
   ];
 
+  const exportToCSV = () => {
+  if (!suggestions.length) return;
+
+  const headers = ['Area', 'Suggestion', 'Reason'];
+  const rows = suggestions.map(item => [
+    `"${item.area.replace(/"/g, '""')}"`,
+    `"${item.suggestion.replace(/"/g, '""')}"`,
+    `"${item.reason.replace(/"/g, '""')}"`
+  ]);
+
+  const csvContent = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', 'web_design_suggestions.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+
   return (
     <div style={{ padding: '1rem' }}>
-      <h2> Improve the placement of your content</h2>
-      <Title level={4}>
-        <ExclamationCircleOutlined style={{ color: '#faad14', marginRight: '0.5rem' }} />
-        Suggested Improvements (with reasoning)
-      </Title>
+      <h2 style={{ marginBottom: '1rem' }}>Improve the placement of your content</h2>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <Title level={4} style={{ margin: 0 }}>
+          <ExclamationCircleOutlined style={{ color: '#faad14', marginRight: '0.5rem' }} />
+          Suggested Improvements (with reasoning)
+        </Title>
+        <Button type="primary" onClick={exportToCSV}>
+          Export to CSV
+        </Button>
+      </div>
+
       <Table columns={columns} dataSource={suggestions} pagination={false} />
     </div>
+
   );
 };
 
