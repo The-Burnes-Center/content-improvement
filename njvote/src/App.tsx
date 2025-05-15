@@ -37,8 +37,8 @@ function App() {
       setIsDoneCreatingProject(false);
       setLoadingPercent(0);
       setLoadingText('');
-      setUrl('');
       setName('');
+      setUrl('');
     }
   };
 
@@ -87,7 +87,7 @@ function App() {
       const newProjectId = data.project[0];
 
       setMenuItems((prev) => [...prev, { key: newProjectId, label: name }]);
-      setSelectedProjectId(newProjectId);
+
 
       setLoadingText('Analyzing Web Design...');
       await fetch('/api/webdesign', {
@@ -114,12 +114,26 @@ function App() {
         body: JSON.stringify({ url, projectId: newProjectId }),
       });
 
-      setAllProjects((prev) => [...prev, { key: newProjectId, label: name }]);
+      const updatedProjects = await fetch(`http://127.0.0.1:5000/get_projects?userId=1`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (updatedProjects.ok) {
+        const data = await updatedProjects.json();
+        const menuItemsTemp = data.projects.map((item: any) => ({
+          key: item[0],
+          label: item[3],
+        }));
+        setMenuItems(menuItemsTemp);
+        setAllProjects(data.projects);
+      }
 
       setLoadingPercent(100);
       setLoadingText('Done');
       setIsDoneCreatingProject(true);
       setIsLoadingNewProj(false);
+      setSelectedProjectId(newProjectId);
     } catch (err) {
       console.error('Error creating project or analyzing:', err);
     }
@@ -145,6 +159,7 @@ function App() {
             </div>
             <Menu
               mode="inline"
+              selectedKeys={[String(selectedProjectId)]}
               defaultSelectedKeys={['1']}
               style={{ height: '100%' }}
               items={menuItems}
