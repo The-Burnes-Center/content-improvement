@@ -143,7 +143,7 @@ function App() {
     <>
       <Layout style={{ height: '100vh' }}>
         <Header style={{ display: 'flex', alignItems: 'center', padding: 0, position: 'relative' }}>
-          <img src="images/logo.png" alt="Logo" style={{ height: '70px', width: 'auto' }} />
+          <img src="images/logo.png" alt="Logo" style={{ height: '90px', width: 'auto' }} />
           <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
             <h1 style={{ color: 'white', margin: 0 }}>MAX (Machine Assistant for eXperience)</h1>
           </div>
