@@ -1038,3 +1038,64 @@ def get_content_clarity_suggestions():
     conn.close()
 
     return {"suggestions": suggestions}, 200
+
+@app.route('/delete_project', methods=['DELETE'])
+def delete_project():
+    """
+    DELETE /delete_project
+    ----------------------
+    Deletes a project entry from the Project table in the database.
+
+    Expected JSON payload:
+    {
+        "projectId": int
+    }
+    Behavior:
+    - Parses the incoming JSON payload from the request body.
+    - Extracts `projectId` field.
+    - Deletes the project record from the Project table.
+    - Returns a success message and HTTP status code 200 on successful deletion.
+    Returns:
+        Tuple[str, int]: A success message and HTTP 200 status code if deletion is successful.
+    Note:
+        This function assumes valid input and does not currently handle errors or validation.
+    """
+    data = request.get_json()
+    projectId = data.get('projectId')
+
+    conn = mysql.connect()
+    cursor = conn.cursor()
+
+    # Delete ContentClaritySuggestion and ContentClarityAudit associated with this project
+    cursor.execute("SELECT contentClarityAuditId FROM ContentClarityAudit WHERE projectId = %s", (projectId,))
+    content_clarity_audits = cursor.fetchall()
+    for audit in content_clarity_audits:
+        contentClarityAuditId = audit[0]
+        cursor.execute("DELETE FROM ContentClaritySuggestion WHERE contentClarityAuditId = %s", (contentClarityAuditId,))
+    cursor.execute("DELETE FROM ContentClarityAudit WHERE projectId = %s", (projectId,))
+
+    # Delete WebDesignSuggestion and WebDesignAudit associated with this project
+    cursor.execute("SELECT webDesignAuditId FROM WebDesignAudit WHERE projectId = %s", (projectId,))
+    web_design_audits = cursor.fetchall()
+    for audit in web_design_audits:
+        webDesignAuditId = audit[0]
+        cursor.execute("DELETE FROM WebDesignSuggestion WHERE webDesignAuditId = %s", (webDesignAuditId,))
+    cursor.execute("DELETE FROM WebDesignAudit WHERE projectId = %s", (projectId,))
+
+    # Delete AccessibilitySuggestion and AccessibilityAudit associated with this project
+    cursor.execute("SELECT accessibilityAuditId FROM AccessibilityAudit WHERE projectId = %s", (projectId,))
+    accessibility_audits = cursor.fetchall()
+    for audit in accessibility_audits:
+        accessibilityAuditId = audit[0]
+        cursor.execute("DELETE FROM AccessibilitySuggestion WHERE accessibilityAuditId = %s", (accessibilityAuditId,))
+    cursor.execute("DELETE FROM AccessibilityAudit WHERE projectId = %s", (projectId,))
+
+    # Delete PersonaAudit associated with this project
+    cursor.execute("DELETE FROM PersonaAudit WHERE projectId = %s", (projectId,))
+    
+    cursor.execute("DELETE FROM Project WHERE projectId = %s", (projectId,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return "Project deleted successfully", 200

@@ -1,7 +1,7 @@
 import './App.css';
 import { useEffect, useState } from 'react';
 import { Input, Layout, Menu, Radio, Modal, Button, Progress } from "antd";
-import { PlusSquareOutlined } from '@ant-design/icons';
+import { PlusSquareOutlined, CloseOutlined } from '@ant-design/icons';
 
 import Audience from './components/audience';
 import ContentClarity from './components/contentclarity';
@@ -28,6 +28,7 @@ function App() {
   const [loadingPercent, setLoadingPercent] = useState(0);
   const [loadingText, setLoadingText] = useState('');
   const [isDoneCreatingProject, setIsDoneCreatingProject] = useState(false);
+  const [hoveredKey, setHoveredKey] = useState<number | null>(null);
 
   const showProjModal = () => setProjModalOpen(true);
 
@@ -70,6 +71,32 @@ function App() {
 
     fetchPersonas();
   }, []);
+
+  const handleDeleteProject = async (e: React.MouseEvent, projectId: number) => {
+    e.stopPropagation(); // prevent triggering `onClick` for the Menu.Item
+    try {
+      const response = await fetch('/api/delete_project', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId }),
+      });
+
+      if (!response.ok) throw new Error('Failed to delete project');
+
+      // Remove the deleted project from state
+      const updatedMenu = menuItems.filter(item => item.key !== projectId);
+      setMenuItems(updatedMenu);
+      setAllProjects(prev => prev.filter(project => project[0] !== projectId));
+
+      // If the deleted project was selected, reset selection
+      if (selectedProjectId === projectId) {
+        setSelectedProjectId(updatedMenu.length > 0 ? Number(updatedMenu[0].key) : null);
+      }
+    } catch (err) {
+      console.error('Error deleting project:', err);
+    }
+  };
+
 
   const createProject = async () => {
     try {
@@ -160,11 +187,36 @@ function App() {
             <Menu
               mode="inline"
               selectedKeys={[String(selectedProjectId)]}
-              defaultSelectedKeys={['1']}
               style={{ height: '100%' }}
-              items={menuItems}
-              onClick={(e) => setSelectedProjectId(Number(e.key))}
-            />
+            >
+              {menuItems.map(item => (
+                <Menu.Item
+                  key={item.key}
+                  onMouseEnter={() => setHoveredKey(item.key)}
+                  onMouseLeave={() => setHoveredKey(null)}
+                  onClick={() => setSelectedProjectId(Number(item.key))}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span
+                      style={{
+                        flex: 1,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {item.label}
+                    </span>
+                    {hoveredKey === item.key && (
+                      <CloseOutlined 
+                        style={{ fontSize: '16px', flexShrink: 0 }}
+                        onClick={(e) => handleDeleteProject(e, item.key)}/>
+                    )}
+                  </div>
+                </Menu.Item>
+              ))}
+            </Menu>
+
           </Sider>
 
           {allProjects.length === 0 ? (
