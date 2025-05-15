@@ -1,6 +1,6 @@
 import './App.css';
 import { useEffect, useState } from 'react';
-import { Input, Layout, Menu, Radio, Modal, Button, Progress } from "antd";
+import { Input, Layout, Menu, Radio, Modal, Button, Progress, Popconfirm } from "antd";
 import { PlusSquareOutlined, CloseOutlined } from '@ant-design/icons';
 
 import Audience from './components/audience';
@@ -208,9 +208,15 @@ function App() {
                       {item.label}
                     </span>
                     {hoveredKey === item.key && (
-                      <CloseOutlined 
-                        style={{ fontSize: '16px', flexShrink: 0 }}
-                        onClick={(e) => handleDeleteProject(e, item.key)}/>
+                      <Popconfirm
+                        title="Are you sure to delete this project?"
+                        onConfirm={() => handleDeleteProject(new MouseEvent('click') as any, item.key)}
+                        okText="Yes"
+                        cancelText="No"
+                      >
+                        <CloseOutlined 
+                          style={{ fontSize: '16px', flexShrink: 0 }}/>
+                      </Popconfirm>
                     )}
                   </div>
                 </Menu.Item>
