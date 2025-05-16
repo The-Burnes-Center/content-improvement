@@ -52,10 +52,11 @@ const PersonaDisplay = (props: PersonaDisplayProps) => {
 
     return (
         <>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '2%' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2%' }}>
                 <div
                   style={{
                     //flex: 1,
+                    marginLeft: '1rem',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between', 
@@ -67,10 +68,11 @@ const PersonaDisplay = (props: PersonaDisplayProps) => {
                     
                   }}
                 >
+                  <div style={{ position: 'relative', width: '100%' }}></div>
                   <TextArea
                     rows={12}
                     placeholder="Enter a User Persona"
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', paddingBottom: '3rem' }}
                     value={props.persona}
                     onChange={(e) => {
                       if (props.id !== undefined) {
@@ -80,8 +82,8 @@ const PersonaDisplay = (props: PersonaDisplayProps) => {
                   />
 
                   <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button onClick={handleAudit} type="primary">
-                      Audit Site
+                    <Button onClick={handleAudit} type="primary" style={{ fontWeight: '600' }} >
+                      Analyze
                     </Button>
                   </div>
                 </div>
@@ -99,11 +101,12 @@ const PersonaDisplay = (props: PersonaDisplayProps) => {
                         whiteSpace: 'pre-wrap',
                         wordWrap: 'break-word',  
                         display: 'block',
+                 
                     }}>
                         {loading ? <LoadingOutlined /> : output}
                 </div>
 
-            </div>
+            /</div>
         </>
     );
 };

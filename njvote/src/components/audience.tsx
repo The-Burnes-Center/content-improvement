@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
-import { DownOutlined } from '@ant-design/icons';
+import { DownOutlined, LoadingOutlined   } from '@ant-design/icons';
 import PersonaDisplay from './personaDisplay';
 import { Space, Dropdown, MenuProps, Modal, Button, Input, Checkbox, message } from 'antd';
+
+
+export interface PersonaDisplayProps {
+  persona: string | undefined;
+  output: string | undefined;
+  id: number | undefined;
+  updatePersonaField: (id: number, field: 'persona' | 'output', value: string) => void;
+}
+
 
 interface AudienceProps {
   projectId: number | null;
@@ -21,7 +30,9 @@ const Audience = ({ projectId }: AudienceProps) => {
   const [openPersonaModal, setOpenPersonaModal] = useState(false);
   const [useAIPersonaGen, setUseAIPersonaGen] = useState(false);
   const [personaName, setPersonaName] = useState('');
-
+  const [personaContent, setPersonaContent] = useState('');
+  const [isEditMode, setIsEditMode] = useState(false);
+  const { TextArea } = Input;
 
   useEffect(() => {
     const fetchPersonas = async () => {
@@ -74,11 +85,38 @@ const Audience = ({ projectId }: AudienceProps) => {
     const selectedItem = personas?.find(item => item?.key === e.key);
     console.log(e.key)
     if (e.key === 'new') {
+      setIsEditMode(false);
+      setPersonaName('');
+      setPersonaContent('');
       showPersonaModal();
     } else if (selectedItem && 'label' in selectedItem) {
       setSelectedPersona(selectedItem);
+      setIsEditMode(true);
+      setPersonaName(selectedItem.label);         
+      setPersonaContent(selectedItem.persona);    
+      showPersonaModal()
     }
   };
+
+ const analyzePersona = async (persona: Persona) => {
+  try {
+    const response = await fetch('/api/audience', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: 'https://www.nj.gov/state/elections/vote.shtml',
+        persona: persona.persona,
+        personaAuditId: parseInt(persona.key),
+      }),
+    });
+
+    const text = await response.text();
+    updatePersonaField(parseInt(persona.key), 'output', text);
+  } catch (err) {
+    console.error(err);
+    updatePersonaField(parseInt(persona.key), 'output', 'Error fetching data from API.');
+  }
+};
 
   const createPersona = async () => {
     try {
@@ -99,6 +137,10 @@ const Audience = ({ projectId }: AudienceProps) => {
                 ]);
         setSelectedPersona(newPersona);
         closePersonaModal();
+
+        await analyzePersona(newPersona);
+
+
       } else {
         message.error('Failed to create persona.');
       }
@@ -108,7 +150,8 @@ const Audience = ({ projectId }: AudienceProps) => {
     }
     setOpenPersonaModal(false);
     setPersonaName('');
-    setUseAIPersonaGen(false);
+    setUseAIPersonaGen(false)
+
   };
 
   const updatePersonaField = (id: number, field: 'persona' | 'output', value: string) => {
@@ -121,13 +164,75 @@ const Audience = ({ projectId }: AudienceProps) => {
       setSelectedPersona((prev) => prev ? { ...prev, [field]: value } : prev);
     }
   };
+
+
+
+// const PersonaDisplay = (props: PersonaDisplayProps) => {
+//     const { TextArea } = Input;
+
+//     const [persona, setPersona] = useState(props.persona);
+//     const [output, setOutput] = useState(props.output);
+//     const [id, setId] = useState(props.id);
+//     const [loading, setLoading] = useState(false);
+
+//     useEffect(() => {
+//         setPersona(props.persona);
+//         setOutput(props.output);
+//         setId(props.id);
+//     }, [props.persona, props.output]);
+
+//     const handleAudit = async () => {
+//         setLoading(true);
+//         try {
+//           const response = await fetch('api/audience', {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' },
+//             body: JSON.stringify({
+//               url: 'https://www.nj.gov/state/elections/vote.shtml',
+//               persona: props.persona,
+//               personaAuditId: props.id
+//             }),
+//           });
+//           const text = await response.text();
+//           if (props.id !== undefined) {
+//             props.updatePersonaField(props.id, 'output', text);
+//           }
+//           setLoading(false);
+//         } catch (err) {
+//           console.error(err);
+//           if (props.id !== undefined) {
+//             props.updatePersonaField(props.id, 'output', 'Error fetching data from API.');
+//           }
+//           setLoading(false);
+//         }
+//       };
+
+//   // {showPersonaBox && (
+//   // <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2%' }}>
+//   //   <div
+//   //     style={{
+//   //       marginLeft: '1rem',
+//   //       display: 'flex',
+//   //       flexDirection: 'column',
+//   //       justifyContent: 'space-between',
+//   //       height: '19.1rem',
+//   //       width: '25rem',
+//   //       padding: '1rem',
+//   //       backgroundColor: 'white',
+//   //       borderRadius: '5px',
+//   //     }}
+//   //      >
+
+//     </div>
+//   </div>
+// )}
   
   
 
   return (
     <>
-    <h2>Understand how users interact with your website</h2>
-      <div style={{ marginLeft: '2rem' }}>
+      <div style={{ marginLeft: '1rem' }}>
+        <h2>Understand how users interact with your website</h2>
         <Dropdown menu ={{ items: personas, onClick: handleMenuClick }} trigger={['click']}>
           <Button>
           <a onClick={(e) => e.preventDefault()}>
@@ -139,6 +244,8 @@ const Audience = ({ projectId }: AudienceProps) => {
           </Button>
         </Dropdown>
       </div>
+       
+      
 
       <PersonaDisplay 
         persona={selectedPersona?.persona}
@@ -151,20 +258,82 @@ const Audience = ({ projectId }: AudienceProps) => {
         open={openPersonaModal}
         title="Create New User Persona"
         onCancel={closePersonaModal}
+        
+
         footer={[
-          <Button type="primary" onClick={createPersona} disabled={!personaName}>
-            Create
+          <Button type="primary" onClick={createPersona} disabled={!personaName} style={{ fontWeight: '500' }}>
+            Analyze
           </Button>,
         ]}
       >
+        <Checkbox onChange={toggleUseAIPersonaGen}>
+          Use AI Persona Generator
+        </Checkbox>
+        <div style={{ marginTop: '1rem' }}></div>
         <Input
           placeholder="Persona Name"
           value={personaName}
-          onChange={(e) => setPersonaName(e.target.value)}
+          onChange={(e) => {
+          const newName = e.target.value;
+          setPersonaName(newName);
+
+          if (isEditMode && selectedPersona) {
+            updatePersonaField(parseInt(selectedPersona.key), 'persona', newName);
+          }
+        }}
+
         />
-        <Checkbox onChange={toggleUseAIPersonaGen} style={{ marginTop: '1rem' }}>
-          Use AI Persona Generator
-        </Checkbox>
+         <div style={{ position: 'relative', width: '100%', marginTop: '1rem' }}>
+         <TextArea
+            rows={12}
+            placeholder= "Enter a User Persona"
+            style={{ width: '100%', paddingBottom: '2rem' }}
+            value={personaContent}
+            onChange={(e) => setPersonaContent(e.target.value)}
+          />
+          
+          </div>
+
+
+        {/* <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2%' }}>
+                <div
+                  style={{
+                    //flex: 1,
+                    marginLeft: '1rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between', 
+                    height: '19.1rem', // same height as the right gray box
+                    width: '25rem',
+                    padding: '1rem',
+                    backgroundColor: 'white', // optional
+                    borderRadius: '5px', // optional styling
+                    
+                  }}
+                >
+                  <div style={{ position: 'relative', width: '100%' }}></div>
+                  <TextArea
+                    rows={12}
+                    placeholder="Enter a User Persona"
+                    style={{ width: '100%', paddingBottom: '3rem' }}
+                    value={props.persona}
+                    onChange={(e) => {
+                      if (props.id !== undefined) {
+                        props.updatePersonaField(props.id, 'persona', e.target.value);
+                      }
+                    }}
+                  />
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button onClick={handleAudit} type="primary" style={{ fontWeight: '600' }} >
+                      Analyze
+                    </Button>
+                  </div>
+                </div>
+
+            </div> */}
+
+
       </Modal>
     </>
   );
