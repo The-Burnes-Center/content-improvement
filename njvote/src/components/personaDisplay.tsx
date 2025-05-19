@@ -7,6 +7,7 @@ export interface PersonaDisplayProps {
     output: string | undefined;
     id: number | undefined;
     updatePersonaField: (id: number, field: 'persona' | 'output', value: string) => void;
+    loading: boolean;
 }
 
 const PersonaDisplay = (props: PersonaDisplayProps) => {
@@ -21,70 +22,40 @@ const PersonaDisplay = (props: PersonaDisplayProps) => {
         setPersona(props.persona);
         setOutput(props.output);
         setId(props.id);
-    }, [props.persona, props.output]);
+        setLoading(props.loading);
+    }, [props.persona, props.output, props.loading, props.id]);
 
-    const handleAudit = async () => {
-        setLoading(true);
-        try {
-          const response = await fetch('api/audience', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              url: 'https://www.nj.gov/state/elections/vote.shtml',
-              persona: props.persona,
-              personaAuditId: props.id
-            }),
-          });
-          const text = await response.text();
-          if (props.id !== undefined) {
-            props.updatePersonaField(props.id, 'output', text);
-          }
-          setLoading(false);
-        } catch (err) {
-          console.error(err);
-          if (props.id !== undefined) {
-            props.updatePersonaField(props.id, 'output', 'Error fetching data from API.');
-          }
-          setLoading(false);
-        }
-      };
+    // const handleAudit = async () => {
+    //     setLoading(true);
+    //     try {
+    //       const response = await fetch('api/audience', {
+    //         method: 'POST',
+    //         headers: { 'Content-Type': 'application/json' },
+    //         body: JSON.stringify({
+    //           url: 'https://www.nj.gov/state/elections/vote.shtml',
+    //           persona: props.persona,
+    //           personaAuditId: props.id
+    //         }),
+    //       });
+    //       const text = await response.text();
+    //       console.log(props.id)
+    //       if (props.id !== undefined) {
+    //         props.updatePersonaField(props.id, 'output', text);
+    //       }
+    //       setLoading(false);
+    //     } catch (err) {
+    //       console.error(err);
+    //       if (props.id !== undefined) {
+    //         props.updatePersonaField(props.id, 'output', 'Error fetching data from API.');
+    //       }
+    //       setLoading(false);
+    //     }
+    //   };
       
 
     return (
         <>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '2%' }}>
-                <div
-                  style={{
-                    //flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between', 
-                    height: '19.1rem', // same height as the right gray box
-                    width: '25rem',
-                    padding: '1rem',
-                    backgroundColor: 'white', // optional
-                    borderRadius: '5px', // optional styling
-                    
-                  }}
-                >
-                  <TextArea
-                    rows={12}
-                    placeholder="Enter a User Persona"
-                    style={{ width: '100%' }}
-                    value={props.persona}
-                    onChange={(e) => {
-                      if (props.id !== undefined) {
-                        props.updatePersonaField(props.id, 'persona', e.target.value);
-                      }
-                    }}
-                  />
-
-                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button onClick={handleAudit} type="primary">
-                      Audit Site
-                    </Button>
-                  </div>
-                </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2%' }}>
                 <div
                     className='grayBox'
                     style={{
@@ -99,6 +70,7 @@ const PersonaDisplay = (props: PersonaDisplayProps) => {
                         whiteSpace: 'pre-wrap',
                         wordWrap: 'break-word',  
                         display: 'block',
+                 
                     }}>
                         {loading ? <LoadingOutlined /> : output}
                 </div>

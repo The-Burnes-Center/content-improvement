@@ -275,8 +275,8 @@ def code_accessibility_review(html_code):
 
 
             accessibility_improvements.append(accessibility_review)
-            appending_time = time.time()
-            print(f"appending time: {appending_time - start_time:.2f} seconds")
+            # appending_time = time.time()
+            # print(f"appending time: {appending_time - start_time:.2f} seconds")
 
             #print(len(accessibility_improvements))
             #print(accessibility_review)
@@ -284,8 +284,8 @@ def code_accessibility_review(html_code):
 
 
 
-    end_time = time.time()
-    print(f"completed tasks: {end_time - start_time:.2f} seconds") 
+    # end_time = time.time()
+    # print(f"completed tasks: {end_time - start_time:.2f} seconds") 
     
 
     return accessibility_improvements  
@@ -296,14 +296,17 @@ def code_accessibility_review(html_code):
 # reviews = code_accessibility_review(url1)
 
 #print(chunk_html_script(url1))
-html_script = get_pure_source(url1)
-chunked_script = chunk_html_script(html_script)
+# 
 
 
-print("html chunking")
-print(chunked_script[0])
-for chunk in chunked_script:
-     print(f" length of chunk is {num_tokens(chunk)}")
+# correct print statemments for chunking and threading 
+# chunked_script = chunk_html_script(html_script)
+
+
+# print("html chunking")
+# print(chunked_script[0])
+# for chunk in chunked_script:
+#      print(f" length of chunk is {num_tokens(chunk)}")
 
 
 
@@ -326,8 +329,8 @@ for chunk in chunked_script:
 
 
 
-output = threading_code_accessibility(chunked_script)
-print(output)
+# output = threading_code_accessibility(chunked_script)
+# print(output)
 
 # print(f"chunked_script: {chunked_script}")
 # print("length of chunked_script: ", num_tokens(html_script))

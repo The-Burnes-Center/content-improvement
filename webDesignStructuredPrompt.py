@@ -7,9 +7,11 @@ import os
 
 load_dotenv()
 
+
 url1 = 'https://www.nj.gov/state/elections/vote.shtml'
-openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+openai_client = OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
 client = instructor.from_openai(openai_client)
+
 
 class WebSuggestion(BaseModel):
     key: int = Field(..., description = "A unique identifier for this suggestion item." )
@@ -19,6 +21,7 @@ class WebSuggestion(BaseModel):
     
 
 def analyze_webdesign(url): 
+
     layout = read_file_text("contentlayoutguide.txt")
 
     input_message = f"""Analyze this webpage screenshot and provide improvements for the layout of the page based off of the following guidelines: {layout}. \
@@ -52,7 +55,7 @@ def analyze_webdesign(url):
         response_model = List[WebSuggestion],
     )
 
-    print()
+    # print()
     output = []
 
 
@@ -68,6 +71,7 @@ def analyze_webdesign(url):
                         "suggestion": item.suggestion,
                         "reason": item.reason})
 
+   
     return output
 
     
