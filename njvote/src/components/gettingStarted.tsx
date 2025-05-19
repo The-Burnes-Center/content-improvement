@@ -5,7 +5,7 @@ const GettingStarted = () => {
           <h1 className="text-4xl font-bold">👋 Welcome to MAX</h1>
   
           <p className="text-lg text-gray-700">
-            MAX (Machine Assistant for eXperience) helps you evaluate and improve your website’s content clarity, accessibility, and design.
+            Machine Assistant for eXperience (MAX) helps you evaluate and improve your website’s content clarity, accessibility, and design.
           </p>
   
           <div className="bg-gray-50 rounded-xl shadow-md px-10 py-8 w-full">
