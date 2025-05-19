@@ -150,8 +150,11 @@ def audience():
         return '', 204  # let preflight pass
     data = request.get_json()
     url = data.get('url')
+    print(f"url {url}")
     persona = data.get('persona')
+    print(persona)
     personaAuditId = data.get('personaAuditId')
+    print(personaAuditId)
     if url and persona:
         output = get_pred(get_pure_source(url), f"""Based off of the provided URL, please audit the website for the following user persona: {persona}.""")
 
@@ -162,7 +165,7 @@ def audience():
         cursor.close()
         conn.close()
 
-        return output
+        return output, 200
     else:
         return "No URL or persona provided", 400
     
@@ -235,7 +238,7 @@ def improveContent():
     contentClarityAuditId = cursor.fetchone()[0]
 
     for item in suggestions:
-        print(item)
+        #print(item)
         original = item.get("original_content", "")
         revised = item.get("suggestion", "")
         cursor.execute(
@@ -285,8 +288,17 @@ def webDesign():
         return '', 204
     
     data = request.get_json()
+    # debuug statements 
+    print("Received JSON payload:", data)
+
     url = data.get('url')
     projectId = data.get('projectId')
+    print(projectId)
+    
+    if projectId is None:
+        print("Bad request: projectId missing")
+        return "error projectId",  400
+
     if url:
         print(url)
         output = json.dumps(analyze_webdesign(url))
@@ -389,7 +401,7 @@ def codeAccessibility():
         conn = mysql.connect()
         cursor = conn.cursor()
         for suggestion in output:
-            print(suggestion)
+            #print(suggestion)
             label = suggestion["label"]
             original = suggestion["original_content"]
             revised = suggestion["revised_content"]
@@ -521,11 +533,14 @@ def create_persona():
     conn = mysql.connect()
     cursor = conn.cursor()
     cursor.execute("INSERT INTO PersonaAudit (name, projectId) VALUES (%s, %s)", (name, projectId))
+
     conn.commit()
+    new_id = cursor.lastrowid
+    
     cursor.close()
     conn.close()
 
-    return "Persona created successfully", 201
+    return {"id": new_id }, 201
 
 
 @app.route('/get_personas', methods=['GET'])

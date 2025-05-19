@@ -33,6 +33,7 @@ const Audience = ({ projectId }: AudienceProps) => {
   const [personaContent, setPersonaContent] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
   const { TextArea } = Input;
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchPersonas = async () => {
@@ -98,23 +99,39 @@ const Audience = ({ projectId }: AudienceProps) => {
     }
   };
 
- const analyzePersona = async (persona: Persona) => {
+ const analyzePersona = async (key: string ,personaName: string, personaContent: string ) => {
+  setLoading(true);
   try {
+    
     const response = await fetch('/api/audience', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url: 'https://www.nj.gov/state/elections/vote.shtml',
-        persona: persona.persona,
-        personaAuditId: parseInt(persona.key),
+        persona: personaContent,
+        personaAuditId: key,
       }),
     });
 
     const text = await response.text();
-    updatePersonaField(parseInt(persona.key), 'output', text);
+    const newPersona = { key: key, label: personaName, output: text, persona: personaContent };
+    setPersonas((prevPersonas) => [
+              ...(prevPersonas ?? []).slice(0, -2), // Exclude the last two items (divider and "New User Persona")
+              newPersona,
+              { key: 'divider', label: 'Divider', output: '', persona: '' },
+              { key: 'new', label: 'New User Persona', output: '', persona: '' },
+            ]);
+    setSelectedPersona(newPersona);
+      console.log(personas)
+      console.log(text)
+    setLoading(false);
+    // console.log(persona.persona)
+    // console.log(persona.key)
+    // console.log(parseInt(persona.key))
   } catch (err) {
     console.error(err);
-    updatePersonaField(parseInt(persona.key), 'output', 'Error fetching data from API.');
+    updatePersonaField(parseInt(key), 'output', 'Error fetching data from API.');
+    setLoading(false);
   }
 };
 
@@ -128,17 +145,19 @@ const Audience = ({ projectId }: AudienceProps) => {
 
       if (res.ok) {
         message.success('Persona created successfully!');
-        const newPersona = { key: String(Date.now()), label: personaName, output: '', persona: '' };
-        setPersonas((prevPersonas) => [
-                  ...(prevPersonas ?? []).slice(0, -2), // Exclude the last two items (divider and "New User Persona")
-                  newPersona,
-                  { key: 'divider', label: 'Divider', output: '', persona: '' },
-                  { key: 'new', label: 'New User Persona', output: '', persona: '' },
-                ]);
-        setSelectedPersona(newPersona);
+        console.log('Persona created successfully!');
+        const data = await res.json()
+        // const newPersona = { key: data.id , label: personaName, output: '', persona: personaContent };
+        // setPersonas((prevPersonas) => [
+        //           ...(prevPersonas ?? []).slice(0, -2), // Exclude the last two items (divider and "New User Persona")
+        //           newPersona,
+        //           { key: 'divider', label: 'Divider', output: '', persona: '' },
+        //           { key: 'new', label: 'New User Persona', output: '', persona: '' },
+        //         ]);
+        // setSelectedPersona(newPersona);
         closePersonaModal();
 
-        await analyzePersona(newPersona);
+        await analyzePersona(data.id ,personaName, personaContent);
 
 
       } else {
@@ -252,6 +271,7 @@ const Audience = ({ projectId }: AudienceProps) => {
         output={selectedPersona?.output}
         id={selectedPersona?.key ? parseInt(selectedPersona.key, 10) : undefined}
         updatePersonaField={updatePersonaField}
+        loading={loading}
          />
 
       <Modal
@@ -279,6 +299,7 @@ const Audience = ({ projectId }: AudienceProps) => {
 
           if (isEditMode && selectedPersona) {
             updatePersonaField(parseInt(selectedPersona.key), 'persona', newName);
+
           }
         }}
 
@@ -290,6 +311,10 @@ const Audience = ({ projectId }: AudienceProps) => {
             style={{ width: '100%', paddingBottom: '2rem' }}
             value={personaContent}
             onChange={(e) => setPersonaContent(e.target.value)}
+
+            
+
+          
           />
           
           </div>
