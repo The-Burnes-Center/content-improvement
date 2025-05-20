@@ -3,35 +3,39 @@ import { DownOutlined } from '@ant-design/icons';
 import PersonaDisplay from './personaDisplay';
 import { Space, Dropdown, MenuProps, Modal, Button, Input, Checkbox, message } from 'antd';
 
+// Props passed into the Audience component
 interface AudienceProps {
   projectId: number | null;
 }
 
+// Structure for each persona
 interface Persona {
   key: string;
-  label: string,
-  output: string,
-  persona: string
+  label: string;
+  output: string;
+  persona: string;
 }
 
 const Audience = ({ projectId }: AudienceProps) => {
-
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(personas[0] || null);
   const [openPersonaModal, setOpenPersonaModal] = useState(false);
   const [useAIPersonaGen, setUseAIPersonaGen] = useState(false);
   const [personaName, setPersonaName] = useState('');
 
-
+  // Fetch personas when projectId changes
   useEffect(() => {
     const fetchPersonas = async () => {
       try {
         let personaItems: MenuProps['items'] = [];
+
         const response = await fetch(`http://127.0.0.1:5000/get_personas?projectId=${projectId}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
+
         const data = await response.json();
+
         if (response.ok) {
           personaItems = data['personas'].map((item: any) => ({
             key: String(item[0]),
@@ -44,8 +48,13 @@ const Audience = ({ projectId }: AudienceProps) => {
         } else {
           message.error('Failed to fetch personas.');
         }
-        console.log(personaItems)
+
+        console.log(personaItems);
+
+        // Filter and cast items to Persona
         setPersonas((personaItems || []).filter((item): item is Persona => !!item && 'key' in item && 'label' in item));
+
+        // Default selection
         const firstPersona = personaItems?.find((item): item is Persona => !!item && 'label' in item);
         setSelectedPersona(firstPersona || null);
       } catch (err) {
@@ -53,26 +62,31 @@ const Audience = ({ projectId }: AudienceProps) => {
         message.error('An error occurred while fetching personas.');
       }
     };
+
     fetchPersonas();
   }, [projectId]);
 
+  // Toggle checkbox state
   const toggleUseAIPersonaGen = () => {
     setUseAIPersonaGen(!useAIPersonaGen);
   };
 
+  // Open persona modal
   const showPersonaModal = () => {
     setOpenPersonaModal(true);
   };
 
+  // Close persona modal and reset fields
   const closePersonaModal = () => {
     setOpenPersonaModal(false);
     setPersonaName('');
     setUseAIPersonaGen(false);
   };
 
+  // Handle persona selection or creation from dropdown
   const handleMenuClick: MenuProps['onClick'] = (e) => {
     const selectedItem = personas?.find(item => item?.key === e.key);
-    console.log(e.key)
+    console.log(e.key);
     if (e.key === 'new') {
       showPersonaModal();
     } else if (selectedItem && 'label' in selectedItem) {
@@ -80,6 +94,7 @@ const Audience = ({ projectId }: AudienceProps) => {
     }
   };
 
+  // Create a new persona and add to list
   const createPersona = async () => {
     try {
       const res = await fetch('/api/create_persona_audit', {
@@ -92,11 +107,11 @@ const Audience = ({ projectId }: AudienceProps) => {
         message.success('Persona created successfully!');
         const newPersona = { key: String(Date.now()), label: personaName, output: '', persona: '' };
         setPersonas((prevPersonas) => [
-                  ...(prevPersonas ?? []).slice(0, -2), // Exclude the last two items (divider and "New User Persona")
-                  newPersona,
-                  { key: 'divider', label: 'Divider', output: '', persona: '' },
-                  { key: 'new', label: 'New User Persona', output: '', persona: '' },
-                ]);
+          ...(prevPersonas ?? []).slice(0, -2), // Exclude the last two items (divider and "New User Persona")
+          newPersona,
+          { key: 'divider', label: 'Divider', output: '', persona: '' },
+          { key: 'new', label: 'New User Persona', output: '', persona: '' },
+        ]);
         setSelectedPersona(newPersona);
         closePersonaModal();
       } else {
@@ -111,6 +126,7 @@ const Audience = ({ projectId }: AudienceProps) => {
     setUseAIPersonaGen(false);
   };
 
+  // Update a field (persona or output) in the selected persona
   const updatePersonaField = (id: number, field: 'persona' | 'output', value: string) => {
     setPersonas((prevPersonas) =>
       prevPersonas.map((p) =>
@@ -121,32 +137,34 @@ const Audience = ({ projectId }: AudienceProps) => {
       setSelectedPersona((prev) => prev ? { ...prev, [field]: value } : prev);
     }
   };
-  
-  
 
   return (
     <>
-    <h2>Understand how users interact with your website</h2>
+      <h2>Understand how users interact with your website</h2>
+
+      {/* Dropdown for selecting personas */}
       <div style={{ marginLeft: '2rem' }}>
-        <Dropdown menu ={{ items: personas, onClick: handleMenuClick }} trigger={['click']}>
+        <Dropdown menu={{ items: personas, onClick: handleMenuClick }} trigger={['click']}>
           <Button>
-          <a onClick={(e) => e.preventDefault()}>
-            <Space>
-              {selectedPersona?.label}
-              <DownOutlined />
-            </Space>
-          </a>
+            <a onClick={(e) => e.preventDefault()}>
+              <Space>
+                {selectedPersona?.label}
+                <DownOutlined />
+              </Space>
+            </a>
           </Button>
         </Dropdown>
       </div>
 
-      <PersonaDisplay 
+      {/* Persona viewer/editor */}
+      <PersonaDisplay
         persona={selectedPersona?.persona}
         output={selectedPersona?.output}
         id={selectedPersona?.key ? parseInt(selectedPersona.key, 10) : undefined}
         updatePersonaField={updatePersonaField}
-         />
+      />
 
+      {/* Modal to create new persona */}
       <Modal
         open={openPersonaModal}
         title="Create New User Persona"

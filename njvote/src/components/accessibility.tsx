@@ -4,97 +4,82 @@ import { useState, useEffect } from 'react';
 
 const { Panel } = Collapse;
 
-
+// Props interface for the Accessibility component
 export interface AccessibilityProps {
   projectId: number | null;
 }
 
+// Suggestion object structure returned by the backend
+interface Suggestion {
+  label: string;
+  original_content: string;
+  revised_content: string;
+  explanation: string;
+}
+
 const Accessibility = (props: AccessibilityProps) => {
-
-  interface Suggestion {
-    label: string;
-    original_content: string;
-    revised_content: string;
-    explanation: string;
-  }
-
-
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
+  // Fetches accessibility audit suggestions from backend
   const fetchAccessibilitySuggestions = async () => {
-    // try {
-    //     const response = await fetch('/api/accessibility', {
-    //         method: 'POST',
-    //         headers: {
-    //             'Content-Type': 'application/json',
-    //         },
-    //         body: JSON.stringify({
-    //             url: 'https://www.nj.gov/state/elections/vote.shtml',
-    //         }),
-    //     }).then(rsp => rsp.json()).then(rsp => {
-    //       console.log(rsp)
-    //         setSuggestions(rsp);
-    //     })
-    // } catch (err) {
-    //     console.error(err);
-    // }
-
+    // Clear existing suggestions before fetching new ones
     setSuggestions([]);
 
     try {
-      const auditResponse = await fetch(`api/get_accessibility_audit?projectId=${props.projectId}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      
+      // Step 1: Get audit ID for the given project
+      const auditResponse = await fetch(
+        `api/get_accessibility_audit?projectId=${props.projectId}`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+
       if (auditResponse.ok) {
         const auditData = await auditResponse.json();
         const accessibilityAuditId = auditData['accessibility_audit'][0];
 
-        console.log(auditData)
-
-        console.log("accessibilityAuditId", accessibilityAuditId)
-
-        const response = await fetch(`api/get_accessibility_suggestions?accessibilityAuditId=${accessibilityAuditId}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
+        // Step 2: Use the audit ID to fetch the actual suggestions
+        const response = await fetch(
+          `api/get_accessibility_suggestions?accessibilityAuditId=${accessibilityAuditId}`,
+          {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
 
         const data = await response.json();
 
-        console.log(data['suggestions'])
-
         if (response.ok) {
+          // Transform backend response into the Suggestion format
           const suggestions = data['suggestions'].map((item: any) => ({
             label: item[2],
             original_content: item[3],
             revised_content: item[4],
             explanation: item[5],
           }));
+
           setSuggestions(suggestions);
         } else {
           console.error('Failed to fetch accessibility suggestions.');
         }
       }
-    }
-    catch (err) {
+    } catch (err) {
       console.error(err);
-      console.error('An error occurred while fetching web design suggestions.');
+      console.error('An error occurred while fetching accessibility suggestions.');
     }
   };
 
+  // Automatically fetch suggestions when component mounts
   useEffect(() => {
     fetchAccessibilitySuggestions();
   }, []);
 
-  
-
-
   return (
-    
     <>
-     <h2> Make sure your content is aligned with WCAG guidelines</h2>
-    <Collapse accordion style={{ marginTop: '2rem' }}>
+      <h2>Make sure your content is aligned with WCAG guidelines</h2>
+
+      <Collapse accordion style={{ marginTop: '2rem' }}>
         {suggestions.map((suggestion, index) => (
           <Panel header={suggestion.label} key={index}>
             <AccessibilitySuggestion
@@ -104,14 +89,9 @@ const Accessibility = (props: AccessibilityProps) => {
             />
           </Panel>
         ))}
-    </Collapse>
+      </Collapse>
     </>
-    
   );
 };
 
 export default Accessibility;
-
-
-
-
