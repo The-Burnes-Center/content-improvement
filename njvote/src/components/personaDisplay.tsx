@@ -24,35 +24,7 @@ const PersonaDisplay = (props: PersonaDisplayProps) => {
         setId(props.id);
         setLoading(props.loading);
     }, [props.persona, props.output, props.loading, props.id]);
-
-    // const handleAudit = async () => {
-    //     setLoading(true);
-    //     try {
-    //       const response = await fetch('api/audience', {
-    //         method: 'POST',
-    //         headers: { 'Content-Type': 'application/json' },
-    //         body: JSON.stringify({
-    //           url: 'https://www.nj.gov/state/elections/vote.shtml',
-    //           persona: props.persona,
-    //           personaAuditId: props.id
-    //         }),
-    //       });
-    //       const text = await response.text();
-    //       console.log(props.id)
-    //       if (props.id !== undefined) {
-    //         props.updatePersonaField(props.id, 'output', text);
-    //       }
-    //       setLoading(false);
-    //     } catch (err) {
-    //       console.error(err);
-    //       if (props.id !== undefined) {
-    //         props.updatePersonaField(props.id, 'output', 'Error fetching data from API.');
-    //       }
-    //       setLoading(false);
-    //     }
-    //   };
       
-
     return (
         <>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2%' }}>
@@ -61,20 +33,20 @@ const PersonaDisplay = (props: PersonaDisplayProps) => {
                     style={{
                         flex: 1, 
                         width: '37rem',
-                        height: '19.1rem',
+                        height: '25rem',
                         overflowY: 'auto',
                         marginLeft: '2%',
                         marginTop: '-0.03rem', 
                         padding: '1rem',
-                        backgroundColor: 'lightgray',
+                        backgroundColor: 'white',
                         whiteSpace: 'pre-wrap',
                         wordWrap: 'break-word',  
                         display: 'block',
+                        font: '13px "Helvetica Neue"'
                  
                     }}>
                         {loading ? <LoadingOutlined /> : output}
                 </div>
-
             </div>
         </>
     );

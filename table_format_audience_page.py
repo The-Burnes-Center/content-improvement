@@ -28,16 +28,7 @@ challenges_prompt = f"""
                     - Be concise but descriptive
                    
                     """
-
-
-
-
-
-
-
-
-
-                
+         
 
 
 body = {

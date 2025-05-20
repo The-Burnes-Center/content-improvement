@@ -120,20 +120,22 @@ const ContentClarity = (props: ContentClarityProps) => {
 
 
   return (
-
-    <div style={{ padding: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ marginBottom: 0 }}>Help users understand your content</h2>
-        <Button type="primary" onClick={exportToCSV}>
-          Export to CSV
-        </Button>
+  <div style={{ marginLeft: '1rem'}}>
+      <div style={{ padding: '1rem'}}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ marginLeft: '0.1rem', marginBottom: '1rem'  }}>Help users understand your content</h2>
+          <Button type="primary" onClick={exportToCSV}>
+            Export to CSV
+          </Button>
+        </div>
+        <Table
+          columns={columns}
+          dataSource={tableData}
+          pagination={{pageSize: 4}}
+          bordered
+        />
+        
       </div>
-      <Table
-        columns={columns}
-        dataSource={tableData}
-        pagination={{pageSize: 4}}
-        bordered
-      />
     </div>
   );
 };

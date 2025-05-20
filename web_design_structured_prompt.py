@@ -20,7 +20,15 @@ class WebSuggestion(BaseModel):
     reason: str = Field(...,description="A brief explanation of why this suggestion is important, such as 'Improves user engagement and guides users to key content.'")
     
 
+
+
 def analyze_webdesign(url): 
+    """Using the OpenAI API, analyze the webpage screenshot and provide suggestions for improving the web design.
+    Args:
+        url (str): The URL of the webpage to analyze.
+    Returns:
+        output (List[WebSuggestion]) : A list of suggestions for improving the web design, each represented as a WebSuggestion object.
+    """
 
     layout = read_file_text("contentlayoutguide.txt")
 
@@ -48,24 +56,15 @@ def analyze_webdesign(url):
                 "content": [
                     {"type": "text", "text": input_message},
                     {"type": "image_url", "image_url": {"url": s3_url}}
-                    #{"type": "text", "text": input_text2}
                 ],
             },
         ], 
         response_model = List[WebSuggestion],
     )
 
-    # print()
     output = []
-
-
     for item in resp:
         assert isinstance(item, WebSuggestion)
-        # print(f"Key: {item.key}")
-        # print(f"Area: {item.area}")
-        # print(f"Suggestion: {item.suggestion}")
-        # print(f"Reason: {item.reason}")
-        # print()
         output.append({"key": item.key,
                         "area": item.area,
                         "suggestion": item.suggestion,

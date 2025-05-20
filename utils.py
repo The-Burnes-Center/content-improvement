@@ -70,8 +70,14 @@ def read_file_text(file_path):
 
 ## Webdesign Functions
 
-#use playwright to capture screen shot 
 def capture_screenshot(url, filepath="screenshot.png"):
+    """Captures a screenshot of the webpage at the given URL and saves it to the specified file path.
+    Args: 
+        url (str): The URL of the webpage to capture.
+        filepath (str): The file path where the screenshot will be saved. Default is "screenshot.png".
+    Returns:
+        str: The file path of the saved screenshot."""
+
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page()
@@ -81,7 +87,7 @@ def capture_screenshot(url, filepath="screenshot.png"):
 
         return filepath
 
-#uploads image to s3 bucket 
+
 def upload_to_s3(file_path, bucket_name, object_name=None):
     """Uploads the screenshot to an S3 bucket and returns its URL."""
     if object_name is None:
@@ -160,6 +166,13 @@ def webdesign_extract_text(input_text):
 ##Code accessibility Functions
 
 def get_pure_source(url):
+    """Fetch the source code of a webpage and return it as plain text.
+    Args: 
+        url (str): The URL of the webpage to fetch.
+    Returns:
+        str: The source code of the webpage as plain text.
+    """
+    
     try:
         response = requests.get(url)
         response.raise_for_status()  # Raise exception for HTTP errors
@@ -178,7 +191,13 @@ def num_tokens(text):
     return len(tokenizer.encode(text))
 
 def chunk_element(element, max_tokens=5000):
-    """Recursively split an element if its text exceeds max_tokens."""
+    """Recursively split an element if its text exceeds max_tokens.
+    Args:
+        element (BeautifulSoup element): The HTML element to process.
+        max_tokens (int): The maximum number of tokens allowed in a chunk.
+    Returns:
+        list: A list of text chunks, each within the token limit.
+        """
     text = element.get_text(separator=' ', strip=True)
     if num_tokens(text) <= max_tokens:
         return [text]

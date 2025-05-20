@@ -1,10 +1,9 @@
 from flask import Flask, request
 from utils import *
 from flask_cors import CORS
-from accessibilityStructuredPrompt import analyze_accessibility
-from webDesignStructuredPrompt import analyze_webdesign
-from ContentClarityStructuredPrompt import anaylze_content_clarity
-from appending_prompts import code_accessibility_review
+from web_design_structured_prompt import analyze_webdesign
+from content_clarity_structured_prompt import anaylze_content_clarity
+from appending_prompts import chunk_html_script, threading_code_accessibility
 import json
 from flaskext.mysql import MySQL
 from dotenv import load_dotenv
@@ -375,11 +374,10 @@ def codeAccessibility():
     projectId = data.get('projectId')
     if url:
         print(url)
-        output = json.dumps(code_accessibility_review(url))
-        #print(json.dumps(code_accessibility_review(url)))
-        #print("finished all iterations")
-        #output = json.dumps(analyze_accessibility(url))
-        #print(json.dumps(analyze_accessibility(url)))
+        html_script = get_pure_source(url)
+        chunked_script = chunk_html_script(html_script)
+        suggestions = threading_code_accessibility(chunked_script)
+        output = json.dumps(suggestions)
         output = json.loads(output)
 
         conn = mysql.connect()

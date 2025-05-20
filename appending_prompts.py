@@ -16,6 +16,16 @@ max_issues = 1
 
 
 def chunk_html_script(html_script, max_tokens = 5000):
+    """
+    This function takes a HTML script and chunks it into smaller pieces based on the max number of tokens.
+    Args:
+        html_script (str): The HTML script to be chunked.
+        max_tokens (int): The maximum number of tokens allowed in each chunk. 
+
+    Returns:
+        list: A list of HTML chunks.
+
+    """
     chunks = []
 
     soup = BeautifulSoup(html_script, 'html.parser')
@@ -42,6 +52,13 @@ def chunk_html_script(html_script, max_tokens = 5000):
     
 
 def threading_code_accessibility(chunked_html_code):
+    """
+    This function takes a list of HTML code chunks and processes them in parallel to find accessibility issues.
+    Args:
+        chunked_html_code (list): A list of HTML code chunks.
+    Returns:
+        list: A list of suggestions for accessibility improvements.
+    """
     suggestions = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         future_to_section = {
@@ -62,18 +79,29 @@ def threading_code_accessibility(chunked_html_code):
 
 
 def code_accessibility_review(html_code): 
+    """
+    Using Claude AI, analyze the HTML code to provide suggestions for improving accessibility. 
+    This function identifies accessibility issues in the provided HTML code and suggests improvements based on WCAG 2.1 AA guidelines.
+    The function uses Claude AI and appends messages in conversation to relationally find the orginal code issue, the suggested improvement, the explanation, and the label for the suggested improvement.
 
+    Args:
+        html_code (str): The HTML code to be analyzed.
+    Returns:
+        list: A list of suggestions for accessibility improvements.The list contains dictionaries with the following keys:
+            - original_content: The original HTML code with the accessibility issue.
+            - revised_content: The suggested improvement for the HTML code.
+            - explanation: An explanation of why the suggested improvement is necessary.
+            - label: A label for the identified code issue and suggested improvement.
+    """
 
-    start_time = time.time()
     code_issues = []
     accessibility_improvements = []
 
     for i in range(max_issues):
-        #print(f"\n Iteration {i+1}: Finding next issue")
+
         accessibility_review = {}
 
-        #if the issue is already in {code_issues}, do not include it.
-
+        #prompt for finding the code issue
         prompt1 = f'''You are a strict accessibility reviewer analyzing the following HTML: {html_code} 
                 Your task is to identify **only real** accessibility issues based on WCAG 2.1 AA guidelines. 
                 Do **not** invent problems. Do not include correct code. 
@@ -121,19 +149,17 @@ def code_accessibility_review(html_code):
         else:
             print(f"code issue already found: {code_issue}")
             print("Repeating issue, No new accessibility issue found.")
-            #end_time = time.time()
+      
             continue
-            # print(f"completed tasks: {end_time - start_time:.2f} seconds")   
-            # return accessibility_improvements
+       
 
         if "done" in code_issue.lower():  
             print(" Done: No accessibility issue found.")
             break 
-            # end_time = time.time()
-            # print(f"completed tasks: {end_time - start_time:.2f} seconds")  
-            # return accessibility_improvements
+           
 
         else: 
+            #prompt for finding the code suggestion
             prompt2 = f'''You are a strict accessibility reviewer analyzing the following HTML: 
             Your task is to provide a suggestion for the identified code issue: {code_issue} based on WCAG 2.1 AA guidelines. 
             Only provide the HTML code that would be improving the given code issue. 
@@ -175,13 +201,13 @@ def code_accessibility_review(html_code):
             response_body2 = json.loads(resp2["body"].read())
             suggestion = response_body2["content"][0]["text"]
             accessibility_review["revised_content"] = suggestion
-        #print(f"suggestion: {suggestion}")
+    
 
             if suggestion == "":
                 print("No suggestion found.")
 
             else: 
-
+                #prompt for finding the code explanation
                 prompt3 = f'''You are a strict accessibility reviewer analyzing the following HTML: 
                 Your task is to provide an explanation for the identified code issue: {code_issue} and suggested improvement: {suggestion} based on WCAG 2.1 AA guidelines. 
 
@@ -224,13 +250,13 @@ def code_accessibility_review(html_code):
             response_body3 = json.loads(resp3["body"].read())
             explanation = response_body3["content"][0]["text"]
             accessibility_review["explanation"] = explanation
-            #print(len(accessibility_improvements))
+ 
 
             if explanation == "":
                 print("No explanation found.")
 
             else: 
-
+                #prompt for producing the label
                 prompt4 = f'''You are a strict accessibility reviewer analyzing the following HTML: 
                 Your task is to provide a label for the identified code issue: {code_issue} and suggested improvement: {suggestion} based on WCAG 2.1 AA guidelines and the explanation: {explanation}.
                 Only provide a label for the identified code issue: {code_issue} and suggested improvement: {suggestion} based on WCAG 2.1 AA guidelines and the explanation: {explanation}. 
@@ -275,72 +301,20 @@ def code_accessibility_review(html_code):
 
 
             accessibility_improvements.append(accessibility_review)
-            # appending_time = time.time()
-            # print(f"appending time: {appending_time - start_time:.2f} seconds")
-
-            #print(len(accessibility_improvements))
-            #print(accessibility_review)
-
-
-
-
-    # end_time = time.time()
-    # print(f"completed tasks: {end_time - start_time:.2f} seconds") 
+          
     
 
     return accessibility_improvements  
 
 
 
-# print("here")
-# reviews = code_accessibility_review(url1)
-
-#print(chunk_html_script(url1))
-# 
-
 
 # correct print statemments for chunking and threading 
+
+# html_script = get_pure_source(url1)
+
 # chunked_script = chunk_html_script(html_script)
+# suggestions = threading_code_accessibility(chunked_script)
+# print(suggestions)
 
-
-# print("html chunking")
-# print(chunked_script[0])
-# for chunk in chunked_script:
-#      print(f" length of chunk is {num_tokens(chunk)}")
-
-
-
-
-
-
-
-# print("text chunking: ")
-# text_chunks = chunk_html_text(url1)
-# print(text_chunks[0])
-
-# for chunk in text_chunks:
-#      print(f" length of chunk is {num_tokens(chunk)}")
-
-# print(f"number of chunks for html {len(chunked_script)}")
-# print(f"number of chunks for text {len(text_chunks)}")
-
-
-
-
-
-
-# output = threading_code_accessibility(chunked_script)
-# print(output)
-
-# print(f"chunked_script: {chunked_script}")
-# print("length of chunked_script: ", num_tokens(html_script))
-# tokens = 0
-# for chunk in chunked_script:
-#     print(f' length chunk: {num_tokens(chunk)}')
-#     tokens += num_tokens(chunk)
-
-# print(f"total tokens: {tokens}")
-
-# print(f"reviews: {reviews}") 
-# # print(len(reviews))
 

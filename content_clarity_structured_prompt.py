@@ -15,7 +15,12 @@ class ContentSuggestion(BaseModel):
     
 
 def anaylze_content_clarity(section, content_guidlines):
-    # client = instructor.from_anthropic(AnthropicBedrock())
+    """Analyze a section of text for content clarity and suggest improvements.
+    Args:
+        section (str): The section of text to analyze.
+        content_guidlines (str): The content clarity guidelines to follow.
+    Returns:
+        output (List[ContentSuggestion]): A list of suggestions for improving content clarity."""
    
     input_message =  f'''
         You are a professional content clarity editor. Analyze the following website section:{section}

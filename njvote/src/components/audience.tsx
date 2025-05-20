@@ -311,54 +311,8 @@ const Audience = ({ projectId }: AudienceProps) => {
             style={{ width: '100%', paddingBottom: '2rem' }}
             value={personaContent}
             onChange={(e) => setPersonaContent(e.target.value)}
-
-            
-
-          
           />
-          
           </div>
-
-
-        {/* <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2%' }}>
-                <div
-                  style={{
-                    //flex: 1,
-                    marginLeft: '1rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between', 
-                    height: '19.1rem', // same height as the right gray box
-                    width: '25rem',
-                    padding: '1rem',
-                    backgroundColor: 'white', // optional
-                    borderRadius: '5px', // optional styling
-                    
-                  }}
-                >
-                  <div style={{ position: 'relative', width: '100%' }}></div>
-                  <TextArea
-                    rows={12}
-                    placeholder="Enter a User Persona"
-                    style={{ width: '100%', paddingBottom: '3rem' }}
-                    value={props.persona}
-                    onChange={(e) => {
-                      if (props.id !== undefined) {
-                        props.updatePersonaField(props.id, 'persona', e.target.value);
-                      }
-                    }}
-                  />
-
-                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button onClick={handleAudit} type="primary" style={{ fontWeight: '600' }} >
-                      Analyze
-                    </Button>
-                  </div>
-                </div>
-
-            </div> */}
-
-
       </Modal>
     </>
   );
