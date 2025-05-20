@@ -20,9 +20,9 @@ class WebSuggestion(BaseModel):
     reason: str = Field(...,description="A brief explanation of why this suggestion is important, such as 'Improves user engagement and guides users to key content.'")
     
 
+layout_guidleines = read_file_text("contentlayoutguide.txt")
 
-
-def analyze_webdesign(url): 
+def analyze_webdesign(url, Layout_guidelines): 
     """Using the OpenAI API, analyze the webpage screenshot and provide suggestions for improving the web design.
     Args:
         url (str): The URL of the webpage to analyze.
@@ -30,9 +30,8 @@ def analyze_webdesign(url):
         output (List[WebSuggestion]) : A list of suggestions for improving the web design, each represented as a WebSuggestion object.
     """
 
-    layout = read_file_text("contentlayoutguide.txt")
 
-    input_message = f"""Analyze this webpage screenshot and provide improvements for the layout of the page based off of the following guidelines: {layout}. \
+    input_message = f"""Analyze this webpage screenshot and provide improvements for the layout of the page based off of the following guidelines: {Layout_guidelines}. \
                 For each suggestion, provide an example of a part of the site that could be improved. Also cite specific guidelines in each suggestion. \
                 If you cannot provide a specific element on the webpage as an example, do not include the suggestion. Do not include additional text and 
                 Format the output in JSON, using the following structure:
