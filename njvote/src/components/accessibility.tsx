@@ -1,117 +1,108 @@
 import { Collapse } from 'antd';
-import AccessibilitySuggestion from './accessibilitySuggestion';
 import { useState, useEffect } from 'react';
+import AccessibilitySuggestion from './accessibilitySuggestion';
 
 const { Panel } = Collapse;
 
-
+// Props interface for the Accessibility component
 export interface AccessibilityProps {
   projectId: number | null;
 }
 
-const Accessibility = (props: AccessibilityProps) => {
+// Suggestion object structure returned by the backend
+interface Suggestion {
+  label: string;
+  original_content: string;
+  revised_content: string;
+  explanation: string;
+}
 
-  interface Suggestion {
-    label: string;
-    original_content: string;
-    revised_content: string;
-    explanation: string;
-  }
-
-
+const Accessibility = ({ projectId }: AccessibilityProps) => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
+  // Fetches accessibility audit suggestions from backend
   const fetchAccessibilitySuggestions = async () => {
-    // try {
-    //     const response = await fetch('/api/accessibility', {
-    //         method: 'POST',
-    //         headers: {
-    //             'Content-Type': 'application/json',
-    //         },
-    //         body: JSON.stringify({
-    //             url: 'https://www.nj.gov/state/elections/vote.shtml',
-    //         }),
-    //     }).then(rsp => rsp.json()).then(rsp => {
-    //       console.log(rsp)
-    //         setSuggestions(rsp);
-    //     })
-    // } catch (err) {
-    //     console.error(err);
-    // }
+    // Prevent fetch if projectId is not set
+    if (!projectId) return;
 
+    // Clear existing suggestions before fetching new ones
     setSuggestions([]);
 
     try {
-      const auditResponse = await fetch(`api/get_accessibility_audit?projectId=${props.projectId}`, {
+      // Step 1: Get audit ID for the given project
+      const auditRes = await fetch(`api/get_accessibility_audit?projectId=${projectId}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
-      
-      if (auditResponse.ok) {
-        const auditData = await auditResponse.json();
-        const accessibilityAuditId = auditData['accessibility_audit'][0];
 
-        console.log(auditData)
+      if (!auditRes.ok) {
+        console.error('Failed to fetch audit ID');
+        return;
+      }
 
-        console.log("accessibilityAuditId", accessibilityAuditId)
+      const auditData = await auditRes.json();
+      const accessibilityAuditId = auditData?.accessibility_audit?.[0];
 
-        const response = await fetch(`api/get_accessibility_suggestions?accessibilityAuditId=${accessibilityAuditId}`, {
+      // If audit ID is missing, stop execution
+      if (!accessibilityAuditId) {
+        console.error('No accessibility audit ID found.');
+        return;
+      }
+
+      // Step 2: Use the audit ID to fetch the actual suggestions
+      const suggestionsRes = await fetch(
+        `api/get_accessibility_suggestions?accessibilityAuditId=${accessibilityAuditId}`,
+        {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
-        });
-
-        const data = await response.json();
-
-        console.log(data['suggestions'])
-
-        if (response.ok) {
-          const suggestions = data['suggestions'].map((item: any) => ({
-            label: item[2],
-            original_content: item[3],
-            revised_content: item[4],
-            explanation: item[5],
-          }));
-          setSuggestions(suggestions);
-        } else {
-          console.error('Failed to fetch accessibility suggestions.');
         }
+      );
+
+      if (!suggestionsRes.ok) {
+        console.error('Failed to fetch accessibility suggestions');
+        return;
       }
-    }
-    catch (err) {
-      console.error(err);
-      console.error('An error occurred while fetching web design suggestions.');
+
+      const data = await suggestionsRes.json();
+
+      // Transform backend response into the Suggestion format
+      const parsedSuggestions = data.suggestions.map((item: any) => ({
+        label: item[2],
+        original_content: item[3],
+        revised_content: item[4],
+        explanation: item[5],
+      }));
+
+      // Store parsed suggestions in state
+      setSuggestions(parsedSuggestions);
+    } catch (err) {
+      console.error('Error fetching accessibility suggestions:', err);
     }
   };
 
+  // Automatically fetch suggestions when component mounts or when projectId changes
   useEffect(() => {
     fetchAccessibilitySuggestions();
-  }, []);
-
-  
-
+  }, [projectId]);
 
   return (
-    
     <>
-     <h2> Make sure your content is aligned with WCAG guidelines</h2>
-    <Collapse accordion style={{ marginTop: '2rem' }}>
-        {suggestions.map((suggestion, index) => (
-          <Panel header={suggestion.label} key={index}>
+      <h2>Make sure your content is aligned with WCAG guidelines</h2>
+
+      {/* Accordion-style collapsible panels for each suggestion */}
+      <Collapse accordion style={{ marginTop: '2rem' }}>
+        {suggestions.map((s, i) => (
+          <Panel header={s.label} key={i}>
             <AccessibilitySuggestion
-              original={suggestion.original_content}
-              revised={suggestion.revised_content}
-              explanation={suggestion.explanation}
+              original={s.original_content}
+              revised={s.revised_content}
+              explanation={s.explanation}
             />
           </Panel>
         ))}
-    </Collapse>
+      </Collapse>
     </>
-    
   );
 };
 
 export default Accessibility;
-
-
-
-

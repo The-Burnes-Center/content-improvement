@@ -1,79 +1,89 @@
-
-// created a table to show the content clarity suggestions
+// Ant Design components and React imports
 import { Table, Typography, Button } from 'antd';
 import { useState, useEffect } from 'react';
 
 const { Paragraph } = Typography;
 
+// Props interface definition
 export interface ContentClarityProps {
   projectId: number | null;
 }
 
-const ContentClarity = (props: ContentClarityProps) => {
-  
+const ContentClarity = ({ projectId }: ContentClarityProps) => {
+  // Local interface to shape suggestion data
   interface Content {
     key: number;
     original: string;
     suggestion: string;
   }
+
+  // State to hold fetched suggestions
   const [suggestions, setSuggestions] = useState<Content[]>([]);
 
+  // Function to fetch suggestions for content clarity
   const fetchContentClaritySuggestions = async () => {
     setSuggestions([]);
+
     try {
-      
-      
-      const auditResponse = await fetch(`api/get_content_clarity_audit?projectId=${props.projectId}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (auditResponse.ok) {
-        const auditData = await auditResponse.json();
-        console.log("auditData", auditData)
-        const contentClarityAuditId = auditData['content_clarity_audit'][0];
-
-        console.log("contentClarityAuditId", contentClarityAuditId)
-
-        const response = await fetch(`api/get_content_clarity_suggestions?contentClarityAuditId=${contentClarityAuditId}`, {
+      // First, get the audit ID for the current project
+      const auditResponse = await fetch(
+        `api/get_content_clarity_audit?projectId=${projectId}`,
+        {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
-        });
-
-        const data = await response.json();
-
-        console.log("data", data)
-        console.log("response", response)
-        if (response.ok) {
-          const suggestions = data['suggestions'].map((item: any) => ({
-            original: item[2],
-            suggestion: item[3],
-          }));
-          setSuggestions(suggestions);
-        } else {
-          console.error('Failed to fetch content clarity suggestions.');
         }
+      );
 
-      } else {
+      if (!auditResponse.ok) {
         console.error('Failed to fetch content clarity audit.');
+        return;
       }
+
+      const auditData = await auditResponse.json();
+      const contentClarityAuditId = auditData['content_clarity_audit'][0];
+
+      // Then, use the audit ID to get the suggestions
+      const response = await fetch(
+        `api/get_content_clarity_suggestions?contentClarityAuditId=${contentClarityAuditId}`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+
+      if (!response.ok) {
+        console.error('Failed to fetch content clarity suggestions.');
+        return;
+      }
+
+      const data = await response.json();
+
+      // Transform raw API response into component-friendly structure
+      const transformed = data['suggestions'].map((item: any, index: number) => ({
+        key: index,
+        original: item[2],
+        suggestion: item[3],
+      }));
+
+      setSuggestions(transformed);
     } catch (err) {
-      console.error(err);
-      console.error('An error occurred while fetching content clarity suggestions.');
+      console.error('An error occurred while fetching content clarity suggestions.', err);
     }
   };
 
+  // Trigger the fetch once the component is mounted
   useEffect(() => {
     fetchContentClaritySuggestions();
   }, []);
 
-  // Combine content + suggestion into one row per entry
-  const tableData = suggestions.map((item ) => ({
+  // Format data for the table component
+  const tableData = suggestions.map((item) => ({
     key: item.key,
     original: item.original,
     suggestion: item.suggestion || 'No suggestions found.',
   }));
 
+  // Define table columns
   const columns = [
     {
       title: 'Original Content',
@@ -88,25 +98,31 @@ const ContentClarity = (props: ContentClarityProps) => {
       dataIndex: 'suggestion',
       key: 'suggestion',
       render: (text: string) => (
-        <Paragraph style={{ whiteSpace: 'pre-wrap', backgroundColor: '#f6ffed', padding: '0.5rem', borderRadius: '6px' }}>
+        <Paragraph
+          style={{
+            whiteSpace: 'pre-wrap',
+            backgroundColor: '#f6ffed',
+            padding: '0.5rem',
+            borderRadius: '6px',
+          }}
+        >
           {text}
         </Paragraph>
       ),
     },
   ];
 
+  // Export suggestions to a downloadable CSV file
   const exportToCSV = () => {
     if (!suggestions.length) return;
 
     const headers = ['Original Content', 'Suggested Improvement'];
-    const rows = suggestions.map(item => [
+    const rows = suggestions.map((item) => [
       `"${item.original.replace(/"/g, '""')}"`,
-      `"${item.suggestion.replace(/"/g, '""')}"`
+      `"${item.suggestion.replace(/"/g, '""')}"`,
     ]);
 
-    const csvContent =
-      [headers, ...rows].map(e => e.join(',')).join('\n');
-
+    const csvContent = [headers, ...rows].map((e) => e.join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
 
@@ -118,9 +134,8 @@ const ContentClarity = (props: ContentClarityProps) => {
     document.body.removeChild(link);
   };
 
-
+  // Render component
   return (
-
     <div style={{ padding: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ marginBottom: 0 }}>Help users understand your content</h2>
@@ -128,15 +143,9 @@ const ContentClarity = (props: ContentClarityProps) => {
           Export to CSV
         </Button>
       </div>
-      <Table
-        columns={columns}
-        dataSource={tableData}
-        pagination={{pageSize: 4}}
-        bordered
-      />
+      <Table columns={columns} dataSource={tableData} pagination={{ pageSize: 4 }} bordered />
     </div>
   );
 };
-
 
 export default ContentClarity;
