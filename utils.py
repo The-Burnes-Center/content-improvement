@@ -20,6 +20,14 @@ s3_client = boto3.client("s3", region_name="us-east-1")
 tokenizer = tiktoken.get_encoding('cl100k_base')
 
 def get_pred(scrapped_data, prompt):
+    """Using the Bedrock API, analyze the webpage source code and provide suggestions for improving the web design.
+    Args:
+        scrapped_data (str): The source code of the webpage to analyze.
+        prompt (str): The prompt to guide the analysis.
+    Returns:
+        str: The response from the model based on the provided source code and prompt.
+    """
+
     summary = f"Look at the following website source code: {scrapped_data}. {prompt}"
     input_data = {
         "anthropic_version": "bedrock-2023-05-31",
@@ -57,6 +65,12 @@ def get_pred(scrapped_data, prompt):
 
 
 def read_file_text(file_path):
+    """Reads the content of a text file and returns it as a string.
+    Args:
+        file_path (str): The path to the text file.
+    Returns:
+        str: The content of the file as a string.
+    """
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
             return file.read()
@@ -66,12 +80,15 @@ def read_file_text(file_path):
 
 
 
-
-
 ## Webdesign Functions
-
-#use playwright to capture screen shot 
 def capture_screenshot(url, filepath="screenshot.png"):
+    """Captures a screenshot of the webpage at the given URL and saves it to the specified file path.
+    Args: 
+        url (str): The URL of the webpage to capture.
+        filepath (str): The file path where the screenshot will be saved. Default is "screenshot.png".
+    Returns:
+        str: The file path of the saved screenshot."""
+
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page()
@@ -81,7 +98,7 @@ def capture_screenshot(url, filepath="screenshot.png"):
 
         return filepath
 
-#uploads image to s3 bucket 
+
 def upload_to_s3(file_path, bucket_name, object_name=None):
     """Uploads the screenshot to an S3 bucket and returns its URL."""
     if object_name is None:
@@ -91,75 +108,17 @@ def upload_to_s3(file_path, bucket_name, object_name=None):
     s3_url = f"https://{bucket_name}.s3.{AWS_REGION}.amazonaws.com/{object_name}"
     return s3_url
 
-def process_image_with_openai(image_url):
-    openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-
-    layout = read_file_text("contentlayoutguide.txt")
-
-    #prompt and structured format 
-    input_text = f"""Analyze this webpage screenshot and provide improvements for the layout of the page based off of the following guidelines: {layout}. \
-                For each suggestion, provide an example of a part of the site that could be improved. Also cite specific guidelines in each suggestion. \
-                If you cannot provide a specific element on the webpage as an example, do not include the suggestion. Do not include additional text and 
-                Format the output in JSON, using the following structure:
-                    
-                    const data = [
-                        {{
-                            key: '1',
-                            area: 'Homepage',
-                            suggestion: 'Add a clear call-to-action button',
-                            reason: 'Improves user engagement and guides users to key content.',
-                        }},
-                        {{
-                            key: '2',
-                            area: 'Navigation Menu',
-                            suggestion: 'Simplify menu structure',
-                            reason: 'Helps users find content faster and reduces cognitive load.',
-                        }},
-                        {{
-                            key: '3',
-                            area: 'Accessibility',
-                            suggestion: 'Add alt text for all images',
-                            reason: 'Ensures compliance with WCAG and improves screen reader support.',
-                        }},
-                        ] 
-    
-    
-    
-    """
-
-    completion = openai_client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            #if I wanted to add text guidlines, would i edit this or input text
-            {"role": "system", "content": "You are an AI expert in web accessibility. Analyze the image and provide WCAG-compliant suggestions."},
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": input_text},
-                    {"type": "image_url", "image_url": {"url": image_url}}
-                    #{"type": "text", "text": input_text2}
-                ],
-            },
-        ]
-    )
-
-    return completion.choices[0].message.content
-
-
-def webdesign_extract_text(input_text):
-    """
-    Extracts all substrings enclosed in square brackets (including the brackets themselves).
-    Args:
-        input_text (str): The input string containing potential bracketed content.
-    Returns:
-        str: A single string with only the bracketed content preserved.
-    """
-    matches = re.findall(r'\[[^\[\]]*\]', input_text)
-    return ''.join(matches)
 
 ##Code accessibility Functions
 
 def get_pure_source(url):
+    """Fetch the source code of a webpage and return it as plain text.
+    Args: 
+        url (str): The URL of the webpage to fetch.
+    Returns:
+        str: The source code of the webpage as plain text.
+    """
+    
     try:
         response = requests.get(url)
         response.raise_for_status()  # Raise exception for HTTP errors
@@ -171,14 +130,19 @@ def get_pure_source(url):
         print(f"Error fetching the website: {e}")
 
 
-#content clarity functions
-
+# Chunking Functions 
 def num_tokens(text):
     """Calculate the number of tokens in a string using tiktoken."""
     return len(tokenizer.encode(text))
 
 def chunk_element(element, max_tokens=5000):
-    """Recursively split an element if its text exceeds max_tokens."""
+    """Recursively split an element if its text exceeds max_tokens.
+    Args:
+        element (BeautifulSoup element): The HTML element to process.
+        max_tokens (int): The maximum number of tokens allowed in a chunk.
+    Returns:
+        list: A list of text chunks, each within the token limit.
+        """
     text = element.get_text(separator=' ', strip=True)
     if num_tokens(text) <= max_tokens:
         return [text]
@@ -210,7 +174,7 @@ def force_split_text(text, max_tokens):
     return chunks
 
 def chunk_html_text(url, max_tokens=5000):
-    """Download HTML and chunk it by token size using structural recursion."""
+    """Download HTML and chunk it by token size using structural recursion Used for chunking the HTML text."""
     response = requests.get(url)
     soup = BeautifulSoup(response.content, 'html.parser')
     

@@ -1,7 +1,7 @@
 from utils import * 
-from accessibilityStructuredPrompt import analyze_accessibility
-from webDesignStructuredPrompt import analyze_webdesign
-from ContentClarityStructuredPrompt import anaylze_content_clarity
+from accessibility_structured_prompt import analyze_accessibility
+from web_design_structured_prompt import analyze_webdesign
+from content_clarity_structured_prompt import anaylze_content_clarity
 import concurrent.futures
 import time
 

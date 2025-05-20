@@ -6,6 +6,12 @@ from bs4 import BeautifulSoup
 import tiktoken
 import concurrent.futures
 
+"""
+This script uses the Claude AI model to analyze HTML code for accessibility issues and suggest improvements based on WCAG 2.1 AA guidelines.
+Four API calls are used to create a structured response  which includes the original code issue, the suggested improvement, the explanation, and the label for the suggested improvement.
+"""
+
+
 client  = boto3.client("bedrock-runtime", region_name="us-east-1")
 model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"
 
@@ -16,6 +22,16 @@ max_issues = 1
 
 
 def chunk_html_script(html_script, max_tokens = 5000):
+    """
+    This function takes a HTML script and chunks it into smaller pieces based on the max number of tokens.
+    Args:
+        html_script (str): The HTML script to be chunked.
+        max_tokens (int): The maximum number of tokens allowed in each chunk. 
+
+    Returns:
+        list: A list of HTML chunks.
+
+    """
     chunks = []
 
     soup = BeautifulSoup(html_script, 'html.parser')
@@ -42,7 +58,15 @@ def chunk_html_script(html_script, max_tokens = 5000):
     
 
 def threading_code_accessibility(chunked_html_code):
+    """
+    This function takes a list of HTML code chunks and processes them in parallel to find accessibility issues.
+    Args:
+        chunked_html_code (list): A list of HTML code chunks.
+    Returns:
+        list: A list of suggestions for accessibility improvements.
+    """
     suggestions = []
+    # Use ThreadPoolExecutor to process the HTML code chunks in parallel
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         future_to_section = {
             executor.submit(code_accessibility_review, section): section
@@ -59,21 +83,31 @@ def threading_code_accessibility(chunked_html_code):
     return suggestions
 
 
-
-
 def code_accessibility_review(html_code): 
+    """
+    Using Claude AI, analyze the HTML code to provide suggestions for improving accessibility. 
+    This function identifies accessibility issues in the provided HTML code and suggests improvements based on WCAG 2.1 AA guidelines.
+    The function uses Claude AI and appends messages in conversation to relationally find the orginal code issue, the suggested improvement, the explanation, and the label for the suggested improvement.
 
+    Args:
+        html_code (str): The HTML code to be analyzed.
+    Returns:
+        list: A list of suggestions for accessibility improvements.The list contains dictionaries with the following keys:
+            - original_content: The original HTML code with the accessibility issue.
+            - revised_content: The suggested improvement for the HTML code.
+            - explanation: An explanation of why the suggested improvement is necessary.
+            - label: A label for the identified code issue and suggested improvement.
+    """
 
-    start_time = time.time()
     code_issues = []
     accessibility_improvements = []
 
     for i in range(max_issues):
-        #print(f"\n Iteration {i+1}: Finding next issue")
+
+        # Initialize the accessibility review dictionary
         accessibility_review = {}
 
-        #if the issue is already in {code_issues}, do not include it.
-
+        #prompt for finding the code issue
         prompt1 = f'''You are a strict accessibility reviewer analyzing the following HTML: {html_code} 
                 Your task is to identify **only real** accessibility issues based on WCAG 2.1 AA guidelines. 
                 Do **not** invent problems. Do not include correct code. 
@@ -93,7 +127,7 @@ def code_accessibility_review(html_code):
                 - #5 example of the output is: '<div onclick="openMenu()">Menu</div>'
 
                 '''
-
+        # Create the body for the request
         body = {
         "anthropic_version": "bedrock-2023-05-31",
         "messages": [
@@ -102,38 +136,36 @@ def code_accessibility_review(html_code):
         "max_tokens": 5000,
 
         }
-
+        # Send the request to the model
         resp = client.invoke_model(
             modelId=model_id,
             body=json.dumps(body),
             contentType="application/json"
         ) 
 
-        response_body = json.loads(resp["body"].read())
 
+        # Read the response
+        response_body = json.loads(resp["body"].read())
         code_issue = response_body["content"][0]["text"]
+
+        # add the code issue to the accessibility review dictionary
         accessibility_review["original_content"] = code_issue
         
-        #print(f"code issue: {code_issue}")
-
+        # Check if the code issue is already in the list
         if code_issue not in code_issues:
             code_issues.append(code_issue)
+
         else:
-            print(f"code issue already found: {code_issue}")
-            print("Repeating issue, No new accessibility issue found.")
-            #end_time = time.time()
+            # if code  issue is already in the list, continue to the next iteration
             continue
-            # print(f"completed tasks: {end_time - start_time:.2f} seconds")   
-            # return accessibility_improvements
-
+    
+        # Check if the code issue is "DONE"
         if "done" in code_issue.lower():  
-            print(" Done: No accessibility issue found.")
             break 
-            # end_time = time.time()
-            # print(f"completed tasks: {end_time - start_time:.2f} seconds")  
-            # return accessibility_improvements
-
+           
+        #if code issue found, countinue to find the suggestion, explanation, and label
         else: 
+            #prompt for finding the code suggestion
             prompt2 = f'''You are a strict accessibility reviewer analyzing the following HTML: 
             Your task is to provide a suggestion for the identified code issue: {code_issue} based on WCAG 2.1 AA guidelines. 
             Only provide the HTML code that would be improving the given code issue. 
@@ -150,38 +182,38 @@ def code_accessibility_review(html_code):
             - #4 example of the output is: '<label for="user-email">Email</label><input type="email" id="user-email">'
             - #5 example of the output is: '<button onclick="openMenu()">Menu</button>'
 
-           
 
 
             '''
-
+            #append the code issue to the body
             body["messages"].append({
                 "role": "assistant",
                 "content": code_issue
             })
-
+            #append the prompt to the body
             body["messages"].append({
                 "role": "user",
                 "content": prompt2.strip()
             })
-            
+            # Send the request to the model
             resp2 = client.invoke_model(
                 modelId=model_id,
                 body=json.dumps(body),
                 contentType="application/json"
             )
 
-        
+            # Read the response and add the suggestion to the accessibility review dictionary
             response_body2 = json.loads(resp2["body"].read())
             suggestion = response_body2["content"][0]["text"]
             accessibility_review["revised_content"] = suggestion
-        #print(f"suggestion: {suggestion}")
-
+    
+            # if suggestion is not found, print a message
             if suggestion == "":
-                print("No suggestion found.")
-
+                continue
+        
+            #if suggestion is found, continue to find the explanation 
             else: 
-
+                #prompt for finding the code explanation
                 prompt3 = f'''You are a strict accessibility reviewer analyzing the following HTML: 
                 Your task is to provide an explanation for the identified code issue: {code_issue} and suggested improvement: {suggestion} based on WCAG 2.1 AA guidelines. 
 
@@ -202,17 +234,18 @@ def code_accessibility_review(html_code):
 
                 
                 '''
-
+            #append the suggestion to the body
             body["messages"].append({
                 "role": "assistant",
                 "content": suggestion 
             })
-
+            #append the prompt to the body
             body["messages"].append({
                 "role": "user",
                 "content": prompt3.strip()
             })
             
+            # Send the request to the model
             resp3 = client.invoke_model(
                 modelId=model_id,
                 body=json.dumps(body),
@@ -220,17 +253,17 @@ def code_accessibility_review(html_code):
             )
 
             
-        
+            # Read the response and add the explanation to the accessibility review dictionary
             response_body3 = json.loads(resp3["body"].read())
             explanation = response_body3["content"][0]["text"]
             accessibility_review["explanation"] = explanation
-            #print(len(accessibility_improvements))
+ 
 
             if explanation == "":
-                print("No explanation found.")
+                continue
 
             else: 
-
+                #prompt for producing the label
                 prompt4 = f'''You are a strict accessibility reviewer analyzing the following HTML: 
                 Your task is to provide a label for the identified code issue: {code_issue} and suggested improvement: {suggestion} based on WCAG 2.1 AA guidelines and the explanation: {explanation}.
                 Only provide a label for the identified code issue: {code_issue} and suggested improvement: {suggestion} based on WCAG 2.1 AA guidelines and the explanation: {explanation}. 
@@ -249,98 +282,47 @@ def code_accessibility_review(html_code):
 
                 
                 '''
-
+            #append the explanation to the body
             body["messages"].append({
                 "role": "assistant",
                 "content": explanation 
             })
-
+            #append the prompt to the body
             body["messages"].append({
                 "role": "user",
                 "content": prompt4.strip()
             })
-            
+
+            # Send the request to the model
             resp3 = client.invoke_model(
                 modelId=model_id,
                 body=json.dumps(body),
                 contentType="application/json"
             )
-
+            # Read the response and add the label to the accessibility review dictionary
             response_body4 = json.loads(resp3["body"].read())
             label = response_body4["content"][0]["text"]
             accessibility_review["label"] = label
 
             if label == "":
-                print("No label found.")
-
-
-            accessibility_improvements.append(accessibility_review)
-            # appending_time = time.time()
-            # print(f"appending time: {appending_time - start_time:.2f} seconds")
-
-            #print(len(accessibility_improvements))
-            #print(accessibility_review)
-
-
-
-
-    # end_time = time.time()
-    # print(f"completed tasks: {end_time - start_time:.2f} seconds") 
+                continue
+            #if label is found, append the accessibility review dictionary to the list of accessibility improvements
+            else:
+            
+                #append the accessibility review dictionary to the list of accessibility improvements
+                accessibility_improvements.append(accessibility_review)
+          
     
 
     return accessibility_improvements  
 
 
 
-# print("here")
-# reviews = code_accessibility_review(url1)
-
-#print(chunk_html_script(url1))
-# 
-
 
 # correct print statemments for chunking and threading 
+# html_script = get_pure_source(url1)
 # chunked_script = chunk_html_script(html_script)
+# suggestions = threading_code_accessibility(chunked_script)
+# print(suggestions)
 
-
-# print("html chunking")
-# print(chunked_script[0])
-# for chunk in chunked_script:
-#      print(f" length of chunk is {num_tokens(chunk)}")
-
-
-
-
-
-
-
-# print("text chunking: ")
-# text_chunks = chunk_html_text(url1)
-# print(text_chunks[0])
-
-# for chunk in text_chunks:
-#      print(f" length of chunk is {num_tokens(chunk)}")
-
-# print(f"number of chunks for html {len(chunked_script)}")
-# print(f"number of chunks for text {len(text_chunks)}")
-
-
-
-
-
-
-# output = threading_code_accessibility(chunked_script)
-# print(output)
-
-# print(f"chunked_script: {chunked_script}")
-# print("length of chunked_script: ", num_tokens(html_script))
-# tokens = 0
-# for chunk in chunked_script:
-#     print(f' length chunk: {num_tokens(chunk)}')
-#     tokens += num_tokens(chunk)
-
-# print(f"total tokens: {tokens}")
-
-# print(f"reviews: {reviews}") 
-# # print(len(reviews))
 

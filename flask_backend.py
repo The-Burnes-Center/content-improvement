@@ -1,10 +1,9 @@
 from flask import Flask, request
 from utils import *
 from flask_cors import CORS
-from accessibilityStructuredPrompt import analyze_accessibility
-from webDesignStructuredPrompt import analyze_webdesign
-from ContentClarityStructuredPrompt import anaylze_content_clarity
-from appending_prompts import code_accessibility_review
+from web_design_structured_prompt import analyze_webdesign
+from content_clarity_structured_prompt import anaylze_content_clarity
+from appending_prompts_code_accessibility import chunk_html_script, threading_code_accessibility
 import json
 from flaskext.mysql import MySQL
 from dotenv import load_dotenv
@@ -150,11 +149,11 @@ def audience():
         return '', 204  # let preflight pass
     data = request.get_json()
     url = data.get('url')
-    print(f"url {url}")
+    print(f" loading audience for: {url} ...")
     persona = data.get('persona')
-    print(persona)
+    
     personaAuditId = data.get('personaAuditId')
-    print(personaAuditId)
+    
     if url and persona:
         output = get_pred(get_pure_source(url), f"""Based off of the provided URL, please audit the website for the following user persona: {persona}.""")
 
@@ -207,6 +206,8 @@ def improveContent():
 
     if not url or not projectId:
         return "Missing 'url' or 'projectId'", 400
+    
+    print(f" loading content for: {url} ...")
 
     scrapped_data = chunk_html_text(url)
     content_guidelines = read_file_text("contentclarityguide.txt")
@@ -288,22 +289,20 @@ def webDesign():
         return '', 204
     
     data = request.get_json()
-    # debuug statements 
-    print("Received JSON payload:", data)
 
     url = data.get('url')
     projectId = data.get('projectId')
-    print(projectId)
-    
+
     if projectId is None:
         print("Bad request: projectId missing")
         return "error projectId",  400
 
     if url:
-        print(url)
-        output = json.dumps(analyze_webdesign(url))
+        print(f"loading web design for {url}...")
+        layout_guidelines = read_file_text("contentlayoutguide.txt")
+        output = json.dumps(analyze_webdesign(url, layout_guidelines))
         output = json.loads(output)
-        print(output)
+        
 
         conn = mysql.connect()
         cursor = conn.cursor()
@@ -374,12 +373,11 @@ def codeAccessibility():
     url = data.get('url')
     projectId = data.get('projectId')
     if url:
-        print(url)
-        output = json.dumps(code_accessibility_review(url))
-        #print(json.dumps(code_accessibility_review(url)))
-        #print("finished all iterations")
-        #output = json.dumps(analyze_accessibility(url))
-        #print(json.dumps(analyze_accessibility(url)))
+        print(f" loading code accessibility for: {url} ...")
+        html_script = get_pure_source(url)
+        chunked_script = chunk_html_script(html_script)
+        suggestions = threading_code_accessibility(chunked_script)
+        output = json.dumps(suggestions)
         output = json.loads(output)
 
         conn = mysql.connect()
