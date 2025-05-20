@@ -3,7 +3,7 @@ from utils import *
 from flask_cors import CORS
 from web_design_structured_prompt import analyze_webdesign
 from content_clarity_structured_prompt import anaylze_content_clarity
-from appending_prompts import chunk_html_script, threading_code_accessibility
+from appending_prompts_code_accessibility import chunk_html_script, threading_code_accessibility
 import json
 from flaskext.mysql import MySQL
 from dotenv import load_dotenv
