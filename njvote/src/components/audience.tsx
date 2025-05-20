@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
 import { DownOutlined } from '@ant-design/icons';
 import PersonaDisplay from './personaDisplay';
-import { Space, Dropdown, MenuProps, Modal, Button, Input, Checkbox, message } from 'antd';
+import {
+  Space,
+  Dropdown,
+  MenuProps,
+  Modal,
+  Button,
+  Input,
+  Checkbox,
+  message,
+} from 'antd';
 
 // Props passed into the Audience component
 interface AudienceProps {
@@ -18,7 +27,7 @@ interface Persona {
 
 const Audience = ({ projectId }: AudienceProps) => {
   const [personas, setPersonas] = useState<Persona[]>([]);
-  const [selectedPersona, setSelectedPersona] = useState<Persona | null>(personas[0] || null);
+  const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
   const [openPersonaModal, setOpenPersonaModal] = useState(false);
   const [useAIPersonaGen, setUseAIPersonaGen] = useState(false);
   const [personaName, setPersonaName] = useState('');
@@ -27,35 +36,40 @@ const Audience = ({ projectId }: AudienceProps) => {
   useEffect(() => {
     const fetchPersonas = async () => {
       try {
-        let personaItems: MenuProps['items'] = [];
-
         const response = await fetch(`http://127.0.0.1:5000/get_personas?projectId=${projectId}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
 
-        const data = await response.json();
-
-        if (response.ok) {
-          personaItems = data['personas'].map((item: any) => ({
-            key: String(item[0]),
-            label: item[1],
-            output: item[4],
-            persona: item[3],
-          }));
-          personaItems?.push({ type: 'divider' });
-          personaItems?.push({ key: 'new', label: 'New User Persona' });
-        } else {
+        if (!response.ok) {
           message.error('Failed to fetch personas.');
+          return;
         }
 
-        console.log(personaItems);
+        const data = await response.json();
+        const personaItems = data['personas'].map((item: any) => ({
+          key: String(item[0]),
+          label: item[1],
+          output: item[4],
+          persona: item[3],
+        }));
+
+        // Add divider and "new" option
+        const enrichedItems = [
+          ...personaItems,
+          { type: 'divider' },
+          { key: 'new', label: 'New User Persona' },
+        ];
 
         // Filter and cast items to Persona
-        setPersonas((personaItems || []).filter((item): item is Persona => !!item && 'key' in item && 'label' in item));
+        const validPersonas = enrichedItems.filter(
+          (item): item is Persona => !!item && 'key' in item && 'label' in item
+        );
+
+        setPersonas(validPersonas);
 
         // Default selection
-        const firstPersona = personaItems?.find((item): item is Persona => !!item && 'label' in item);
+        const firstPersona = validPersonas.find((item) => !!item && 'label' in item);
         setSelectedPersona(firstPersona || null);
       } catch (err) {
         console.error(err);
@@ -68,7 +82,7 @@ const Audience = ({ projectId }: AudienceProps) => {
 
   // Toggle checkbox state
   const toggleUseAIPersonaGen = () => {
-    setUseAIPersonaGen(!useAIPersonaGen);
+    setUseAIPersonaGen((prev) => !prev);
   };
 
   // Open persona modal
@@ -85,12 +99,11 @@ const Audience = ({ projectId }: AudienceProps) => {
 
   // Handle persona selection or creation from dropdown
   const handleMenuClick: MenuProps['onClick'] = (e) => {
-    const selectedItem = personas?.find(item => item?.key === e.key);
-    console.log(e.key);
     if (e.key === 'new') {
       showPersonaModal();
-    } else if (selectedItem && 'label' in selectedItem) {
-      setSelectedPersona(selectedItem);
+    } else {
+      const selectedItem = personas.find((item) => item.key === e.key);
+      if (selectedItem) setSelectedPersona(selectedItem);
     }
   };
 
@@ -103,38 +116,41 @@ const Audience = ({ projectId }: AudienceProps) => {
         body: JSON.stringify({ name: personaName, projectId }),
       });
 
-      if (res.ok) {
-        message.success('Persona created successfully!');
-        const newPersona = { key: String(Date.now()), label: personaName, output: '', persona: '' };
-        setPersonas((prevPersonas) => [
-          ...(prevPersonas ?? []).slice(0, -2), // Exclude the last two items (divider and "New User Persona")
-          newPersona,
-          { key: 'divider', label: 'Divider', output: '', persona: '' },
-          { key: 'new', label: 'New User Persona', output: '', persona: '' },
-        ]);
-        setSelectedPersona(newPersona);
-        closePersonaModal();
-      } else {
+      if (!res.ok) {
         message.error('Failed to create persona.');
+        return;
       }
+
+      message.success('Persona created successfully!');
+      const newPersona = {
+        key: String(Date.now()),
+        label: personaName,
+        output: '',
+        persona: '',
+      };
+
+      setPersonas((prev) => [
+        ...(prev ?? []).slice(0, -2),
+        newPersona,
+        { key: 'divider', label: 'Divider', output: '', persona: '' },
+        { key: 'new', label: 'New User Persona', output: '', persona: '' },
+      ]);
+
+      setSelectedPersona(newPersona);
+      closePersonaModal();
     } catch (err) {
       console.error(err);
       message.error('An error occurred while creating the persona.');
     }
-    setOpenPersonaModal(false);
-    setPersonaName('');
-    setUseAIPersonaGen(false);
   };
 
   // Update a field (persona or output) in the selected persona
   const updatePersonaField = (id: number, field: 'persona' | 'output', value: string) => {
-    setPersonas((prevPersonas) =>
-      prevPersonas.map((p) =>
-        parseInt(p.key, 10) === id ? { ...p, [field]: value } : p
-      )
+    setPersonas((prev) =>
+      prev.map((p) => (parseInt(p.key, 10) === id ? { ...p, [field]: value } : p))
     );
     if (selectedPersona && parseInt(selectedPersona.key, 10) === id) {
-      setSelectedPersona((prev) => prev ? { ...prev, [field]: value } : prev);
+      setSelectedPersona((prev) => (prev ? { ...prev, [field]: value } : prev));
     }
   };
 

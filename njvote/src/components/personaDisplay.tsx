@@ -10,24 +10,22 @@ export interface PersonaDisplayProps {
   updatePersonaField: (id: number, field: 'persona' | 'output', value: string) => void;
 }
 
-const PersonaDisplay = (props: PersonaDisplayProps) => {
+const PersonaDisplay = ({ persona, output: propOutput, id, updatePersonaField }: PersonaDisplayProps) => {
   const { TextArea } = Input;
 
   // Local state to mirror props
-  const [persona, setPersona] = useState(props.persona);
-  const [output, setOutput] = useState(props.output);
-  const [id, setId] = useState(props.id);
+  const [output, setOutput] = useState(propOutput);
   const [loading, setLoading] = useState(false);
 
   // Sync local state with props when props change
   useEffect(() => {
-    setPersona(props.persona);
-    setOutput(props.output);
-    setId(props.id);
-  }, [props.persona, props.output]);
+    setOutput(propOutput);
+  }, [persona, propOutput]);
 
   // Trigger API call to audit the site for this persona
   const handleAudit = async () => {
+    if (id === undefined) return;
+
     setLoading(true);
     try {
       const response = await fetch('api/audience', {
@@ -35,91 +33,81 @@ const PersonaDisplay = (props: PersonaDisplayProps) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           url: 'https://www.nj.gov/state/elections/vote.shtml',
-          persona: props.persona,
-          personaAuditId: props.id
+          persona,
+          personaAuditId: id,
         }),
       });
 
       const text = await response.text();
-
-      if (props.id !== undefined) {
-        props.updatePersonaField(props.id, 'output', text);
-      }
-
-      setLoading(false);
+      updatePersonaField(id, 'output', text);
     } catch (err) {
       console.error(err);
-
-      if (props.id !== undefined) {
-        props.updatePersonaField(props.id, 'output', 'Error fetching data from API.');
-      }
-
+      updatePersonaField(id, 'output', 'Error fetching data from API.');
+    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <>
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '2rem',
+        marginTop: '2%',
+      }}
+    >
+      {/* Left input card for entering user persona */}
       <div
         style={{
           display: 'flex',
-          justifyContent: 'center',
-          gap: '2rem',
-          marginTop: '2%',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          height: '19.1rem',
+          width: '25rem',
+          padding: '1rem',
+          backgroundColor: 'white',
+          borderRadius: '5px',
         }}
       >
-        {/* Left input card for entering user persona */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            height: '19.1rem',
-            width: '25rem',
-            padding: '1rem',
-            backgroundColor: 'white',
-            borderRadius: '5px',
+        <TextArea
+          rows={12}
+          placeholder="Enter a User Persona"
+          style={{ width: '100%' }}
+          value={persona}
+          onChange={(e) => {
+            if (id !== undefined) {
+              updatePersonaField(id, 'persona', e.target.value);
+            }
           }}
-        >
-          <TextArea
-            rows={12}
-            placeholder="Enter a User Persona"
-            style={{ width: '100%' }}
-            value={props.persona}
-            onChange={(e) => {
-              if (props.id !== undefined) {
-                props.updatePersonaField(props.id, 'persona', e.target.value);
-              }
-            }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <Button onClick={handleAudit} type="primary">
-              Audit Site
-            </Button>
-          </div>
-        </div>
-
-        {/* Right output box for showing audit result */}
-        <div
-          className="grayBox"
-          style={{
-            flex: 1,
-            width: '37rem',
-            height: '19.1rem',
-            overflowY: 'auto',
-            marginLeft: '2%',
-            marginTop: '-0.03rem',
-            padding: '1rem',
-            backgroundColor: 'lightgray',
-            whiteSpace: 'pre-wrap',
-            wordWrap: 'break-word',
-            display: 'block',
-          }}
-        >
-          {loading ? <LoadingOutlined /> : output}
+        />
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Button onClick={handleAudit} type="primary">
+            Audit Site
+          </Button>
         </div>
       </div>
-    </>
+
+      {/* Right output box for showing audit result */}
+      <div
+        className="grayBox"
+        style={{
+          flex: 1,
+          width: '37rem',
+          height: '19.1rem',
+          overflowY: 'auto',
+          marginLeft: '2%',
+          marginTop: '-0.03rem',
+          padding: '1rem',
+          backgroundColor: 'lightgray',
+          whiteSpace: 'pre-wrap',
+          wordWrap: 'break-word',
+          display: 'block',
+        }}
+      >
+        {loading ? <LoadingOutlined /> : output}
+      </div>
+    </div>
   );
 };
 

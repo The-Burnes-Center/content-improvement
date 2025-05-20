@@ -21,7 +21,7 @@ export interface WebDesignProps {
   projectId: number | null;
 }
 
-const WebDesign = (props: WebDesignProps) => {
+const WebDesign = ({ projectId }: WebDesignProps) => {
   const [suggestions, setSuggestions] = useState<WebDesignSuggestion[]>([]);
 
   // Fetches suggestions based on projectId
@@ -30,40 +30,44 @@ const WebDesign = (props: WebDesignProps) => {
 
     try {
       // First fetch the audit ID for the project
-      const auditResponse = await fetch(`api/get_webdesign_audit?projectId=${props.projectId}`, {
+      const auditResponse = await fetch(`api/get_webdesign_audit?projectId=${projectId}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
 
-      if (auditResponse.ok) {
-        const auditData = await auditResponse.json();
-        const webDesignAuditId = auditData['web_design_audit'][0];
+      if (!auditResponse.ok) {
+        console.error('Failed to fetch web design audit.');
+        return;
+      }
 
-        console.log("webdesignAuditId", webDesignAuditId);
+      const auditData = await auditResponse.json();
+      const webDesignAuditId = auditData['web_design_audit'][0];
 
-        // Then fetch the suggestions using the audit ID
-        const response = await fetch(`api/get_webdesign_suggestions?webDesignAuditId=${webDesignAuditId}`, {
+      // Then fetch the suggestions using the audit ID
+      const suggestionsResponse = await fetch(
+        `api/get_webdesign_suggestions?webDesignAuditId=${webDesignAuditId}`,
+        {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          // Transform the response data into the expected format
-          const suggestions = data['suggestions'].map((item: any) => ({
-            label: item[0],
-            area: item[2],
-            suggestion: item[3],
-            reason: item[4],
-          }));
-          setSuggestions(suggestions);
-        } else {
-          console.error('Failed to fetch web design suggestions.');
         }
-      } else {
-        console.error('Failed to fetch web design audit.');
+      );
+
+      if (!suggestionsResponse.ok) {
+        console.error('Failed to fetch web design suggestions.');
+        return;
       }
+
+      const suggestionData = await suggestionsResponse.json();
+
+      // Transform the response data into the expected format
+      const formattedSuggestions = suggestionData['suggestions'].map((item: any) => ({
+        label: item[0],
+        area: item[2],
+        suggestion: item[3],
+        reason: item[4],
+      }));
+
+      setSuggestions(formattedSuggestions);
     } catch (err) {
       console.error(err);
       console.error('An error occurred while fetching web design suggestions.');
@@ -72,9 +76,10 @@ const WebDesign = (props: WebDesignProps) => {
 
   // Refetch suggestions whenever the projectId changes
   useEffect(() => {
-    console.log('Fetching web design suggestions...');
-    fetchWebDevSuggestions();
-  }, [props.projectId]);
+    if (projectId !== null) {
+      fetchWebDevSuggestions();
+    }
+  }, [projectId]);
 
   // Table column configuration
   const columns = [
