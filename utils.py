@@ -20,6 +20,14 @@ s3_client = boto3.client("s3", region_name="us-east-1")
 tokenizer = tiktoken.get_encoding('cl100k_base')
 
 def get_pred(scrapped_data, prompt):
+    """Using the Bedrock API, analyze the webpage source code and provide suggestions for improving the web design.
+    Args:
+        scrapped_data (str): The source code of the webpage to analyze.
+        prompt (str): The prompt to guide the analysis.
+    Returns:
+        str: The response from the model based on the provided source code and prompt.
+    """
+    
     summary = f"Look at the following website source code: {scrapped_data}. {prompt}"
     input_data = {
         "anthropic_version": "bedrock-2023-05-31",
@@ -57,14 +65,18 @@ def get_pred(scrapped_data, prompt):
 
 
 def read_file_text(file_path):
+    """Reads the content of a text file and returns it as a string.
+    Args:
+        file_path (str): The path to the text file.
+    Returns:
+        str: The content of the file as a string.
+    """
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
             return file.read()
     except Exception as e:
         return f"Error: {e}"
     
-
-
 
 
 
