@@ -5,11 +5,12 @@ from utils import *
 from typing import List
 from instructor.exceptions import InstructorRetryException
 
+"""
+This module provides a function to analyze the clarity of website content and suggest improvements.
+It uses the Anthropic Claude model to generate suggestions based on provided content guidelines."""
 
-
-
+# Define the ContentSuggestion model
 class ContentSuggestion(BaseModel):
-    #key: int = Field(..., description = "A unique identifier for this suggestion item." )
     original_content: str = Field(..., description="The original text that does not meet content clarity standards." )
     suggestion: str = Field(..., description="The revised text that meets content clarity standards." )
     
@@ -66,14 +67,16 @@ def anaylze_content_clarity(section, content_guidlines):
             response_model = List[ContentSuggestion],
             
         )
+        # Check response type
         if not isinstance(resp, list):
                 raise TypeError(f"Expected list, got {type(resp)}")
         
+        #if the response is a list, check each item type for instance of ContentSuggestion
         else: 
-   
             output = []
             for item in resp:
                 if isinstance(item, ContentSuggestion): 
+                    #if the item is an instance of ContentSuggestion, append it to the output list
                     output.append({
                                 "original_content": item.original_content,
                                 "suggestion": item.suggestion})
