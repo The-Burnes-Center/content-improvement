@@ -1,5 +1,5 @@
 from utils import * 
-from accessibility_structured_prompt import analyze_accessibility
+
 from web_design_structured_prompt import analyze_webdesign
 from content_clarity_structured_prompt import anaylze_content_clarity
 import concurrent.futures
@@ -54,16 +54,52 @@ generate_user_persona = get_pred(url,
                                  
                         """ )
 
-# print(f"user persona: {generate_user_persona}")
+
+persona = generate_user_persona
+print(f"user persona: {persona}")
 # output = get_pred(get_pure_source(url), f"""Based off of the provided URL, please audit the website for the following user persona: {generate_user_persona}.""")
 
 # print(f"auditing website: {output} ")
 
-persona = " Victor a student at Rutgers university looking to register for the first time . confused if he should vote in his home county or at his college county"
+#persona = " Victor a student at Rutgers university looking to register for the first time . confused if he should vote in his home county or at his college county"
 
-challenges_output = get_pred(get_pure_source(url), f"""Based off of the provided URL, please audit the website for the following user persona: {persona}. """)
+#change this to be a single suggestion, then add to a list and impliment threading? 
 
-print(f"auditing website based on victor: {challenges_output} ")
+positives_output = get_pred(get_pure_source(url), f"""Based off of the provided URL, please audit and provide postives for the website using the  {persona}. 
+                             
+                             Examples of  the postives include: 
+
+                            1. Clear navigation menu with important voter information categories like "Voter Information Portal", "3 Ways To Vote", "Register to Vote!", etc.
+                            2. Prominent display of important dates and deadlines for upcoming elections.
+                            3. Easy access to key voter resources like voter registration, polling location lookup, and ballot tracking.
+                            4. Multiple language options available, including Spanish translations for some content.
+                            5. Information on accessibility options for voters with disabilities.
+                            6. Links to social media accounts for additional updates and information.
+                            7. Contact information for county election officials and a voter information hotline.
+                             
+                             """)
+
+challenges_output = get_pred(get_pure_source(url), f"""Based off of the provided URL, please audit the website for the following user persona: {persona} and provide challenges.
+                             Examples of challenges include:
+
+                            1. The homepage is quite text-heavy and may be overwhelming for some users. Consider streamlining content or using more visual elements.
+                            2. The font size is relatively small, which may be difficult for some older voters to read comfortably. Consider offering an easy way to increase text size.
+                            3. While there are some visual elements, more infographics or icons could help break up text and make information more digestible.
+                            4. The mobile responsiveness of the site could be improved for easier viewing on smartphones.
+                            5. Consider adding a prominent search function to help users quickly find specific information.
+                            6. A FAQ section addressing common questions for older voters might be helpful.
+                            7. The site could benefit from more white space and a cleaner layout to improve readability.
+                            8. Add more information specifically tailored for older voters, such as details on absentee voting or assistance at polling places.
+                            9. Ensure all PDFs and downloadable forms are accessible and easy to fill out electronically.
+                            10. Consider adding video tutorials for key processes like registering to vote or using voting machines.
+                             """)
+
+# print(f"auditing  postives website based on victor: {positives_output} ")
+# print(f"auditing  challenges based on victor: {challenges_output} ")
+
+print(f"auditing  postives website based on generated persona : {positives_output} ")
+print(f"auditing  challenges based on generated persona: {challenges_output} ")
+
 
 
 

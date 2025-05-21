@@ -1,7 +1,7 @@
 import './App.css';
 import { useEffect, useState } from 'react';
 import { Input, Layout, Menu, Radio, Modal, Button, Progress, Popconfirm } from "antd";
-import { PlusSquareOutlined, CloseOutlined } from '@ant-design/icons';
+import { PlusSquareOutlined, CloseOutlined, HomeFilled } from '@ant-design/icons';
 
 import Audience from './components/audience';
 import ContentClarity from './components/contentclarity';
@@ -29,6 +29,8 @@ function App() {
   const [loadingText, setLoadingText] = useState('');
   const [isDoneCreatingProject, setIsDoneCreatingProject] = useState(false);
   const [hoveredKey, setHoveredKey] = useState<number | null>(null);
+
+  
 
   const showProjModal = () => setProjModalOpen(true);
 
@@ -175,6 +177,9 @@ function App() {
             <h1 style={{ color: 'white', margin: 0 }}>Machine Assistant for eXperience (MAX)</h1>
           </div>
         </Header>
+        <HomeFilled style={{ color: 'white', position: 'absolute', right: '0', padding: '1.5rem', fontSize: '1.5rem', cursor: 'pointer' }} 
+          onClick ={() => setSelectedProjectId(null)}>
+        </HomeFilled>
 
         <Layout style={{ height: '100vh' }}>
           <Sider width={200} className="site-layout-background" theme="light">
@@ -225,7 +230,7 @@ function App() {
 
           </Sider>
 
-          {allProjects.length === 0 ? (
+          {allProjects.length === 0  || selectedProjectId === null ? (
             <Content style={{ padding: 24, margin: 0, height: 'calc(100vh - 64px)' }}>
               <div className="flex items-center justify-center w-full h-full">
                 <GettingStarted />
