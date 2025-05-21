@@ -4,6 +4,7 @@ from flask_cors import CORS
 from web_design_structured_prompt import analyze_webdesign
 from content_clarity_structured_prompt import anaylze_content_clarity
 from appending_prompts_code_accessibility import chunk_html_script, threading_code_accessibility
+from format_audience_page import audience_page_postives, audience_page_challenges
 import json
 from flaskext.mysql import MySQL
 from dotenv import load_dotenv
@@ -155,7 +156,8 @@ def audience():
     personaAuditId = data.get('personaAuditId')
     
     if url and persona:
-        output = get_pred(get_pure_source(url), f"""Based off of the provided URL, please audit the website for the following user persona: {persona}.""")
+        output = f" Postives:\n{audience_page_postives(url, persona)} \nUser Challenges:\n {audience_page_challenges(url, persona)}"
+        #output = get_pred(get_pure_source(url), f"""Based off of the provided URL, please audit the website for the following user persona: {persona}.""")
 
         conn = mysql.connect()
         cursor = conn.cursor()
