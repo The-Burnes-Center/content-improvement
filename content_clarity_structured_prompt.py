@@ -13,6 +13,7 @@ It uses the Anthropic Claude model to generate suggestions based on provided con
 class ContentSuggestion(BaseModel):
     original_content: str = Field(..., description="The original text that does not meet content clarity standards." )
     suggestion: str = Field(..., description="The revised text that meets content clarity standards." )
+    area: str = Field(..., description="The a three word summary of the area of the website where the content is located." )
     
 
 def anaylze_content_clarity(section, content_guidlines):
@@ -38,12 +39,14 @@ def anaylze_content_clarity(section, content_guidlines):
         Do not format as Markdown or enclose in backticks.
         Do NOT return the list as a string or enclose it in quotes or Markdown.
 
+
         Return your response **only** as a JSON list in this format:
 
         [
         {{
+            "area": <p>...</p>
             "original_content": "<p>...</p>",
-            "suggestion": "<p>...</p>"
+            "suggestion": "<p>...</p>",
         }},
         ...
         ]
@@ -78,6 +81,7 @@ def anaylze_content_clarity(section, content_guidlines):
                 if isinstance(item, ContentSuggestion): 
                     #if the item is an instance of ContentSuggestion, append it to the output list
                     output.append({
+                                "area": item.area,
                                 "original_content": item.original_content,
                                 "suggestion": item.suggestion})
                 else: 
