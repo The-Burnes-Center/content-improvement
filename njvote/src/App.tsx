@@ -254,7 +254,7 @@ function App() {
                 </Radio.Group>
               </div>
 
-              {tab === "audience" && <Audience projectId={selectedProjectId} />}
+              {tab === "audience" && <Audience projectId={selectedProjectId}  url={allProjects.find((project) => project[0] === selectedProjectId)?.[2] || "No URL available"}/>}
               {tab === "clarity" && <ContentClarity projectId={selectedProjectId} />}
               {tab === "design" && <WebDesign projectId={selectedProjectId} />}
               {tab === "accessibility" && <Accessibility projectId={selectedProjectId} />}

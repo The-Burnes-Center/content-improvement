@@ -156,7 +156,7 @@ def audience():
     personaAuditId = data.get('personaAuditId')
     
     if url and persona:
-        output = f" Postives:\n{audience_page_postives(url, persona)} \nUser Challenges:\n {audience_page_challenges(url, persona)}"
+        output = f"Postives:\n{audience_page_postives(url, persona)} \nUser Challenges:\n {audience_page_challenges(url, persona)}"
         #output = get_pred(get_pure_source(url), f"""Based off of the provided URL, please audit the website for the following user persona: {persona}.""")
 
         conn = mysql.connect()
