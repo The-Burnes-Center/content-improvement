@@ -145,7 +145,7 @@ const Audience = ({ projectId, url }: AudienceProps) => {
       let text = "";
       
       if (useAIPersonaGen) {
-        const res = await fetch('/api/generate-sample-persona?url=https://www.nj.gov/state/elections/vote.shtml', {
+        const res = await fetch(`/api/generate-sample-persona?url=${url}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -266,7 +266,7 @@ const Audience = ({ projectId, url }: AudienceProps) => {
     <>
       <div style={{ marginLeft: '1rem' }}>
         <h2>Understand how users interact with your website</h2>
-        <Dropdown menu ={{ items: personas, onClick: handleMenuClick }} trigger={['click']}>
+        <Dropdown menu ={{ items: personas, onClick: handleMenuClick }} trigger={['click']} disabled={loading}>
           <Button>
           <a onClick={(e) => e.preventDefault()}>
             <Space>
@@ -300,7 +300,7 @@ const Audience = ({ projectId, url }: AudienceProps) => {
           </Button>,
         ]}
       >
-        <Checkbox onChange={toggleUseAIPersonaGen}>
+        <Checkbox onChange={toggleUseAIPersonaGen} checked={useAIPersonaGen}>
           Use AI Persona Generator
         </Checkbox>
         <div style={{ marginTop: '1rem' }}></div>
