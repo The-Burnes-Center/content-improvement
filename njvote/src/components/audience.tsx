@@ -100,7 +100,6 @@ const Audience = ({ projectId }: AudienceProps) => {
   };
 
  const analyzePersona = async (key: string ,personaName: string, personaContent: string ) => {
-  setLoading(true);
   try {
     
     const response = await fetch('/api/audience', {
@@ -136,8 +135,24 @@ const Audience = ({ projectId }: AudienceProps) => {
 };
 
   const createPersona = async () => {
+    setOpenPersonaModal(false);
+    setPersonaName('');
+    setUseAIPersonaGen(false)
+    setLoading(true);
     try {
-      const res = await fetch('/api/create_persona_audit', {
+      console.log('Creating persona...');
+      let text = "";
+      
+      if (useAIPersonaGen) {
+        const res = await fetch('/api/generate-sample-persona?url=https://www.nj.gov/state/elections/vote.shtml', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        text = await res.text();
+        setPersonaContent(text);
+        console.log(text);
+      }
+        const res = await fetch('/api/create_persona_audit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: personaName, projectId }),
@@ -157,19 +172,17 @@ const Audience = ({ projectId }: AudienceProps) => {
         // setSelectedPersona(newPersona);
         closePersonaModal();
 
-        await analyzePersona(data.id ,personaName, personaContent);
+        await analyzePersona(data.id ,personaName, text);
 
 
       } else {
         message.error('Failed to create persona.');
       }
+
     } catch (err) {
       console.error(err);
       message.error('An error occurred while creating the persona.');
     }
-    setOpenPersonaModal(false);
-    setPersonaName('');
-    setUseAIPersonaGen(false)
 
   };
 
@@ -306,6 +319,8 @@ const Audience = ({ projectId }: AudienceProps) => {
         />
          <div style={{ position: 'relative', width: '100%', marginTop: '1rem' }}>
          <TextArea
+            key={useAIPersonaGen ? 'ai' : 'manual'}
+            disabled={useAIPersonaGen}
             rows={12}
             placeholder= "Enter a User Persona"
             style={{ width: '100%', paddingBottom: '2rem' }}
