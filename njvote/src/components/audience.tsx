@@ -14,6 +14,7 @@ export interface PersonaDisplayProps {
 
 interface AudienceProps {
   projectId: number | null;
+  url: string;
 }
 
 interface Persona {
@@ -23,7 +24,7 @@ interface Persona {
   persona: string
 }
 
-const Audience = ({ projectId }: AudienceProps) => {
+const Audience = ({ projectId, url }: AudienceProps) => {
 
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(personas[0] || null);
@@ -107,7 +108,7 @@ const Audience = ({ projectId }: AudienceProps) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        url: 'https://www.nj.gov/state/elections/vote.shtml',
+        url: url,
         persona: personaContent,
         personaAuditId: key,
       }),
