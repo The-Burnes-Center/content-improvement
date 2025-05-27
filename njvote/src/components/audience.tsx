@@ -101,7 +101,6 @@ const Audience = ({ projectId, url }: AudienceProps) => {
   };
 
  const analyzePersona = async (key: string ,personaName: string, personaContent: string ) => {
-  setLoading(true);
   try {
     
     const response = await fetch('/api/audience', {
@@ -137,8 +136,24 @@ const Audience = ({ projectId, url }: AudienceProps) => {
 };
 
   const createPersona = async () => {
+    setOpenPersonaModal(false);
+    setPersonaName('');
+    setUseAIPersonaGen(false)
+    setLoading(true);
     try {
-      const res = await fetch('/api/create_persona_audit', {
+      console.log('Creating persona...');
+      let text = "";
+      
+      if (useAIPersonaGen) {
+        const res = await fetch(`/api/generate-sample-persona?url=${url}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        text = await res.text();
+        setPersonaContent(text);
+        console.log(text);
+      }
+        const res = await fetch('/api/create_persona_audit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: personaName, projectId }),
@@ -158,19 +173,17 @@ const Audience = ({ projectId, url }: AudienceProps) => {
         // setSelectedPersona(newPersona);
         closePersonaModal();
 
-        await analyzePersona(data.id ,personaName, personaContent);
+        await analyzePersona(data.id ,personaName, text);
 
 
       } else {
         message.error('Failed to create persona.');
       }
+
     } catch (err) {
       console.error(err);
       message.error('An error occurred while creating the persona.');
     }
-    setOpenPersonaModal(false);
-    setPersonaName('');
-    setUseAIPersonaGen(false)
 
   };
 
@@ -253,7 +266,7 @@ const Audience = ({ projectId, url }: AudienceProps) => {
     <>
       <div style={{ marginLeft: '1rem' }}>
         <h2>Understand how users interact with your website</h2>
-        <Dropdown menu ={{ items: personas, onClick: handleMenuClick }} trigger={['click']}>
+        <Dropdown menu ={{ items: personas, onClick: handleMenuClick }} trigger={['click']} disabled={loading}>
           <Button>
           <a onClick={(e) => e.preventDefault()}>
             <Space>
@@ -287,7 +300,7 @@ const Audience = ({ projectId, url }: AudienceProps) => {
           </Button>,
         ]}
       >
-        <Checkbox onChange={toggleUseAIPersonaGen}>
+        <Checkbox onChange={toggleUseAIPersonaGen} checked={useAIPersonaGen}>
           Use AI Persona Generator
         </Checkbox>
         <div style={{ marginTop: '1rem' }}></div>
@@ -307,6 +320,8 @@ const Audience = ({ projectId, url }: AudienceProps) => {
         />
          <div style={{ position: 'relative', width: '100%', marginTop: '1rem' }}>
          <TextArea
+            key={useAIPersonaGen ? 'ai' : 'manual'}
+            disabled={useAIPersonaGen}
             rows={12}
             placeholder= "Enter a User Persona"
             style={{ width: '100%', paddingBottom: '2rem' }}

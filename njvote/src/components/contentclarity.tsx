@@ -1,6 +1,8 @@
 // Ant Design components and React imports
-import { Table, Typography, Button } from 'antd';
+import { Table, Typography, Button, TableProps } from 'antd';
 import { useState, useEffect } from 'react';
+import type { ColumnsType } from 'antd/es/table';
+
 
 const { Paragraph } = Typography;
 
@@ -13,6 +15,7 @@ const ContentClarity = ({ projectId }: ContentClarityProps) => {
   // Local interface to shape suggestion data
   interface Content {
     key: number;
+    area: string;
     original: string;
     suggestion: string;
   }
@@ -63,7 +66,10 @@ const ContentClarity = ({ projectId }: ContentClarityProps) => {
         key: index,
         original: item[2],
         suggestion: item[3],
+        area: item[4],
       }));
+
+      console.log(transformed)
 
       setSuggestions(transformed);
     } catch (err) {
@@ -79,12 +85,37 @@ const ContentClarity = ({ projectId }: ContentClarityProps) => {
   // Format data for the table component
   const tableData = suggestions.map((item) => ({
     key: item.key,
+    area: item.area,
     original: item.original,
     suggestion: item.suggestion || 'No suggestions found.',
   }));
 
+  const onChange: TableProps<Content>['onChange'] = (
+    pagination: any,
+    filters: any,
+    sorter: any,
+    extra: any
+    ) => {
+      console.log('params', pagination, filters, sorter, extra);
+    };
+
   // Define table columns
-  const columns = [
+  const columns: ColumnsType<Content> = [
+    {
+      title: 'Area of Improvement',
+      dataIndex: 'area',
+      key: 'area',
+      render: (text: string) => (
+        <Paragraph style={{ whiteSpace: 'pre-wrap' }}>{text}</Paragraph>
+      ),
+      onFilter: (value: boolean | React.Key, record: Content) => record.area.toLowerCase().includes(String(value).toLowerCase()),
+      filters: Array.from(new Set(suggestions.map(item => item.area))).map(area => ({
+  text: area,
+  value: area,
+})),
+      filterSearch: true,
+      width: '40%',
+    },
     {
       title: 'Original Content',
       dataIndex: 'original',
@@ -146,6 +177,7 @@ const ContentClarity = ({ projectId }: ContentClarityProps) => {
         </div>
         <Table
           columns={columns}
+          onChange={onChange}
           dataSource={tableData}
           pagination={{pageSize: 4}}
           bordered

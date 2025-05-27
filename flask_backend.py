@@ -244,9 +244,10 @@ def improveContent():
         #print(item)
         original = item.get("original_content", "")
         revised = item.get("suggestion", "")
+        area = item.get("area", "")
         cursor.execute(
-            "INSERT INTO ContentClaritySuggestion (contentClarityAuditId, original, suggestion) VALUES (%s, %s, %s)",
-            (contentClarityAuditId, original, revised)
+            "INSERT INTO ContentClaritySuggestion (contentClarityAuditId, original, suggestion, area) VALUES (%s, %s, %s, %s)",
+            (contentClarityAuditId, original, revised, area)
         )
 
     conn.commit()
