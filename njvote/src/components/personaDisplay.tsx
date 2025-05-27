@@ -1,30 +1,45 @@
-import { Input, Button } from 'antd';
 import { useEffect, useState } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
+import type { TableColumnsType, TableProps } from 'antd';
+import { Table } from 'aws-sdk/clients/glue';
+
 
 export interface PersonaDisplayProps {
-    persona: string | undefined;
-    output: string | undefined;
-    id: number | undefined;
-    updatePersonaField: (id: number, field: 'persona' | 'output', value: string) => void;
-    loading: boolean;
+  persona: string | undefined;
+  id: number | undefined;
+  updatePersonaField: (id: number, field: 'persona' | 'output', value: string) => void;
+  displayItems: string;
+  loading: boolean
+}
+
+interface TableType {
+    key: string;
+    item: string;
 }
 
 const PersonaDisplay = (props: PersonaDisplayProps) => {
-    const { TextArea } = Input;
 
-    const [persona, setPersona] = useState(props.persona);
-    const [output, setOutput] = useState(props.output);
-    const [id, setId] = useState(props.id);
+    const [displayItems, setDisplayItems] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
+    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
     useEffect(() => {
-        setPersona(props.persona);
-        setOutput(props.output);
-        setId(props.id);
+        setDisplayItems(["item1", "item2", "item3"]);
         setLoading(props.loading);
-    }, [props.persona, props.output, props.loading, props.id]);
-      
+    }, [props.persona, props.displayItems, props.loading]);
+
+
+    const columns: TableColumnsType<TableType> = [
+        {
+            title: 'item',
+            dataIndex: 'item',
+            width: '100%',
+            render: (text) => <span style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{text}</span>,
+        },
+    ];
+
+
+
     return (
         <>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2%' }}>
@@ -45,7 +60,11 @@ const PersonaDisplay = (props: PersonaDisplayProps) => {
                         font: '13px "Helvetica Neue"'
                  
                     }}>
-                        {loading ? <LoadingOutlined /> : output}
+                        {loading ? <LoadingOutlined /> : 
+                        
+                        <>
+                            
+                        </>}
                 </div>
             </div>
         </>

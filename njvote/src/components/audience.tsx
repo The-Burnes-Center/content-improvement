@@ -1,15 +1,7 @@
 import { useEffect, useState } from 'react';
-import { DownOutlined, LoadingOutlined   } from '@ant-design/icons';
+import { DownOutlined   } from '@ant-design/icons';
 import PersonaDisplay from './personaDisplay';
 import { Space, Dropdown, MenuProps, Modal, Button, Input, Checkbox, message } from 'antd';
-
-
-export interface PersonaDisplayProps {
-  persona: string | undefined;
-  output: string | undefined;
-  id: number | undefined;
-  updatePersonaField: (id: number, field: 'persona' | 'output', value: string) => void;
-}
 
 
 interface AudienceProps {
@@ -20,8 +12,9 @@ interface AudienceProps {
 interface Persona {
   key: string;
   label: string,
-  output: string,
   persona: string
+  positives: string;
+  challenges: string;
 }
 
 const Audience = ({ projectId, url }: AudienceProps) => {
@@ -45,12 +38,14 @@ const Audience = ({ projectId, url }: AudienceProps) => {
           headers: { 'Content-Type': 'application/json' },
         });
         const data = await response.json();
+        console.log(data);
         if (response.ok) {
           personaItems = data['personas'].map((item: any) => ({
             key: String(item[0]),
             label: item[1],
-            output: item[4],
             persona: item[3],
+            positives: item[4],
+            challenges: item[5],
           }));
           personaItems?.push({ type: 'divider' });
           personaItems?.push({ key: 'new', label: 'New User Persona' });
@@ -111,14 +106,13 @@ const Audience = ({ projectId, url }: AudienceProps) => {
       }),
     });
 
-    const text = await response.text();
-    const newPersona = { key: key, label: personaName, output: text, persona: personaContent };
+    const text = await response.json();
+    const newPersona = { key: key, label: personaName, persona: personaContent, positives: text.positives, challenges: text.challenges };
     setPersonas((prevPersonas) => [
-              ...(prevPersonas ?? []).slice(0, -2), // Exclude the last two items (divider and "New User Persona")
-              newPersona,
-              { key: 'divider', label: 'Divider', output: '', persona: '' },
-              { key: 'new', label: 'New User Persona', output: '', persona: '' },
-            ]);
+                  ...(prevPersonas ?? []).slice(0, -1), // Exclude the last two items (divider and "New User Persona")
+                  newPersona,
+                  { key: 'new', label: 'New User Persona', persona: '', positives: '', challenges: '' },
+                ]);
     setSelectedPersona(newPersona);
     setLoading(false);
   } catch (err) {
@@ -156,14 +150,6 @@ const Audience = ({ projectId, url }: AudienceProps) => {
       if (res.ok) {
         message.success('Persona created successfully!');
         const data = await res.json()
-        // const newPersona = { key: data.id , label: personaName, output: '', persona: personaContent };
-        // setPersonas((prevPersonas) => [
-        //           ...(prevPersonas ?? []).slice(0, -2), // Exclude the last two items (divider and "New User Persona")
-        //           newPersona,
-        //           { key: 'divider', label: 'Divider', output: '', persona: '' },
-        //           { key: 'new', label: 'New User Persona', output: '', persona: '' },
-        //         ]);
-        // setSelectedPersona(newPersona);
         closePersonaModal();
 
         await analyzePersona(data.id ,personaName, text);
@@ -190,69 +176,6 @@ const Audience = ({ projectId, url }: AudienceProps) => {
       setSelectedPersona((prev) => prev ? { ...prev, [field]: value } : prev);
     }
   };
-
-
-
-// const PersonaDisplay = (props: PersonaDisplayProps) => {
-//     const { TextArea } = Input;
-
-//     const [persona, setPersona] = useState(props.persona);
-//     const [output, setOutput] = useState(props.output);
-//     const [id, setId] = useState(props.id);
-//     const [loading, setLoading] = useState(false);
-
-//     useEffect(() => {
-//         setPersona(props.persona);
-//         setOutput(props.output);
-//         setId(props.id);
-//     }, [props.persona, props.output]);
-
-//     const handleAudit = async () => {
-//         setLoading(true);
-//         try {
-//           const response = await fetch('api/audience', {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify({
-//               url: 'https://www.nj.gov/state/elections/vote.shtml',
-//               persona: props.persona,
-//               personaAuditId: props.id
-//             }),
-//           });
-//           const text = await response.text();
-//           if (props.id !== undefined) {
-//             props.updatePersonaField(props.id, 'output', text);
-//           }
-//           setLoading(false);
-//         } catch (err) {
-//           console.error(err);
-//           if (props.id !== undefined) {
-//             props.updatePersonaField(props.id, 'output', 'Error fetching data from API.');
-//           }
-//           setLoading(false);
-//         }
-//       };
-
-//   // {showPersonaBox && (
-//   // <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2%' }}>
-//   //   <div
-//   //     style={{
-//   //       marginLeft: '1rem',
-//   //       display: 'flex',
-//   //       flexDirection: 'column',
-//   //       justifyContent: 'space-between',
-//   //       height: '19.1rem',
-//   //       width: '25rem',
-//   //       padding: '1rem',
-//   //       backgroundColor: 'white',
-//   //       borderRadius: '5px',
-//   //     }}
-//   //      >
-
-//     </div>
-//   </div>
-// )}
-  
   
 
   return (

@@ -167,7 +167,7 @@ def audience():
         cursor.close()
         conn.close()
 
-        return f"Postives: {positives}, Challenges: {challenges}", 200
+        return {"positives": positives, "challenges": challenges}, 200
     else:
         return "No URL or persona provided", 400
     
