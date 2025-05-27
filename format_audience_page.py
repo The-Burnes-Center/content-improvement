@@ -8,6 +8,19 @@ client  = boto3.client("bedrock-runtime", region_name="us-east-1")
 model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"
 
 
+'''
+ An example of the challenges and output format is:
+                        Confusing information about XXXX
+                        Complex navigation with multiple dropdown menus and links
+                        Overwhelming amount of information 
+                        Small font size and low contrast may be difficult to read
+                        No obvious search functionality to find specific information
+                        Mobile responsiveness issues may hinder use on smartphone
+                        Jargon and legal terminology without plain language explanations
+                        No clear way to get personalized help or ask questions
+                        Distracting social media feeds and non-essential content
+'''
+
 def audience_page_postives(source_code, persona):
     """Using the Bedrock API, using the persona annd the source code to provide feedback on the postives of User interaction with the website.
     Args:
@@ -35,16 +48,7 @@ def audience_page_postives(source_code, persona):
                     An example of postives and the output format is:
                     Clear navigation menu with simple, descriptive labels for different sections
                     Prominent search bar to quickly find specific information
-                    Social media integration for easy sharing of voter information with peers
-                    Video tutorials available for visual learners 
-                    Option to sign up for email or text alerts about upcoming elections and deadlines
                     Ability to download and save important forms as PDFs for later reference
-                    Language toggle to switch between English and Spanish versions of the site
-                    High color contrast between text and backgrounds for improved readability
-                    Capability to increase text size for easier reading without losing layout integrity
-                    Alt text provided for images to assist screen reader users
-                    Keyboard navigation support for those who cannot use a mouse
-                    Clear error messages and form validation to help complete registration accurately 
 
             
                 """
@@ -92,20 +96,18 @@ def audience_page_challenges(source_code, persona):
 
                         Each challenge should:
                         - Reflect the user’s specific needs or difficulties
+                        - The challenge should be actionable and specific to the user persona
                         - Be concise but detailed enough to provide actionable insights
                         - Only include the challenge itself, without any additional text or context
                         - return a list of the challenges, each challenge should be on a new line with no bullet points or numbers
 
                         An example of the challenges and output format is:
-                        Confusing information about XXXX
-                        Complex navigation with multiple dropdown menus and links
-                        Overwhelming amount of information 
-                        Small font size and low contrast may be difficult to read
-                        No obvious search functionality to find specific information
-                        Mobile responsiveness issues may hinder use on smartphone
-                        Jargon and legal terminology without plain language explanations
-                        No clear way to get personalized help or ask questions
-                        Distracting social media feeds and non-essential content
+
+                        Complex navigation structure may overwhelm a first-time voter
+                        Lengthy text content could be difficult to quickly scan for key information
+                        Lack of clear, prominent call-to-action for mail-in voting process
+                        Candidate information not readily accessible from the main page
+                        Small font size may strain eyes during extended reading sessions
                     
                         """
     body = {
