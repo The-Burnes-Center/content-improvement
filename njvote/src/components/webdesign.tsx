@@ -5,12 +5,13 @@ import {
   SearchOutlined,
   ToolOutlined,
   BulbOutlined,
+  DeleteOutlined
 } from '@ant-design/icons';
 
 const { Title } = Typography;
 
-// Define the shape of a single suggestion item
 interface WebDesignSuggestion {
+  key: number;
   label: string;
   area: string;
   suggestion: string;
@@ -24,12 +25,9 @@ export interface WebDesignProps {
 const WebDesign = ({ projectId }: WebDesignProps) => {
   const [suggestions, setSuggestions] = useState<WebDesignSuggestion[]>([]);
 
-  // Fetches suggestions based on projectId
   const fetchWebDevSuggestions = async () => {
     setSuggestions([]);
-
     try {
-      // First fetch the audit ID for the project
       const auditResponse = await fetch(`api/get_webdesign_audit?projectId=${projectId}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
@@ -43,7 +41,6 @@ const WebDesign = ({ projectId }: WebDesignProps) => {
       const auditData = await auditResponse.json();
       const webDesignAuditId = auditData['web_design_audit'][0];
 
-      // Then fetch the suggestions using the audit ID
       const suggestionsResponse = await fetch(
         `api/get_webdesign_suggestions?webDesignAuditId=${webDesignAuditId}`,
         {
@@ -59,8 +56,8 @@ const WebDesign = ({ projectId }: WebDesignProps) => {
 
       const suggestionData = await suggestionsResponse.json();
 
-      // Transform the response data into the expected format
       const formattedSuggestions = suggestionData['suggestions'].map((item: any) => ({
+        key: item[0],
         label: item[0],
         area: item[2],
         suggestion: item[3],
@@ -74,14 +71,29 @@ const WebDesign = ({ projectId }: WebDesignProps) => {
     }
   };
 
-  // Refetch suggestions whenever the projectId changes
   useEffect(() => {
     if (projectId !== null) {
       fetchWebDevSuggestions();
     }
   }, [projectId]);
 
-  // Table column configuration
+  const handleDelete = (key: number) => {
+    setSuggestions(prev => prev.filter(item => item.key !== key));
+    fetch('api/delete_webdesign_suggestion', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ webDesignSuggestionId: key }),
+    })
+      .then(response => {
+        if (!response.ok) {
+          console.error('Failed to delete web design suggestion.');
+        }
+      })
+      .catch(err => {
+        console.error('Error deleting web design suggestion:', err);
+      });
+  };
+
   const columns = [
     {
       title: (
@@ -111,9 +123,28 @@ const WebDesign = ({ projectId }: WebDesignProps) => {
       dataIndex: 'reason',
       key: 'reason',
     },
+    {
+      title: '',
+      key: 'action',
+      render: (_: any, record: WebDesignSuggestion) => (
+        <Button
+          type="text"
+          onClick={() => handleDelete(record.key)}
+          style={{
+            visibility: 'hidden',
+            padding: 0,
+            fontWeight: 'bold',
+            fontSize: '16px',
+          }}
+          className="inline-delete-button"
+        >
+          <DeleteOutlined />
+        </Button>
+      ),
+      width: 50,
+    },
   ];
 
-  // Export suggestions to a CSV file
   const exportToCSV = () => {
     if (!suggestions.length) return;
 
@@ -136,7 +167,6 @@ const WebDesign = ({ projectId }: WebDesignProps) => {
     document.body.removeChild(link);
   };
 
-  // Component render
   return (
     <div style={{ padding: '1rem' }}>
       <h2 style={{ marginBottom: '1rem' }}>Improve the placement of your content</h2>
@@ -159,7 +189,24 @@ const WebDesign = ({ projectId }: WebDesignProps) => {
         </Button>
       </div>
 
-      <Table columns={columns} dataSource={suggestions} pagination={false} />
+      <Table
+        columns={columns}
+        dataSource={suggestions}
+        pagination={false}
+        rowClassName={() => 'hoverable-row'}
+        onRow={() => {
+          return {
+            onMouseEnter: (event) => {
+              const button = event.currentTarget.querySelector('.inline-delete-button') as HTMLElement;
+              if (button) button.style.visibility = 'visible';
+            },
+            onMouseLeave: (event) => {
+              const button = event.currentTarget.querySelector('.inline-delete-button') as HTMLElement;
+              if (button) button.style.visibility = 'hidden';
+            },
+          };
+        }}
+      />
     </div>
   );
 };

@@ -1115,3 +1115,109 @@ def delete_project():
     conn.close()
 
     return "Project deleted successfully", 200
+
+@app.route('/delete_content_clarity_suggestion', methods=['DELETE'])
+def delete_content_clarity_suggestion():
+    """
+    DELETE /delete_content_clarity_suggestion
+    ----------------------------------------
+    Deletes a content clarity suggestion entry from the ContentClaritySuggestion table in the database.
+
+    Expected JSON payload:
+    {
+        "contentClaritySuggestionId": int
+    }
+
+    Behavior:
+    - Parses the incoming JSON payload from the request body.
+    - Extracts `contentClaritySuggestionId` field.
+    - Deletes the suggestion record from the ContentClaritySuggestion table.
+    - Returns a success message and HTTP status code 200 on successful deletion.
+
+    Returns:
+        Tuple[str, int]: A success message and HTTP 200 status code if deletion is successful.
+    """
+    data = request.get_json()
+    suggestion_id = data.get('contentClaritySuggestionId')
+    if not suggestion_id:
+        return "No contentClaritySuggestionId provided", 400
+
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM ContentClaritySuggestion WHERE contentClaritySuggestionId = %s", (suggestion_id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return "Content clarity suggestion deleted successfully", 200
+
+@app.route('/delete_webdesign_suggestion', methods=['DELETE'])
+def delete_webdesign_suggestion():
+    """
+    DELETE /delete_webdesign_suggestion
+    -----------------------------------
+    Deletes a web design suggestion entry from the WebDesignSuggestion table in the database.
+
+    Expected JSON payload:
+    {
+        "webDesignSuggestionId": int
+    }
+
+    Behavior:
+    - Parses the incoming JSON payload from the request body.
+    - Extracts `webDesignSuggestionId` field.
+    - Deletes the suggestion record from the WebDesignSuggestion table.
+    - Returns a success message and HTTP status code 200 on successful deletion.
+
+    Returns:
+        Tuple[str, int]: A success message and HTTP 200 status code if deletion is successful.
+    """
+    data = request.get_json()
+    suggestion_id = data.get('webDesignSuggestionId')
+    if not suggestion_id:
+        return "No webDesignSuggestionId provided", 400
+
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM WebDesignSuggestion WHERE webDesignSuggestionId = %s", (suggestion_id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return "Web design suggestion deleted successfully", 200
+
+
+@app.route('/delete_accessibility_suggestion', methods=['DELETE'])
+def delete_accessibility_suggestion():
+    """
+    DELETE /delete_accessibility_suggestion
+    ---------------------------------------
+    Deletes an accessibility suggestion entry from the AccessibilitySuggestion table in the database.
+
+    Expected JSON payload:
+    {
+        "accessibilitySuggestionId": int
+    }
+
+    Behavior:
+    - Parses the incoming JSON payload from the request body.
+    - Extracts `accessibilitySuggestionId` field.
+    - Deletes the suggestion record from the AccessibilitySuggestion table.
+    - Returns a success message and HTTP status code 200 on successful deletion.
+
+    Returns:
+        Tuple[str, int]: A success message and HTTP 200 status code if deletion is successful.
+    """
+    data = request.get_json()
+    suggestion_id = data.get('accessibilitySuggestionId')
+    if not suggestion_id:
+        return "No accessibilitySuggestionId provided", 400
+
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM AccessibilitySuggestion WHERE accessibilitySuggestionId = %s", (suggestion_id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return "Accessibility suggestion deleted successfully", 200

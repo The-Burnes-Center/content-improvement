@@ -1,16 +1,17 @@
-import { Collapse } from 'antd';
+import { Collapse, Button } from 'antd';
 import { useState, useEffect } from 'react';
 import AccessibilitySuggestion from './accessibilitySuggestion';
+import { DeleteOutlined } from '@ant-design/icons';
+
 
 const { Panel } = Collapse;
 
-// Props interface for the Accessibility component
 export interface AccessibilityProps {
   projectId: number | null;
 }
 
-// Suggestion object structure returned by the backend
 interface Suggestion {
+  key: number;
   label: string;
   original_content: string;
   revised_content: string;
@@ -20,16 +21,11 @@ interface Suggestion {
 const Accessibility = ({ projectId }: AccessibilityProps) => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
-  // Fetches accessibility audit suggestions from backend
   const fetchAccessibilitySuggestions = async () => {
-    // Prevent fetch if projectId is not set
     if (!projectId) return;
-
-    // Clear existing suggestions before fetching new ones
     setSuggestions([]);
 
     try {
-      // Step 1: Get audit ID for the given project
       const auditRes = await fetch(`api/get_accessibility_audit?projectId=${projectId}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
@@ -43,13 +39,11 @@ const Accessibility = ({ projectId }: AccessibilityProps) => {
       const auditData = await auditRes.json();
       const accessibilityAuditId = auditData?.accessibility_audit?.[0];
 
-      // If audit ID is missing, stop execution
       if (!accessibilityAuditId) {
         console.error('No accessibility audit ID found.');
         return;
       }
 
-      // Step 2: Use the audit ID to fetch the actual suggestions
       const suggestionsRes = await fetch(
         `api/get_accessibility_suggestions?accessibilityAuditId=${accessibilityAuditId}`,
         {
@@ -65,34 +59,84 @@ const Accessibility = ({ projectId }: AccessibilityProps) => {
 
       const data = await suggestionsRes.json();
 
-      // Transform backend response into the Suggestion format
       const parsedSuggestions = data.suggestions.map((item: any) => ({
+        key: item[0],
         label: item[2],
         original_content: item[3],
         revised_content: item[4],
         explanation: item[5],
       }));
 
-      // Store parsed suggestions in state
       setSuggestions(parsedSuggestions);
     } catch (err) {
       console.error('Error fetching accessibility suggestions:', err);
     }
   };
 
-  // Automatically fetch suggestions when component mounts or when projectId changes
   useEffect(() => {
     fetchAccessibilitySuggestions();
   }, [projectId]);
 
+  const handleDelete = (key: number) => {
+    setSuggestions(prev => prev.filter(s => s.key !== key));
+    fetch('/api/delete_accessibility_suggestion', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessibilitySuggestionId: key }),
+    })
+      .then(res => {
+        if (!res.ok) {
+          console.error('Failed to delete accessibility suggestion');
+        }
+      })
+      .catch(err => {
+        console.error('Error deleting accessibility suggestion:', err);
+      });
+  };
+
   return (
     <>
       <h2>Make sure your content is aligned with WCAG guidelines</h2>
-
-      {/* Accordion-style collapsible panels for each suggestion */}
       <Collapse accordion style={{ marginTop: '2rem' }}>
-        {suggestions.map((s, i) => (
-          <Panel header={s.label} key={i}>
+        {suggestions.map((s) => (
+          <Panel
+            key={s.key}
+            header={
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+                onMouseEnter={(e) => {
+                  const btn = e.currentTarget.querySelector('.inline-delete-button') as HTMLElement;
+                  if (btn) btn.style.visibility = 'visible';
+                }}
+                onMouseLeave={(e) => {
+                  const btn = e.currentTarget.querySelector('.inline-delete-button') as HTMLElement;
+                  if (btn) btn.style.visibility = 'hidden';
+                }}
+              >
+                <span>{s.label}</span>
+                <Button
+                  type="text"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(s.key);
+                  }}
+                  style={{
+                    visibility: 'hidden',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    color: '#333',
+                  }}
+                  className="inline-delete-button"
+                >
+                  <DeleteOutlined />
+                </Button>
+              </div>
+            }
+          >
             <AccessibilitySuggestion
               original={s.original_content}
               revised={s.revised_content}

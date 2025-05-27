@@ -1,7 +1,9 @@
 // Ant Design components and React imports
-import { Table, Typography, Button, TableProps } from 'antd';
+import { Table, Typography, Button, TableProps, Tooltip } from 'antd';
 import { useState, useEffect } from 'react';
 import type { ColumnsType } from 'antd/es/table';
+import { DeleteOutlined } from '@ant-design/icons';
+
 
 
 const { Paragraph } = Typography;
@@ -22,6 +24,8 @@ const ContentClarity = ({ projectId }: ContentClarityProps) => {
 
   // State to hold fetched suggestions
   const [suggestions, setSuggestions] = useState<Content[]>([]);
+  const [hoveredRowKey, setHoveredRowKey] = useState<number | null>(null);
+
 
   // Function to fetch suggestions for content clarity
   const fetchContentClaritySuggestions = async () => {
@@ -62,14 +66,13 @@ const ContentClarity = ({ projectId }: ContentClarityProps) => {
       const data = await response.json();
 
       // Transform raw API response into component-friendly structure
-      const transformed = data['suggestions'].map((item: any, index: number) => ({
-        key: index,
+      const transformed = data['suggestions'].map((item: any) => ({
+        key: item[0],
         original: item[2],
         suggestion: item[3],
         area: item[4],
+        dismissed: item[1],
       }));
-
-      console.log(transformed)
 
       setSuggestions(transformed);
     } catch (err) {
@@ -99,20 +102,61 @@ const ContentClarity = ({ projectId }: ContentClarityProps) => {
       console.log('params', pagination, filters, sorter, extra);
     };
 
-  // Define table columns
+  const handleDelete = (areaToDelete: number) => {
+    setSuggestions(prev => prev.filter(item => item.key !== areaToDelete));
+    fetch('/api/delete_content_clarity_suggestion', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contentClaritySuggestionId: areaToDelete }),
+    })
+      .then((res) => {
+      if (!res.ok) {
+        throw new Error('Failed to delete suggestion');
+      }
+      })
+      .catch((err) => {
+      console.error('Error deleting suggestion:', err);
+      });
+  };
+
   const columns: ColumnsType<Content> = [
     {
       title: 'Area of Improvement',
       dataIndex: 'area',
       key: 'area',
-      render: (text: string) => (
-        <Paragraph style={{ whiteSpace: 'pre-wrap' }}>{text}</Paragraph>
+      render: (text: string, record: Content) => (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+          onMouseEnter={() => setHoveredRowKey(record.key)}
+          onMouseLeave={() => setHoveredRowKey(null)}
+        >
+          <Paragraph style={{ whiteSpace: 'pre-wrap', marginBottom: 0 }}>
+            {text}
+          </Paragraph>
+          {hoveredRowKey === record.key && (
+            <Tooltip title="Dismiss Suggestion">
+              <Button
+                type="text"
+                icon={<DeleteOutlined />}
+                size="small"
+                style={{ opacity: 1 }}
+                onClick={() => handleDelete(record.key)}
+              />
+            </Tooltip>
+          )}
+        </div>
       ),
-      onFilter: (value: boolean | React.Key, record: Content) => record.area.toLowerCase().includes(String(value).toLowerCase()),
+      onFilter: (value: boolean | React.Key, record: Content) =>
+        record.area.toLowerCase().includes(String(value).toLowerCase()),
       filters: Array.from(new Set(suggestions.map(item => item.area))).map(area => ({
-  text: area,
-  value: area,
-})),
+        text: area,
+        value: area,
+      })),
       filterSearch: true,
       width: '40%',
     },
@@ -142,6 +186,7 @@ const ContentClarity = ({ projectId }: ContentClarityProps) => {
       ),
     },
   ];
+
 
   // Export suggestions to a downloadable CSV file
   const exportToCSV = () => {

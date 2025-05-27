@@ -57,7 +57,6 @@ const Audience = ({ projectId, url }: AudienceProps) => {
         } else {
           message.error('Failed to fetch personas.');
         }
-        console.log(personaItems)
         setPersonas((personaItems || []).filter((item): item is Persona => !!item && 'key' in item && 'label' in item));
         const firstPersona = personaItems?.find((item): item is Persona => !!item && 'label' in item);
         setSelectedPersona(firstPersona || null);
@@ -85,7 +84,6 @@ const Audience = ({ projectId, url }: AudienceProps) => {
 
   const handleMenuClick: MenuProps['onClick'] = (e) => {
     const selectedItem = personas?.find(item => item?.key === e.key);
-    console.log(e.key)
     if (e.key === 'new') {
       setIsEditMode(false);
       setPersonaName('');
@@ -122,12 +120,7 @@ const Audience = ({ projectId, url }: AudienceProps) => {
               { key: 'new', label: 'New User Persona', output: '', persona: '' },
             ]);
     setSelectedPersona(newPersona);
-      console.log(personas)
-      console.log(text)
     setLoading(false);
-    // console.log(persona.persona)
-    // console.log(persona.key)
-    // console.log(parseInt(persona.key))
   } catch (err) {
     console.error(err);
     updatePersonaField(parseInt(key), 'output', 'Error fetching data from API.');
@@ -141,7 +134,6 @@ const Audience = ({ projectId, url }: AudienceProps) => {
     setUseAIPersonaGen(false)
     setLoading(true);
     try {
-      console.log('Creating persona...');
       let text = "";
       
       if (useAIPersonaGen) {
@@ -151,7 +143,9 @@ const Audience = ({ projectId, url }: AudienceProps) => {
         });
         text = await res.text();
         setPersonaContent(text);
-        console.log(text);
+      }
+      else {
+        text = personaContent;
       }
         const res = await fetch('/api/create_persona_audit', {
         method: 'POST',
@@ -161,7 +155,6 @@ const Audience = ({ projectId, url }: AudienceProps) => {
 
       if (res.ok) {
         message.success('Persona created successfully!');
-        console.log('Persona created successfully!');
         const data = await res.json()
         // const newPersona = { key: data.id , label: personaName, output: '', persona: personaContent };
         // setPersonas((prevPersonas) => [
