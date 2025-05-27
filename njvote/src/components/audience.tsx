@@ -153,6 +153,10 @@ const Audience = ({ projectId, url }: AudienceProps) => {
         setPersonaContent(text);
         console.log(text);
       }
+      else{
+        text = personaContent;
+
+      }
         const res = await fetch('/api/create_persona_audit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

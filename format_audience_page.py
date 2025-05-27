@@ -44,6 +44,7 @@ def audience_page_postives(source_code, persona):
                     - Be concise but detailed enough to provide actionable insights
                     - Only include the postive itself, without any additional text or context
                     - return a list of the challenges, each challenge should be on a new line with no bullet points or numbers
+                    - limit the postives to 3-5 insights
 
                     An example of postives and the output format is:
                     Clear navigation menu with simple, descriptive labels for different sections
@@ -100,6 +101,7 @@ def audience_page_challenges(source_code, persona):
                         - Be concise but detailed enough to provide actionable insights
                         - Only include the challenge itself, without any additional text or context
                         - return a list of the challenges, each challenge should be on a new line with no bullet points or numbers
+                        - limit the challenges to 3-5 insights
 
                         An example of the challenges and output format is:
 
