@@ -156,17 +156,18 @@ def audience():
     personaAuditId = data.get('personaAuditId')
     
     if url and persona:
-        output = f"Postives:\n{audience_page_postives(url, persona)} \nUser Challenges:\n {audience_page_challenges(url, persona)}"
+        positives = audience_page_postives(url, persona)  
+        challenges = audience_page_challenges(url, persona)
         #output = get_pred(get_pure_source(url), f"""Based off of the provided URL, please audit the website for the following user persona: {persona}.""")
 
         conn = mysql.connect()
         cursor = conn.cursor()
-        cursor.execute("UPDATE PersonaAudit SET persona = %s, output = %s WHERE personaAuditId = %s", (persona, output, personaAuditId))
+        cursor.execute("UPDATE PersonaAudit SET persona = %s, positives = %s,  challenges = %s WHERE personaAuditId = %s", (persona, positives, challenges, personaAuditId))
         conn.commit()
         cursor.close()
         conn.close()
 
-        return output, 200
+        return f"Postives: {positives}, Challenges: {challenges}", 200
     else:
         return "No URL or persona provided", 400
     
