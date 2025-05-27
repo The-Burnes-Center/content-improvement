@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { DownOutlined, LoadingOutlined   } from '@ant-design/icons';
+import { DownOutlined, InfoCircleFilled, InfoCircleTwoTone } from '@ant-design/icons';
 import PersonaDisplay from './personaDisplay';
-import { Space, Dropdown, MenuProps, Modal, Button, Input, Checkbox, message } from 'antd';
+import { Space, Dropdown, MenuProps, Modal, Button, Input, Checkbox, message, Popover} from 'antd'; 
 
 
 export interface PersonaDisplayProps {
@@ -35,6 +35,24 @@ const Audience = ({ projectId, url }: AudienceProps) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const { TextArea } = Input;
   const [loading, setLoading] = useState(false);
+
+  
+
+  const InfoContent = (
+  <div style={{ maxWidth: 500 }}>
+    <p style={{ margin: 0 }}>Name:</p>
+    <p style={{ margin: 0 }}>Age:</p>
+    <p style={{ margin: 0 }}> Gender: </p>
+    <p style={{ margin: 0 }}> Occupation:</p>
+    <p style={{ margin: 0 }}>Income Level:</p>
+    <p style={{ margin: 0 }}>Education Level:</p>
+    <p style={{ margin: 0 }}>Tech Savviness: Beginner/ Moderate / Intermediate / Advance </p>
+    <p> Include Goals, Needs, and Potential Challenges </p>
+    
+  </div>
+)
+
+
 
   useEffect(() => {
     const fetchPersonas = async () => {
@@ -193,67 +211,6 @@ const Audience = ({ projectId, url }: AudienceProps) => {
 
 
 
-// const PersonaDisplay = (props: PersonaDisplayProps) => {
-//     const { TextArea } = Input;
-
-//     const [persona, setPersona] = useState(props.persona);
-//     const [output, setOutput] = useState(props.output);
-//     const [id, setId] = useState(props.id);
-//     const [loading, setLoading] = useState(false);
-
-//     useEffect(() => {
-//         setPersona(props.persona);
-//         setOutput(props.output);
-//         setId(props.id);
-//     }, [props.persona, props.output]);
-
-//     const handleAudit = async () => {
-//         setLoading(true);
-//         try {
-//           const response = await fetch('api/audience', {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify({
-//               url: 'https://www.nj.gov/state/elections/vote.shtml',
-//               persona: props.persona,
-//               personaAuditId: props.id
-//             }),
-//           });
-//           const text = await response.text();
-//           if (props.id !== undefined) {
-//             props.updatePersonaField(props.id, 'output', text);
-//           }
-//           setLoading(false);
-//         } catch (err) {
-//           console.error(err);
-//           if (props.id !== undefined) {
-//             props.updatePersonaField(props.id, 'output', 'Error fetching data from API.');
-//           }
-//           setLoading(false);
-//         }
-//       };
-
-//   // {showPersonaBox && (
-//   // <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2%' }}>
-//   //   <div
-//   //     style={{
-//   //       marginLeft: '1rem',
-//   //       display: 'flex',
-//   //       flexDirection: 'column',
-//   //       justifyContent: 'space-between',
-//   //       height: '19.1rem',
-//   //       width: '25rem',
-//   //       padding: '1rem',
-//   //       backgroundColor: 'white',
-//   //       borderRadius: '5px',
-//   //     }}
-//   //      >
-
-//     </div>
-//   </div>
-// )}
-  
-  
 
   return (
     <>
@@ -283,7 +240,21 @@ const Audience = ({ projectId, url }: AudienceProps) => {
 
       <Modal
         open={openPersonaModal}
-        title="Create New User Persona"
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+            <span>Create New User Persona</span>
+            <Popover
+              content={InfoContent}
+              title="An Example Persona Includes:"
+              placement="right"
+              trigger="click"
+              align={{ offset: [20, 80] }} 
+            >
+            <InfoCircleFilled style={{ fontSize: '1rem', color: '#179ee2', cursor: 'pointer' }} />
+          </Popover>
+          </div>
+        }
+
         onCancel={closePersonaModal}
         
 
@@ -296,6 +267,8 @@ const Audience = ({ projectId, url }: AudienceProps) => {
         <Checkbox onChange={toggleUseAIPersonaGen} checked={useAIPersonaGen}>
           Use AI Persona Generator
         </Checkbox>
+
+
         <div style={{ marginTop: '1rem' }}></div>
         <Input
           placeholder="Persona Name"
@@ -309,8 +282,10 @@ const Audience = ({ projectId, url }: AudienceProps) => {
 
           }
         }}
-
         />
+
+
+
          <div style={{ position: 'relative', width: '100%', marginTop: '1rem' }}>
          <TextArea
             key={useAIPersonaGen ? 'ai' : 'manual'}
