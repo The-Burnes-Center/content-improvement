@@ -307,7 +307,10 @@ def code_accessibility_review(html_code):
             if label == "":
                 continue
             #if label is found, append the accessibility review dictionary to the list of accessibility improvements
-            else:
+            elif (accessibility_review["original_content"]!= "" and 
+                  accessibility_review["revised_content"] != "" and 
+                  accessibility_review["original_content"]!= "" and 
+                  accessibility_review["explanation"] != "") :
             
                 #append the accessibility review dictionary to the list of accessibility improvements
                 accessibility_improvements.append(accessibility_review)
