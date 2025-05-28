@@ -33,7 +33,11 @@ def analyze_webdesign(url, Layout_guidelines):
 
     input_message = f"""Analyze this webpage screenshot and provide improvements for the layout of the page based off of the following guidelines: {Layout_guidelines}. \
                 For each suggestion, provide an example of a part of the site that could be improved. Also cite specific guidelines in each suggestion. \
-                If you cannot provide a specific element on the webpage as an example, do not include the suggestion. Do not include additional text and 
+                If you cannot provide a specific element on the webpage as an example, do not include the suggestion. 
+                
+                Make sure that each suggestion is actionable, specific, and relevant to the webpage. 
+                
+                Do not include additional text and  
                 Format the output in JSON, using the following structure:
                   [{{
                             key: '1',
