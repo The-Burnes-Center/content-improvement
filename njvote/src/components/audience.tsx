@@ -215,7 +215,8 @@ const Audience = ({ projectId, url }: AudienceProps) => {
 
       <PersonaDisplay 
         persona={selectedPersona?.persona}
-        output={selectedPersona?.output}
+        positives={selectedPersona?.positives || ''}
+        challenges={selectedPersona?.challenges || ''}
         id={selectedPersona?.key ? parseInt(selectedPersona.key, 10) : undefined}
         updatePersonaField={updatePersonaField}
         loading={loading}
