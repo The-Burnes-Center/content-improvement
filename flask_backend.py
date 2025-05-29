@@ -1222,3 +1222,41 @@ def delete_accessibility_suggestion():
     conn.close()
 
     return "Accessibility suggestion deleted successfully", 200
+
+@app.route('/update_persona_checked', methods=['POST'])
+def update_persona_checked():
+    """
+    POST /update_persona_checked
+    ---------------------------
+    Updates the 'checked' boolean field for a given personaAuditId in the PersonaAudit table.
+
+    Expected JSON payload:
+    {
+        "personaAuditId": int,
+        "checked": bool
+    }
+
+    Behavior:
+    - Parses the incoming JSON payload from the request body.
+    - Extracts `personaAuditId` and `checked` fields.
+    - Updates the 'checked' field for the specified personaAuditId in the PersonaAudit table.
+    - Returns a success message and HTTP status code 200 on successful update.
+
+    Returns:
+        Tuple[str, int]: A success message and HTTP 200 status code if update is successful.
+    """
+    data = request.get_json()
+    personaAuditId = data.get('personaAuditId')
+    checked = data.get('checked')
+
+    if personaAuditId is None or checked is None:
+        return "Missing 'personaAuditId' or 'checked'", 400
+
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE PersonaAudit SET checked = %s WHERE personaAuditId = %s", (checked, personaAuditId))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return "Persona 'checked' status updated successfully", 200
