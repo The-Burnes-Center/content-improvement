@@ -85,8 +85,19 @@ const AccessibilitySuggestion = (props: AccessibilitySuggestionProps) => {
         <Text strong>
           <BulbOutlined style={{ color: '#e6e615' }} /> Why?
         </Text>
-        <pre style={preStyle}>{props.explanation}</pre>
+        <pre
+          style={{
+            margin: 0,
+            fontFamily: 'inherit',
+            fontSize: 'inherit',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+          }}
+        >
+          {props.explanation}
+        </pre>
       </Row>
+
     </>
   );
 };
