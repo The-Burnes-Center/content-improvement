@@ -250,7 +250,7 @@ function App() {
                   <Radio.Button value="audience" onClick={() => setTab("audience")}>Audience</Radio.Button>
                   <Radio.Button value="content-clarity" onClick={() => setTab("clarity")}>Content Clarity</Radio.Button>
                   <Radio.Button value="web-design" onClick={() => setTab("design")}>Web Design</Radio.Button>
-                  <Radio.Button value="accessibility" onClick={() => setTab("accessibility")}>Code Accessibility</Radio.Button>
+                  <Radio.Button value="accessibility" onClick={() => setTab("accessibility")}>Coding Practices</Radio.Button>
                 </Radio.Group>
               </div>
 
