@@ -43,7 +43,7 @@ const PersonaDisplay = (props: PersonaDisplayProps) => {
 
         const columnsNeg: TableColumnsType<TableType> = [
         {
-            title: 'Challenges',
+            title: 'Recommendations',
             dataIndex: 'item',
             width: '100%',
             render: (text) => <span style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{text}</span>,

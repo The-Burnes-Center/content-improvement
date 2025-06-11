@@ -8,7 +8,6 @@ import os
 load_dotenv()
 
 
-url1 = 'https://www.nj.gov/state/elections/vote.shtml'
 openai_client = OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
 client = instructor.from_openai(openai_client)
 
