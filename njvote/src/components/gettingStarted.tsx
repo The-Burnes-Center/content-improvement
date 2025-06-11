@@ -14,7 +14,7 @@ const GettingStarted = () => {
 
         {/* Introductory paragraph */}
         <p className="text-lg" style={{ color: 'rgb(4, 21, 39)' }}>
-          MAX (Machine Assistant for eXperience) helps you evaluate and improve your website’s content clarity, accessibility, and design.
+          MAX helps you evaluate and improve your website’s content clarity, accessibility, and design.
         </p>
 
         {/* Steps container */}

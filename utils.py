@@ -113,19 +113,19 @@ def upload_to_s3(file_path, bucket_name, object_name=None):
 
 def get_pure_source(url):
     """Fetch the source code of a webpage and return it as plain text.
-    Args: 
+    Args:
         url (str): The URL of the webpage to fetch.
     Returns:
         str: The source code of the webpage as plain text.
     """
-    
     try:
-        response = requests.get(url)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+        }
+        response = requests.get(url, headers=headers)
         response.raise_for_status()  # Raise exception for HTTP errors
         source_code = response.text
-        
         return source_code
-
     except requests.exceptions.RequestException as e:
         print(f"Error fetching the website: {e}")
 
