@@ -82,20 +82,17 @@ def read_file_text(file_path):
 
 ## Webdesign Functions
 def capture_screenshot(url, filepath="screenshot.png"):
-    """Captures a screenshot of the webpage at the given URL and saves it to the specified file path.
-    Args: 
-        url (str): The URL of the webpage to capture.
-        filepath (str): The file path where the screenshot will be saved. Default is "screenshot.png".
-    Returns:
-        str: The file path of the saved screenshot."""
-
     with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page()
-        page.goto(url)
+        browser = p.chromium.launch(headless=False)  # try headless=False
+        context = browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+            viewport={"width": 1280, "height": 800},
+            locale="en-US",
+        )
+        page = context.new_page()
+        page.goto(url, timeout=60000)
         page.screenshot(path=filepath, full_page=True)
         browser.close()
-
         return filepath
 
 
@@ -175,7 +172,10 @@ def force_split_text(text, max_tokens):
 
 def chunk_html_text(url, max_tokens=5000):
     """Download HTML and chunk it by token size using structural recursion Used for chunking the HTML text."""
-    response = requests.get(url)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+    }
+    response = requests.get(url, headers=headers)
     soup = BeautifulSoup(response.content, 'html.parser')
     
     main = soup.find('main')

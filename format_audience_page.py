@@ -72,7 +72,9 @@ def audience_page_postives(source_code, persona):
     response_body = json.loads(resp_postives["body"].read())
     positives = response_body["content"][0]["text"]
 
+    return positives
 
+"""
     # Split the response into individual postives
     positives = positives.strip().split('\n')
     # Remove any leading/trailing whitespace from each postive
@@ -80,7 +82,7 @@ def audience_page_postives(source_code, persona):
 
 
     return positives_list
-
+"""
 
 def audience_page_challenges(source_code, persona):
     """Using the Bedrock API, using the persona annd the source code to provide feedback on the challenges of User interaction with the website.
@@ -144,14 +146,16 @@ def audience_page_challenges(source_code, persona):
     response_body = json.loads(resp_challenges["body"].read())
     challenges = response_body["content"][0]["text"]
 
+    return challenges
 
+"""
     # Split the response into individual challenges
     challenges = challenges.strip().split('\n')
     # Remove any leading/trailing whitespace from each challenge
     challenges_list = [challenge.strip() for challenge in challenges if challenge.strip()]
 
     return challenges_list
-
+"""
 
 # url1 = "https://www.nj.gov/state/elections/vote.shtml"
 # source_code = get_pure_source(url1)
