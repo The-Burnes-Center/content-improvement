@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 import tiktoken
 import concurrent.futures
 
-from constants import CLIENT_CODE_ACCESSIBILITY, MODEL_ID, MAX_ISSUES_CODE_ACESSIBILITY, MODEL_SELECTION, ANTHROPIC_VERSION, MAX_TOKENS
+from constants import CODE_ACCESSIBILITY_CLIENT, MODEL_ID, MAX_ISSUES_CODE_ACESSIBILITY, MODEL_SELECTION, ANTHROPIC_VERSION, MAX_TOKENS
 
 """
 This script uses the Claude AI model to analyze HTML code for accessibility issues and suggest improvements based on WCAG 2.1 AA guidelines.
@@ -48,9 +48,6 @@ def chunk_html_script(html_script, max_tokens = MAX_TOKENS):
                 chunks.extend(chunk_element(elem, max_tokens))
 
 
-    print(f"Total chunks created: {len(chunks)}")
-    for i, chunk in enumerate(chunks):
-        print(f"Chunk {i+1} tokens: {num_tokens(chunk)}")
     return chunks
 
     
@@ -150,7 +147,7 @@ def code_accessibility_review_claude(html_code):
             }
         
     
-        resp = CLIENT_CODE_ACCESSIBILITY.invoke_model(
+        resp = CODE_ACCESSIBILITY_CLIENT.invoke_model(
             modelId=MODEL_ID,
             body=json.dumps(body),
             contentType="application/json"
@@ -161,7 +158,7 @@ def code_accessibility_review_claude(html_code):
         # Read the response
         response_body = json.loads(resp["body"].read())
         code_issue = response_body["content"][0]["text"]
-        print(f"Code issue found: {code_issue}")
+       
 
         # add the code issue to the accessibility review dictionary
         accessibility_review["original_content"] = code_issue
@@ -211,7 +208,7 @@ def code_accessibility_review_claude(html_code):
                 "content": prompt2.strip()
             })
             # Send the request to the model
-            resp2 = CLIENT_CODE_ACCESSIBILITY.invoke_model(
+            resp2 = CODE_ACCESSIBILITY_CLIENT.invoke_model(
                 modelId=MODEL_ID,
                 body=json.dumps(body),
                 contentType="application/json"
@@ -261,7 +258,7 @@ def code_accessibility_review_claude(html_code):
             })
             
             # Send the request to the model
-            resp3 = CLIENT_CODE_ACCESSIBILITY.invoke_model(
+            resp3 = CODE_ACCESSIBILITY_CLIENT.invoke_model(
                 modelId=MODEL_ID,
                 body=json.dumps(body),
                 contentType="application/json"
@@ -309,7 +306,7 @@ def code_accessibility_review_claude(html_code):
             })
 
             # Send the request to the model
-            resp4 = CLIENT_CODE_ACCESSIBILITY.invoke_model(
+            resp4 = CODE_ACCESSIBILITY_CLIENT.invoke_model(
                 modelId=MODEL_ID,
                 body=json.dumps(body),
                 contentType="application/json"
@@ -391,7 +388,7 @@ def code_accessibility_review_openai(html_code):
             }
         
     
-        resp = CLIENT_CODE_ACCESSIBILITY.chat.completions.create(
+        resp = CODE_ACCESSIBILITY_CLIENT.chat.completions.create(
             model=MODEL_ID,
             messages= body["messages"],
             max_tokens= body["max_tokens"],
@@ -451,7 +448,7 @@ def code_accessibility_review_openai(html_code):
                 "content": prompt2.strip()
             })
             # Send the request to the model
-            resp2 = CLIENT_CODE_ACCESSIBILITY.chat.completions.create(
+            resp2 = CODE_ACCESSIBILITY_CLIENT.chat.completions.create(
                 model=MODEL_ID,
                 messages= body["messages"],
                 max_tokens= body["max_tokens"],
@@ -501,7 +498,7 @@ def code_accessibility_review_openai(html_code):
             })
             
             # Send the request to the model
-            resp3 = CLIENT_CODE_ACCESSIBILITY.chat.completions.create(
+            resp3 = CODE_ACCESSIBILITY_CLIENT.chat.completions.create(
                 model=MODEL_ID,
                 messages= body["messages"],
                 max_tokens= body["max_tokens"],
@@ -547,7 +544,7 @@ def code_accessibility_review_openai(html_code):
             })
 
             # Send the request to the model
-            resp4= CLIENT_CODE_ACCESSIBILITY.chat.completions.create(
+            resp4= CODE_ACCESSIBILITY_CLIENT.chat.completions.create(
                 model=MODEL_ID,
                 messages= body["messages"],
                 max_tokens= body["max_tokens"],
