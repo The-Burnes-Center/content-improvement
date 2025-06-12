@@ -5,7 +5,7 @@ from utils import *
 from typing import List
 from instructor.exceptions import InstructorRetryException
 
-from constants import MODEL_SELECTION, CONTENT_CLARITY_CLIENT, MODEL_ID, MAX_TOKENS
+from constants import MODEL_SELECTION, INSTRUCTOR_CLIENT, MODEL_ID, MAX_TOKENS
 
 """
 This module provides a function to analyze the clarity of website content and suggest improvements.
@@ -61,7 +61,7 @@ def anaylze_content_clarity(section, content_guidlines):
 
         try: 
         # note that client.chat.completions.create will also work
-            resp = CONTENT_CLARITY_CLIENT.messages.create(
+            resp = INSTRUCTOR_CLIENT.messages.create(
                 model= MODEL_ID,
                 max_tokens = MAX_TOKENS,
                 messages=[
@@ -98,7 +98,7 @@ def anaylze_content_clarity(section, content_guidlines):
         
     else: 
         try: 
-            resp = CONTENT_CLARITY_CLIENT.chat.completions.create(
+            resp = INSTRUCTOR_CLIENT.chat.completions.create(
             model= MODEL_ID,
             messages=[
                     {

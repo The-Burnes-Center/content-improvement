@@ -1,6 +1,8 @@
 import boto3
 from utils import * 
 
+from constants import MODEL_SELECTION, ANTHROPIC_VERSION, MAX_TOKENS, BOTO3_CLIENT, OPEN_AI_CLIENT, MODEL_ID
+
 '''
 This script uses the Bedrock API to analyze a webpage's source code and provide feedback on the positives and challenges of user interaction with the website.
 '''
@@ -53,26 +55,52 @@ def audience_page_postives(source_code, persona):
 
             
                 """
+    
+    if MODEL_SELECTION: 
+        #using claude model 
 
-    body = {
-                "anthropic_version": "bedrock-2023-05-31",
-                "messages": [
-                    { "role": "user", "content": postives_prompt }
-                    ],
-                "max_tokens": 5000,
+        body = {
+                    "anthropic_version": ANTHROPIC_VERSION,
+                    "messages": [
+                        { "role": "user", "content": postives_prompt }
+                        ],
+                    "max_tokens": MAX_TOKENS,
 
-                }
+                    }
 
-    resp_postives = client.invoke_model(
-        modelId=model_id,
-        body=json.dumps(body),
-        contentType="application/json"
-    )
+        resp_postives = BOTO3_CLIENT.invoke_model(
+            modelId= MODEL_ID,
+            body=json.dumps(body),
+            contentType="application/json"
+        )
 
-    response_body = json.loads(resp_postives["body"].read())
-    positives = response_body["content"][0]["text"]
+        response_body = json.loads(resp_postives["body"].read())
+        positives = response_body["content"][0]["text"]
 
-    return positives
+        return positives
+    else: 
+        #using open ai model
+        body = {
+            "messages": [
+                { "role": "user", "content": postives_prompt }
+                ],
+            "max_tokens": MAX_TOKENS,
+            "temperature": 0,
+
+            }
+        
+    
+        resp = OPEN_AI_CLIENT.chat.completions.create(
+            model=MODEL_ID,
+            messages= body["messages"],
+            max_tokens= body["max_tokens"],
+            temperature= body["temperature"],
+        ) 
+    
+
+        # Read the response
+        positives = resp.choices[0].message.content 
+        return positives 
 
 """
     # Split the response into individual postives
@@ -121,32 +149,52 @@ def audience_page_challenges(source_code, persona):
                         Small font size may strain eyes during extended reading sessions
                     
                         """
-    body = {
-                "anthropic_version": "bedrock-2023-05-31",
-                "messages": [
-                    { "role": "user", "content": challenges_prompt }
-                    ],
-                "max_tokens": 5000,
+    
+    if MODEL_SELECTION: 
+        #using claude model 
+        body = {
+                    "anthropic_version": ANTHROPIC_VERSION,
+                    "messages": [
+                        { "role": "user", "content": challenges_prompt }
+                        ],
+                    "max_tokens": 5000,
 
-                }
+                    }
 
+        resp_challenges = BOTO3_CLIENT.invoke_model(
+            modelId= MODEL_ID,
+            body=json.dumps(body),
+            contentType="application/json"
+        ) 
 
+        response_body = json.loads(resp_challenges["body"].read())
+        challenges = response_body["content"][0]["text"]
 
+        return challenges
+    else: 
+        #using open AI Model 
+        body = {
+            "messages": [
+                { "role": "user", "content": challenges_prompt }
+                ],
+            "max_tokens": MAX_TOKENS,
+            "temperature": 0,
 
-    resp_challenges = client.invoke_model(
-        modelId=model_id,
-        body=json.dumps(body),
-        contentType="application/json"
-    ) 
+            }
+        
+    
+        resp = OPEN_AI_CLIENT.chat.completions.create(
+            model=MODEL_ID,
+            messages= body["messages"],
+            max_tokens= body["max_tokens"],
+            temperature= body["temperature"],
+        ) 
+    
 
-
-
-
-
-    response_body = json.loads(resp_challenges["body"].read())
-    challenges = response_body["content"][0]["text"]
-
-    return challenges
+        # Read the response
+        challenges = resp.choices[0].message.content 
+        return challenges 
+        
 
 """
     # Split the response into individual challenges

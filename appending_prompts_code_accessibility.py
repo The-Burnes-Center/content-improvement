@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 import tiktoken
 import concurrent.futures
 
-from constants import CODE_ACCESSIBILITY_CLIENT, MODEL_ID, MAX_ISSUES_CODE_ACESSIBILITY, MODEL_SELECTION, ANTHROPIC_VERSION, MAX_TOKENS
+from constants import BOTO3_CLIENT, OPEN_AI_CLIENT, MODEL_ID, MAX_ISSUES_CODE_ACESSIBILITY, MODEL_SELECTION, ANTHROPIC_VERSION, MAX_TOKENS
 
 """
 This script uses the Claude AI model to analyze HTML code for accessibility issues and suggest improvements based on WCAG 2.1 AA guidelines.
@@ -147,7 +147,7 @@ def code_accessibility_review_claude(html_code):
             }
         
     
-        resp = CODE_ACCESSIBILITY_CLIENT.invoke_model(
+        resp = BOTO3_CLIENT.invoke_model(
             modelId=MODEL_ID,
             body=json.dumps(body),
             contentType="application/json"
@@ -208,7 +208,7 @@ def code_accessibility_review_claude(html_code):
                 "content": prompt2.strip()
             })
             # Send the request to the model
-            resp2 = CODE_ACCESSIBILITY_CLIENT.invoke_model(
+            resp2 = BOTO3_CLIENT.invoke_model(
                 modelId=MODEL_ID,
                 body=json.dumps(body),
                 contentType="application/json"
@@ -258,7 +258,7 @@ def code_accessibility_review_claude(html_code):
             })
             
             # Send the request to the model
-            resp3 = CODE_ACCESSIBILITY_CLIENT.invoke_model(
+            resp3 = BOTO3_CLIENT.invoke_model(
                 modelId=MODEL_ID,
                 body=json.dumps(body),
                 contentType="application/json"
@@ -306,7 +306,7 @@ def code_accessibility_review_claude(html_code):
             })
 
             # Send the request to the model
-            resp4 = CODE_ACCESSIBILITY_CLIENT.invoke_model(
+            resp4 = BOTO3_CLIENT.invoke_model(
                 modelId=MODEL_ID,
                 body=json.dumps(body),
                 contentType="application/json"
@@ -388,7 +388,7 @@ def code_accessibility_review_openai(html_code):
             }
         
     
-        resp = CODE_ACCESSIBILITY_CLIENT.chat.completions.create(
+        resp = OPEN_AI_CLIENT.chat.completions.create(
             model=MODEL_ID,
             messages= body["messages"],
             max_tokens= body["max_tokens"],
@@ -448,7 +448,7 @@ def code_accessibility_review_openai(html_code):
                 "content": prompt2.strip()
             })
             # Send the request to the model
-            resp2 = CODE_ACCESSIBILITY_CLIENT.chat.completions.create(
+            resp2 = OPEN_AI_CLIENT.chat.completions.create(
                 model=MODEL_ID,
                 messages= body["messages"],
                 max_tokens= body["max_tokens"],
@@ -498,7 +498,7 @@ def code_accessibility_review_openai(html_code):
             })
             
             # Send the request to the model
-            resp3 = CODE_ACCESSIBILITY_CLIENT.chat.completions.create(
+            resp3 = OPEN_AI_CLIENT.chat.completions.create(
                 model=MODEL_ID,
                 messages= body["messages"],
                 max_tokens= body["max_tokens"],
@@ -544,7 +544,7 @@ def code_accessibility_review_openai(html_code):
             })
 
             # Send the request to the model
-            resp4= CODE_ACCESSIBILITY_CLIENT.chat.completions.create(
+            resp4= OPEN_AI_CLIENT.chat.completions.create(
                 model=MODEL_ID,
                 messages= body["messages"],
                 max_tokens= body["max_tokens"],

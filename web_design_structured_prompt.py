@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from anthropic import AnthropicBedrock
 import base64
 
-from constants import MODEL_SELECTION, WEB_DESIGN_CLIENT, S3_BUCKET_NAME, MODEL_ID, MAX_TOKENS
+from constants import MODEL_SELECTION, INSTRUCTOR_CLIENT, S3_BUCKET_NAME, MODEL_ID, MAX_TOKENS
 load_dotenv()
 
 '''
@@ -76,7 +76,7 @@ def analyze_webdesign(url, Layout_guidelines):
     }
         try: 
 
-            resp = WEB_DESIGN_CLIENT.messages.create(
+            resp = INSTRUCTOR_CLIENT.messages.create(
                 model= MODEL_ID,
                 max_tokens= MAX_TOKENS,
                 messages=[
@@ -119,7 +119,7 @@ def analyze_webdesign(url, Layout_guidelines):
 
         try: 
 
-            resp = WEB_DESIGN_CLIENT.chat.completions.create(
+            resp = INSTRUCTOR_CLIENT.chat.completions.create(
             model= MODEL_ID,
             messages=[
                 #if I wanted to add text guidlines, would i edit this or input text
