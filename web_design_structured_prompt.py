@@ -4,11 +4,10 @@ from instructor.exceptions import InstructorRetryException
 from utils import * 
 from typing import List
 from dotenv import load_dotenv
-
-
 from anthropic import AnthropicBedrock
-# import boto3
 import base64
+
+from constants import MODEL_SELECTION, WEB_DESIGN_CLIENT, S3_BUCKET_NAME, MODEL_ID, MAX_TOKENS
 load_dotenv()
 
 '''
@@ -18,14 +17,6 @@ When using claude models via Bedrock, a base64 encoding is required to process t
 Directly passing the s3_url or image will not work. 
 
 '''
-
-
-# openai_client = OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
-# client = instructor.from_openai(openai_client)
-
-client = instructor.from_anthropic(AnthropicBedrock())
-# s3_client = boto3.client('s3')
-model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"
 
 
 class WebSuggestion(BaseModel):
@@ -70,22 +61,66 @@ def analyze_webdesign(url, Layout_guidelines):
                         }},"""
 
     screenshot_path = capture_screenshot(url)
-    s3_url = upload_to_s3(screenshot_path, S3_BUCKET_NAME)
-    image_base64 = encode_image_to_base64(screenshot_path)
 
-    image_payload = {
-    "type": "image",
-    "source": {
-        "type": "base64",
-        "media_type": "image/png",  
-        "data": image_base64
+    if MODEL_SELECTION: 
+        #Using claude model 
+        image_base64 = encode_image_to_base64(screenshot_path)
+
+        image_payload = {
+        "type": "image",
+            "source": {
+                "type": "base64",
+                "media_type": "image/png",  
+                "data": image_base64
+            }
     }
-}
-    try: 
+        try: 
 
-        resp = client.messages.create(
-            model= model_id,
-            max_tokens= 5000,
+            resp = WEB_DESIGN_CLIENT.messages.create(
+                model= MODEL_ID,
+                max_tokens= MAX_TOKENS,
+                messages=[
+                    #if I wanted to add text guidlines, would i edit this or input text
+                    {"role": "system", "content": "You are an AI expert in web accessibility. Analyze the image and provide WCAG-compliant suggestions."},
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": input_message},
+                            image_payload
+                        ],
+                    },
+                ], 
+                response_model = List[WebSuggestion],
+            )
+        
+            if not isinstance(resp, list):
+                raise TypeError(f"Expected list, got {type(resp)}")
+        
+        #if the response is a list, check each item type for instance of ContentSuggestion
+            else: 
+                output = []
+                for item in resp:
+                    assert isinstance(item, WebSuggestion)
+                    output.append({"key": item.key,
+                                    "area": item.area,
+                                    "suggestion": item.suggestion,
+                                    "reason": item.reason})  
+                    
+                return output
+        
+        except (ValidationError, InstructorRetryException, TypeError) as e:
+            print(f"Error processing Claude response:{e} ")
+            return []
+
+
+    else: 
+        #Using open AI model 
+        s3_url = upload_to_s3(screenshot_path, S3_BUCKET_NAME)
+
+        try: 
+
+            resp = WEB_DESIGN_CLIENT.chat.completions.create(
+            model= MODEL_ID,
             messages=[
                 #if I wanted to add text guidlines, would i edit this or input text
                 {"role": "system", "content": "You are an AI expert in web accessibility. Analyze the image and provide WCAG-compliant suggestions."},
@@ -93,48 +128,37 @@ def analyze_webdesign(url, Layout_guidelines):
                     "role": "user",
                     "content": [
                         {"type": "text", "text": input_message},
-                        image_payload
+                        {"type": "image_url", "image_url": {"url": s3_url}}
                     ],
                 },
             ], 
             response_model = List[WebSuggestion],
-        )
+            ) 
 
-    # resp = client.chat.completions.create(
-    #     model="gpt-4o",
-    #     messages=[
-    #         #if I wanted to add text guidlines, would i edit this or input text
-    #         {"role": "system", "content": "You are an AI expert in web accessibility. Analyze the image and provide WCAG-compliant suggestions."},
-    #         {
-    #             "role": "user",
-    #             "content": [
-    #                 {"type": "text", "text": input_message},
-    #                 {"type": "image_url", "image_url": {"url": s3_url}}
-    #             ],
-    #         },
-    #     ], 
-    #     response_model = List[WebSuggestion],
-    # )
-
-      # Check response type
-        if not isinstance(resp, list):
-                raise TypeError(f"Expected list, got {type(resp)}")
-        
-        #if the response is a list, check each item type for instance of ContentSuggestion
-        else: 
-            output = []
-            for item in resp:
-                assert isinstance(item, WebSuggestion)
-                output.append({"key": item.key,
-                                "area": item.area,
-                                "suggestion": item.suggestion,
-                                "reason": item.reason})
-
-        
-            return output
-    except (ValidationError, InstructorRetryException, TypeError) as e:
+            # Check response type
+            if not isinstance(resp, list):
+                    raise TypeError(f"Expected list, got {type(resp)}")
+            
+            #if the response is a list, check each item type for instance of ContentSuggestion
+            else: 
+                output = []
+                for item in resp:
+                    assert isinstance(item, WebSuggestion)
+                    output.append({"key": item.key,
+                                    "area": item.area,
+                                    "suggestion": item.suggestion,
+                                    "reason": item.reason})  
+                    
+                return output
+            
+        except (ValidationError, InstructorRetryException, TypeError) as e:
             print(f"Error processing Claude response:{e} ")
             return []
-
+            
+        
+    
+url1 = "https://www.nj.gov/state/elections/vote.shtml"
+layout_guidelines1= read_file_text("contentlayoutguide.txt")
+print(analyze_webdesign(url1, layout_guidelines1))
 
     
