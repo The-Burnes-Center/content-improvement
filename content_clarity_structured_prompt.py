@@ -5,6 +5,8 @@ from utils import *
 from typing import List
 from instructor.exceptions import InstructorRetryException
 
+from constants import MODEL_SELECTION, INSTRUCTOR_CLIENT, MODEL_ID, MAX_TOKENS
+
 """
 This module provides a function to analyze the clarity of website content and suggest improvements.
 It uses the Anthropic Claude model to generate suggestions based on provided content guidelines."""
@@ -53,45 +55,82 @@ def anaylze_content_clarity(section, content_guidlines):
 
         If there are **no suggestions**, return an **empty list**: [].
         '''
-    
-
-    client = instructor.from_anthropic(AnthropicBedrock())
-    try: 
-    # note that client.chat.completions.create will also work
-        resp = client.messages.create(
-            model="anthropic.claude-3-5-sonnet-20240620-v1:0",
-            max_tokens= 5000,
-            messages=[
-                {
-                    "role": "user",
-                    "content": input_message
-                }
-            ],
-            response_model = List[ContentSuggestion],
-            
-        )
-        # Check response type
-        if not isinstance(resp, list):
-                raise TypeError(f"Expected list, got {type(resp)}")
-        
-        #if the response is a list, check each item type for instance of ContentSuggestion
-        else: 
-            output = []
-            for item in resp:
-                if isinstance(item, ContentSuggestion): 
-                    #if the item is an instance of ContentSuggestion, append it to the output list
-                    output.append({
-                                "area": item.area,
-                                "original_content": item.original_content,
-                                "suggestion": item.suggestion})
-                else: 
-                    raise TypeError("Invalid item type in response list.")
-                
-            return output
    
-    except (ValidationError, InstructorRetryException, TypeError) as e:
-        print(f"Error processing Claude response:{e} ")
-        return []
+    
+    if MODEL_SELECTION: 
+
+        try: 
+        # note that client.chat.completions.create will also work
+            resp = INSTRUCTOR_CLIENT.messages.create(
+                model= MODEL_ID,
+                max_tokens = MAX_TOKENS,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": input_message
+                    }
+                ],
+                response_model = List[ContentSuggestion],
+                
+            )
+            # Check response type
+            if not isinstance(resp, list):
+                    raise TypeError(f"Expected list, got {type(resp)}")
+            
+            #if the response is a list, check each item type for instance of ContentSuggestion
+            else: 
+                output = []
+                for item in resp:
+                    if isinstance(item, ContentSuggestion): 
+                        #if the item is an instance of ContentSuggestion, append it to the output list
+                        output.append({
+                                    "area": item.area,
+                                    "original_content": item.original_content,
+                                    "suggestion": item.suggestion})
+                    else: 
+                        raise TypeError("Invalid item type in response list.")
+                    
+                return output
+    
+        except (ValidationError, InstructorRetryException, TypeError) as e:
+            print(f"Error processing Claude response:{e} ")
+            return []
+        
+    else: 
+        try: 
+            resp = INSTRUCTOR_CLIENT.chat.completions.create(
+            model= MODEL_ID,
+            messages=[
+                    {
+                        "role": "user",
+                        "content": input_message
+                    }
+                ],
+            response_model = List[ContentSuggestion],
+            ) 
+
+            if not isinstance(resp, list):
+                    raise TypeError(f"Expected list, got {type(resp)}")
+            
+            #if the response is a list, check each item type for instance of ContentSuggestion
+            else: 
+                output = []
+                for item in resp:
+                    if isinstance(item, ContentSuggestion): 
+                        #if the item is an instance of ContentSuggestion, append it to the output list
+                        output.append({
+                                    "area": item.area,
+                                    "original_content": item.original_content,
+                                    "suggestion": item.suggestion})
+                    else: 
+                        raise TypeError("Invalid item type in response list.")
+                    
+                return output
+
+        except (ValidationError, InstructorRetryException, TypeError) as e:
+            print(f"Error processing Claude response:{e} ")
+            return []
+
 
 
         

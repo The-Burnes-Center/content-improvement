@@ -592,8 +592,8 @@ def audience():
     personaAuditId = data.get('personaAuditId')
     
     if url and persona:
-        positives = audience_page_postives(url, persona)  
-        challenges = audience_page_challenges(url, persona)
+        positives = audience_page_postives(get_pure_source(url), persona)  
+        challenges = audience_page_challenges(get_pure_source(url), persona)
         #output = get_pred(get_pure_source(url), f"""Based off of the provided URL, please audit the website for the following user persona: {persona}.""")
 
         conn = mysql.connect()
@@ -761,7 +761,7 @@ def codeAccessibility():
     if url:
         print(f" loading code accessibility for: {url} ...")
         html_script = get_pure_source(url)
-        print(html_script)
+        #print(html_script)
         chunked_script = chunk_html_script(html_script)
         suggestions = threading_code_accessibility(chunked_script)
         output = json.dumps(suggestions)
