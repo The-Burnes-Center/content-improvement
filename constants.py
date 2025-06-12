@@ -13,7 +13,7 @@ S3_BUCKET_NAME = "nj-ai-votes-image"
 
 
 # Model Selection
-MODEL_SELECTION = False 
+MODEL_SELECTION = True
 
 if (MODEL_SELECTION): 
     print("Using Bedrock Claude model..")

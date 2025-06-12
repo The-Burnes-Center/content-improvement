@@ -156,9 +156,9 @@ def analyze_webdesign(url, Layout_guidelines):
             return []
             
         
-    
-url1 = "https://www.nj.gov/state/elections/vote.shtml"
-layout_guidelines1= read_file_text("contentlayoutguide.txt")
-print(analyze_webdesign(url1, layout_guidelines1))
+# testing    
+# url1 = "https://www.nj.gov/state/elections/vote.shtml"
+# layout_guidelines1= read_file_text("contentlayoutguide.txt")
+# print(analyze_webdesign(url1, layout_guidelines1))
 
     
