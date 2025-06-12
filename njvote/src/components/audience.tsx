@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { DownOutlined, InfoCircleFilled, InfoCircleTwoTone } from '@ant-design/icons';
+import { DownOutlined, InfoCircleFilled } from '@ant-design/icons';
 import PersonaDisplay from './personaDisplay';
 import { Space, Dropdown, MenuProps, Modal, Button, Input, Checkbox, message, Popover} from 'antd'; 
 
 
 interface AudienceProps {
-  projectId: number | null;
+  personas: Persona[];
   url: string;
+  projectId: number | null
 }
 
 interface Persona {
@@ -17,7 +18,7 @@ interface Persona {
   challenges: string;
 }
 
-const Audience = ({ projectId, url }: AudienceProps) => {
+const Audience = (props: AudienceProps) => {
 
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(personas[0] || null);
@@ -51,25 +52,15 @@ const Audience = ({ projectId, url }: AudienceProps) => {
     const fetchPersonas = async () => {
       try {
         let personaItems: MenuProps['items'] = [];
-        const response = await fetch(`http://127.0.0.1:5000/get_personas?projectId=${projectId}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        const data = await response.json();
-        console.log(data);
-        if (response.ok) {
-          personaItems = data['personas'].map((item: any) => ({
-            key: String(item[0]),
-            label: item[1],
-            persona: item[3],
-            positives: item[4],
-            challenges: item[5],
-          }));
-          personaItems?.push({ type: 'divider' });
-          personaItems?.push({ key: 'new', label: 'New User Persona' });
-        } else {
-          message.error('Failed to fetch personas.');
-        }
+        personaItems = props.personas.map((item: any) => ({
+          key: String(item[0]),
+          label: item[1],
+          persona: item[3],
+          positives: item[4],
+          challenges: item[5],
+        }));
+        personaItems?.push({ type: 'divider' });
+        personaItems?.push({ key: 'new', label: 'New User Persona' });
         setPersonas((personaItems || []).filter((item): item is Persona => !!item && 'key' in item && 'label' in item));
         const firstPersona = personaItems?.find((item): item is Persona => !!item && 'label' in item);
         setSelectedPersona(firstPersona || null);
@@ -79,7 +70,7 @@ const Audience = ({ projectId, url }: AudienceProps) => {
       }
     };
     fetchPersonas();
-  }, [projectId]);
+  }, [props.personas, props.url]);
 
   const toggleUseAIPersonaGen = () => {
     setUseAIPersonaGen(!useAIPersonaGen);
@@ -118,7 +109,7 @@ const Audience = ({ projectId, url }: AudienceProps) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        url: url,
+        url: props.url,
         persona: personaContent,
         personaAuditId: key,
       }),
@@ -149,7 +140,7 @@ const Audience = ({ projectId, url }: AudienceProps) => {
       let text = "";
       
       if (useAIPersonaGen) {
-        const res = await fetch(`/api/generate-sample-persona?url=${url}`, {
+        const res = await fetch(`/api/generate-sample-persona?url=${props.personas}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -162,7 +153,7 @@ const Audience = ({ projectId, url }: AudienceProps) => {
         const res = await fetch('/api/create_persona_audit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: personaName, projectId }),
+        body: JSON.stringify({ name: personaName, projectId: props.projectId }),
       });
 
       if (res.ok) {

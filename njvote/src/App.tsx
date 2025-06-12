@@ -29,6 +29,10 @@ function App() {
   const [loadingText, setLoadingText] = useState('');
   const [isDoneCreatingProject, setIsDoneCreatingProject] = useState(false);
   const [hoveredKey, setHoveredKey] = useState<number | null>(null);
+  const [contentClaritySuggestions, setContentClaritySuggestions] = useState<any[]>([]);
+  const [webDesignSuggestions, setWebDesignSuggestions] = useState<any[]>([]);
+  const [accessibilitySuggestions, setAccessibilitySuggestions] = useState<any[]>([]);
+  const [audienceData, setAudienceData] = useState<any[]>([]);
 
   
 
@@ -46,16 +50,19 @@ function App() {
   };
 
   useEffect(() => {
-    const fetchPersonas = async () => {
+    const fetchProjects = async () => {
       try {
-        const response = await fetch(`http://127.0.0.1:5000/get_projects?userId=1`, {
+        const response = await fetch(`/api/fetch_projects?userId=1`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
 
-        if (!response.ok) throw new Error('Failed to fetch personas');
+        if (!response.ok) throw new Error('Failed to fetch projects');
 
         const data = await response.json();
+
+        console.log('Fetched projects:', data);
+
         const menuItemsTemp = data.projects.map((item: any) => ({
           key: item[0],
           label: item[3],
@@ -66,21 +73,27 @@ function App() {
         if (menuItemsTemp.length > 0) {
           setSelectedProjectId(Number(menuItemsTemp[0].key));
         }
+
+        setContentClaritySuggestions(data.content_suggestions || []);
+        setWebDesignSuggestions(data.web_design_suggestions || []);
+        setAccessibilitySuggestions(data.accessibility_suggestions || []);
+        setAudienceData(data.audience_data || []);
+
       } catch (err) {
         console.error(err);
       }
     };
 
-    fetchPersonas();
+    fetchProjects();
   }, []);
 
   const handleDeleteProject = async (e: React.MouseEvent, projectId: number) => {
     e.stopPropagation(); // prevent triggering `onClick` for the Menu.Item
     try {
-      const response = await fetch('/api/delete_project', {
+      const response = await fetch('/api/delete', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId }),
+        body: JSON.stringify({ projectId: projectId, toDelete: 'project' }),
       });
 
       if (!response.ok) throw new Error('Failed to delete project');
@@ -103,8 +116,10 @@ function App() {
   const createProject = async () => {
     try {
       setIsLoadingNewProj(true);
+      setLoadingText('Creating project and analyzing...');
+      setLoadingPercent(10);
 
-      const response = await fetch('/api/add_project', {
+      const response = await fetch('/api/create-project', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: 1, url, name }),
@@ -113,49 +128,22 @@ function App() {
       if (!response.ok) throw new Error('Failed to create project');
 
       const data = await response.json();
-      const newProjectId = data.project[0];
+      const newProjectId = data.project[0]['project'][0];
 
-      setMenuItems((prev) => [...prev, { key: newProjectId, label: name }]);
-
-
-      setLoadingText('Analyzing Web Design...');
-      await fetch('/api/webdesign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, projectId: newProjectId }),
-      });
-
-      setLoadingText('Analyzing Accessibility');
-      setLoadingPercent(33);
-
-      await fetch('/api/accessibility', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, projectId: newProjectId }),
-      });
-
-      setLoadingText('Analyzing Content Clarity');
-      setLoadingPercent(66);
-
-      await fetch('/api/content', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, projectId: newProjectId }),
-      });
-
-      const updatedProjects = await fetch(`http://127.0.0.1:5000/get_projects?userId=1`, {
+      // Refresh project list
+      const updatedProjects = await fetch(`api/get_projects?userId=1`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
 
       if (updatedProjects.ok) {
-        const data = await updatedProjects.json();
-        const menuItemsTemp = data.projects.map((item: any) => ({
+        const updatedData = await updatedProjects.json();
+        const menuItemsTemp = updatedData.projects.map((item: any) => ({
           key: item[0],
           label: item[3],
         }));
         setMenuItems(menuItemsTemp);
-        setAllProjects(data.projects);
+        setAllProjects(updatedData.projects);
       }
 
       setLoadingPercent(100);
@@ -165,6 +153,8 @@ function App() {
       setSelectedProjectId(newProjectId);
     } catch (err) {
       console.error('Error creating project or analyzing:', err);
+      setIsLoadingNewProj(false);
+      setLoadingText('Error occurred');
     }
   };
 
@@ -254,10 +244,13 @@ function App() {
                 </Radio.Group>
               </div>
 
-              {tab === "audience" && <Audience projectId={selectedProjectId}  url={allProjects.find((project) => project[0] === selectedProjectId)?.[2] || "No URL available"}/>}
-              {tab === "clarity" && <ContentClarity projectId={selectedProjectId} />}
-              {tab === "design" && <WebDesign projectId={selectedProjectId} />}
-              {tab === "accessibility" && <Accessibility projectId={selectedProjectId} />}
+              {tab === "audience" && <Audience
+                projectId={selectedProjectId} 
+                url={allProjects.find((project) => project[0] === selectedProjectId)?.[2] || "No URL available"}
+                personas={audienceData[selectedProjectId]}/>}
+              {tab === "clarity" && <ContentClarity suggestions={contentClaritySuggestions[selectedProjectId]} />}
+              {tab === "design" && <WebDesign suggestions={webDesignSuggestions[selectedProjectId]} />}
+              {tab === "accessibility" && <Accessibility suggestions={accessibilitySuggestions[selectedProjectId]} />}
             </Content>
           )}
         </Layout>

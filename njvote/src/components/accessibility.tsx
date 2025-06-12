@@ -7,7 +7,7 @@ import { DeleteOutlined } from '@ant-design/icons';
 const { Panel } = Collapse;
 
 export interface AccessibilityProps {
-  projectId: number | null;
+  suggestions: Suggestion[];
 }
 
 interface Suggestion {
@@ -18,48 +18,14 @@ interface Suggestion {
   explanation: string;
 }
 
-const Accessibility = ({ projectId }: AccessibilityProps) => {
+const Accessibility = (props: AccessibilityProps) => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
   const fetchAccessibilitySuggestions = async () => {
-    if (!projectId) return;
     setSuggestions([]);
 
     try {
-      const auditRes = await fetch(`api/get_accessibility_audit?projectId=${projectId}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (!auditRes.ok) {
-        console.error('Failed to fetch audit ID');
-        return;
-      }
-
-      const auditData = await auditRes.json();
-      const accessibilityAuditId = auditData?.accessibility_audit?.[0];
-
-      if (!accessibilityAuditId) {
-        console.error('No accessibility audit ID found.');
-        return;
-      }
-
-      const suggestionsRes = await fetch(
-        `api/get_accessibility_suggestions?accessibilityAuditId=${accessibilityAuditId}`,
-        {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-
-      if (!suggestionsRes.ok) {
-        console.error('Failed to fetch accessibility suggestions');
-        return;
-      }
-
-      const data = await suggestionsRes.json();
-
-      const parsedSuggestions = data.suggestions.map((item: any) => ({
+      const parsedSuggestions = props.suggestions.map((item: any) => ({
         key: item[0],
         label: item[2],
         original_content: item[3],
@@ -75,14 +41,14 @@ const Accessibility = ({ projectId }: AccessibilityProps) => {
 
   useEffect(() => {
     fetchAccessibilitySuggestions();
-  }, [projectId]);
+  }, [props.suggestions]);
 
   const handleDelete = (key: number) => {
     setSuggestions(prev => prev.filter(s => s.key !== key));
     fetch('/api/delete_accessibility_suggestion', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessibilitySuggestionId: key }),
+      body: JSON.stringify({ accessibilitySuggestionId: key, toDelete: "accessibility_suggestion" }),
     })
       .then(res => {
         if (!res.ok) {

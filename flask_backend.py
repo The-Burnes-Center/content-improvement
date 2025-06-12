@@ -26,7 +26,443 @@ app.config['MYSQL_DATABASE_HOST'] = os.getenv('MYSQL_DATABASE_HOST')
 mysql.init_app(app)
 
 
+
 #############################
+
+# ROUTES TO BE CONVERTED TO LAMBDA FUNCTIONS
+
+#############################
+
+
+### ROUTE 1- Create a new project ###
+
+def add_proj(userId, url, name):
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO Project (userId, url, name) VALUES (%s, %s, %s)", (userId, url, name))
+    conn.commit()
+    cursor.execute("SELECT * FROM Project WHERE projectId = LAST_INSERT_ID()")
+    created_project = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return {"project": created_project}, 201
+
+
+def run_web_design_audit(url, projectId):
+
+    if projectId is None:
+        print("Bad request: projectId missing")
+        return "error projectId",  400
+
+    if url:
+        print(f"loading web design for {url}...")
+        layout_guidelines = read_file_text("contentlayoutguide.txt")
+        output = json.dumps(analyze_webdesign(url, layout_guidelines))
+        output = json.loads(output)
+        
+
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO WebDesignAudit (projectId) VALUES (%s)", (projectId,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        # Retrieve the ID of the newly created WebDesignAudit
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        cursor.execute("SELECT webDesignAuditId FROM WebDesignAudit WHERE projectId = %s ORDER BY webDesignAuditId DESC LIMIT 1", (projectId,))
+        webDesignAuditId = cursor.fetchone()[0]
+        cursor.close()
+        conn.close()
+
+        # Insert each suggestion into the WebDesignSuggestion table
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        for suggestion in output:
+            area = suggestion["area"]
+            suggestion_text = suggestion["suggestion"]
+            reason = suggestion["reason"]
+            cursor.execute(
+            "INSERT INTO WebDesignSuggestion (webDesignAuditId, area, suggestion, reason) VALUES (%s, %s, %s, %s)",
+            (webDesignAuditId, area, suggestion_text, reason)
+            )
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+
+        return output
+
+    else:
+        return "No URL provided", 400
+    
+def run_accessibility_audit(url, projectId):
+    if url:
+        print(f" loading code accessibility for: {url} ...")
+        html_script = get_pure_source(url)
+        print(html_script)
+        chunked_script = chunk_html_script(html_script)
+        suggestions = threading_code_accessibility(chunked_script)
+        output = json.dumps(suggestions)
+        output = json.loads(output)
+
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO AccessibilityAudit (projectId) VALUES (%s)", (projectId,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        # Retrieve the AccessibilityAudit with the highest ID for the given projectId
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        cursor.execute("SELECT accessibilityAuditId FROM AccessibilityAudit WHERE projectId = %s ORDER BY accessibilityAuditId DESC LIMIT 1", (projectId,))
+        accessibilityAuditId = cursor.fetchone()[0]
+        cursor.close()
+        conn.close()
+
+        # Insert each suggestion into the AccessibilitySuggestion table
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        for suggestion in output:
+            #print(suggestion)
+            label = suggestion["label"]
+            original = suggestion["original_content"]
+            revised = suggestion["revised_content"]
+            explanation = suggestion["explanation"]
+            cursor.execute(
+                "INSERT INTO AccessibilitySuggestion (accessibilityAuditId, label, original, revised, explanation) VALUES (%s, %s, %s, %s, %s)",
+                (accessibilityAuditId, label, original, revised, explanation)
+            )
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return output
+
+    else: 
+        return "No URL provided", 400
+    
+def run_content_audit(url, projectId):
+
+    if not url or not projectId:
+        return "Missing 'url' or 'projectId'", 400
+    
+    print(f" loading content for: {url} ...")
+
+    scrapped_data = chunk_html_text(url)
+    content_guidelines = read_file_text("contentclarityguide.txt")
+
+    suggestions = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        future_to_section = {
+            executor.submit(anaylze_content_clarity, section, content_guidelines): section
+            for section in scrapped_data
+        }
+
+        for future in concurrent.futures.as_completed(future_to_section):
+            try:
+                result = future.result()
+                suggestions.extend(result)
+            except Exception as e:
+                print(f"Error processing a section: {e}")
+
+    # Save to database
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO ContentClarityAudit (projectId) VALUES (%s)", (projectId,))
+    conn.commit()
+
+    cursor.execute(
+        "SELECT contentClarityAuditId FROM ContentClarityAudit WHERE projectId = %s ORDER BY contentClarityAuditId DESC LIMIT 1",
+        (projectId,)
+    )
+    contentClarityAuditId = cursor.fetchone()[0]
+
+    for item in suggestions:
+        #print(item)
+        original = item.get("original_content", "")
+        revised = item.get("suggestion", "")
+        area = item.get("area", "")
+        cursor.execute(
+            "INSERT INTO ContentClaritySuggestion (contentClarityAuditId, original, suggestion, area) VALUES (%s, %s, %s, %s)",
+            (contentClarityAuditId, original, revised, area)
+        )
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return suggestions
+
+
+@app.route('/create-project', methods=['POST', 'OPTIONS'])
+def create_project():
+    """
+    POST /create-project
+
+
+    ---------------------
+
+    
+    Creates a new project entry in the Project table in the database.
+    Expected JSON payload:
+    {
+        "userId": int,
+        "url": str,      # URL associated with the project
+        "name": str      # Name of the project
+    }
+
+
+    Behavior:
+    - Parses the incoming JSON payload from the request body.
+    - Extracts `userId`, `url`, and `name` fields.
+    - Inserts the new project record into the Project table.
+    - Returns a success message and HTTP status code 201 on successful insertion.
+
+
+    Returns:
+        Tuple[str, int]: A success message and HTTP 201 status code if insertion is successful.
+    Note:
+        This function assumes valid input and does not currently handle errors or validation.
+    """
+
+    if request.method == 'OPTIONS':
+        return '', 204
+
+    data = request.get_json()
+    userId = data.get('userId')
+    url = data.get('url')
+    name = data.get('name')
+
+    created_project = add_proj(userId, url, name)
+
+    print(f"Project created: {created_project}")
+
+    project_id = created_project[0]['project'][0]
+
+    web_design_audit = run_web_design_audit(url, project_id)
+    accessibility_audit = run_accessibility_audit(url, project_id)
+    content_audit = run_content_audit(url, project_id)
+
+    return {"project": created_project,
+            "web_design_audit": web_design_audit,
+            "accessibility_audit": accessibility_audit,
+            "content_audit": content_audit}, 201
+
+## ROUTE 2 - Fetch all project data for a given userId ##
+
+def fetch_user_projects(user_id):
+    if not user_id:
+        return "No userId provided", 400
+
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM Project WHERE userId = %s", (user_id,))
+    projects = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return projects
+
+def get_content_suggestions_by_project(project_id):
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM ContentClarityAudit WHERE projectId = %s", (project_id,))
+    content_clarity_audit = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not content_clarity_audit:
+        return "No content clarity audit found for the given projectId", 404
+
+    content_clarity_audit_id = content_clarity_audit[0]
+
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM ContentClaritySuggestion WHERE contentClarityAuditId = %s", (content_clarity_audit_id,))
+    suggestions = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return suggestions
+
+def get_web_design_suggestions_by_project(project_id):
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM WebDesignAudit WHERE projectId = %s", (project_id,))
+    web_design_audit = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not web_design_audit:
+        return "No web design audit found for the given projectId", 404
+
+    web_design_audit_id = web_design_audit[0]
+
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM WebDesignSuggestion WHERE webDesignAuditId = %s", (web_design_audit_id,))
+    suggestions = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return suggestions
+
+def get_accessibility_suggestions_by_project(project_id):
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM AccessibilityAudit WHERE projectId = %s ORDER BY accessibilityAuditId DESC LIMIT 1", (project_id))
+    accessibility_audit = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not accessibility_audit:
+        return "No accessibility audit found for the given projectId", 404
+    
+    accessibility_audit_id = accessibility_audit[0]
+
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM AccessibilitySuggestion WHERE accessibilityAuditId = %s", (accessibility_audit_id,))
+    suggestions = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return suggestions
+
+def get_persona_data(projectId):
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM PersonaAudit WHERE projectId = %s", (projectId,))
+    personas = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return personas
+
+@app.route('/fetch_projects', methods=['GET'])
+def fetch_projects():
+    user_id = request.args.get('userId')
+
+    print(user_id)
+
+    projects = fetch_user_projects(user_id)
+    content_suggestions = {}
+    web_design_suggestions = {}
+    accessibility_suggestions = {}
+    personas = {}
+
+    print(projects)
+
+    for project in projects:
+        project_id =project[0]
+        content_suggestions[project_id] = get_content_suggestions_by_project(project_id)
+        web_design_suggestions[project_id] = get_web_design_suggestions_by_project(project_id)
+        accessibility_suggestions[project_id] = get_accessibility_suggestions_by_project(project_id)
+        personas[project_id] = get_persona_data(project_id)
+
+
+    return {"projects": projects,
+            "content_suggestions": content_suggestions,
+            "web_design_suggestions": web_design_suggestions,
+            "accessibility_suggestions": accessibility_suggestions,
+            "audience_data": personas}, 200
+
+## ROUTE 3 - Delete projects or suggestions ##
+
+def delete_all_project_data(projectId):
+    conn = mysql.connect()
+    cursor = conn.cursor()
+
+    # Delete ContentClaritySuggestion and ContentClarityAudit associated with this project
+    cursor.execute("SELECT contentClarityAuditId FROM ContentClarityAudit WHERE projectId = %s", (projectId,))
+    content_clarity_audits = cursor.fetchall()
+    for audit in content_clarity_audits:
+        contentClarityAuditId = audit[0]
+        cursor.execute("DELETE FROM ContentClaritySuggestion WHERE contentClarityAuditId = %s", (contentClarityAuditId,))
+    cursor.execute("DELETE FROM ContentClarityAudit WHERE projectId = %s", (projectId,))
+
+    # Delete WebDesignSuggestion and WebDesignAudit associated with this project
+    cursor.execute("SELECT webDesignAuditId FROM WebDesignAudit WHERE projectId = %s", (projectId,))
+    web_design_audits = cursor.fetchall()
+    for audit in web_design_audits:
+        webDesignAuditId = audit[0]
+        cursor.execute("DELETE FROM WebDesignSuggestion WHERE webDesignAuditId = %s", (webDesignAuditId,))
+    cursor.execute("DELETE FROM WebDesignAudit WHERE projectId = %s", (projectId,))
+
+    # Delete AccessibilitySuggestion and AccessibilityAudit associated with this project
+    cursor.execute("SELECT accessibilityAuditId FROM AccessibilityAudit WHERE projectId = %s", (projectId,))
+    accessibility_audits = cursor.fetchall()
+    for audit in accessibility_audits:
+        accessibilityAuditId = audit[0]
+        cursor.execute("DELETE FROM AccessibilitySuggestion WHERE accessibilityAuditId = %s", (accessibilityAuditId,))
+    cursor.execute("DELETE FROM AccessibilityAudit WHERE projectId = %s", (projectId,))
+
+    # Delete PersonaAudit associated with this project
+    cursor.execute("DELETE FROM PersonaAudit WHERE projectId = %s", (projectId,))
+    
+    cursor.execute("DELETE FROM Project WHERE projectId = %s", (projectId,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+def delete_content_suggestion(suggestion_id):
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM ContentClaritySuggestion WHERE contentClaritySuggestionId = %s", (suggestion_id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+def delete_web_design_suggestion(suggestion_id):
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM WebDesignSuggestion WHERE webDesignSuggestionId = %s", (suggestion_id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+def delete_accessibility_suggestion(suggestion_id):
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM AccessibilitySuggestion WHERE accessibilitySuggestionId = %s", (suggestion_id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+@app.route('/delete', methods=['DELETE'])
+def delete():
+    data = request.get_json()
+    to_delete = data.get('toDelete')
+
+    if to_delete == 'project':
+        projectId = data.get('projectId')
+        print(projectId)
+        delete_all_project_data(projectId)
+        return "Success", 200
+
+    elif to_delete == 'content_suggestion':
+        contentClaritySuggestionId = data.get('contentClaritySuggestionId')
+        delete_content_suggestion(contentClaritySuggestionId)
+        return "Success", 200
+
+    elif to_delete == 'web_design_suggestion':
+        webDesignSuggestionId = data.get('webDesignSuggestionId')
+        delete_web_design_suggestion(webDesignSuggestionId)
+        return "Success", 200
+
+    elif to_delete == 'accessibility_suggestion':
+        accessibilitySuggestionId = data.get('accessibilitySuggestionId')
+        delete_accessibility_suggestion(accessibilitySuggestionId)
+        return "Success", 200
+    
+    return "Failed to delete project", 400
+
+
+##############################
 
 ## Generative AI Endpoints ##
 
@@ -289,60 +725,6 @@ def webDesign():
           and must be parsed by `webdesign_extract_text`.
         - Ensure S3 bucket configuration and OpenAI API credentials are properly set.
     """
-    if request.method == 'OPTIONS':
-        return '', 204
-    
-    data = request.get_json()
-
-    url = data.get('url')
-    projectId = data.get('projectId')
-
-    if projectId is None:
-        print("Bad request: projectId missing")
-        return "error projectId",  400
-
-    if url:
-        print(f"loading web design for {url}...")
-        layout_guidelines = read_file_text("contentlayoutguide.txt")
-        output = json.dumps(analyze_webdesign(url, layout_guidelines))
-        output = json.loads(output)
-        
-
-        conn = mysql.connect()
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO WebDesignAudit (projectId) VALUES (%s)", (projectId,))
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        # Retrieve the ID of the newly created WebDesignAudit
-        conn = mysql.connect()
-        cursor = conn.cursor()
-        cursor.execute("SELECT webDesignAuditId FROM WebDesignAudit WHERE projectId = %s ORDER BY webDesignAuditId DESC LIMIT 1", (projectId,))
-        webDesignAuditId = cursor.fetchone()[0]
-        cursor.close()
-        conn.close()
-
-        # Insert each suggestion into the WebDesignSuggestion table
-        conn = mysql.connect()
-        cursor = conn.cursor()
-        for suggestion in output:
-            area = suggestion["area"]
-            suggestion_text = suggestion["suggestion"]
-            reason = suggestion["reason"]
-            cursor.execute(
-            "INSERT INTO WebDesignSuggestion (webDesignAuditId, area, suggestion, reason) VALUES (%s, %s, %s, %s)",
-            (webDesignAuditId, area, suggestion_text, reason)
-            )
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-
-        return output
-
-    else:
-        return "No URL provided", 400
     
     
 @app.route('/accessibility', methods=['POST', 'OPTIONS'])
