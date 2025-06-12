@@ -379,7 +379,7 @@ def codeAccessibility():
     if url:
         print(f" loading code accessibility for: {url} ...")
         html_script = get_pure_source(url)
-        print(html_script)
+        #print(html_script)
         chunked_script = chunk_html_script(html_script)
         suggestions = threading_code_accessibility(chunked_script)
         output = json.dumps(suggestions)

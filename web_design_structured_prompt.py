@@ -1,15 +1,31 @@
 import instructor
-from pydantic import BaseModel, Field 
+from pydantic import BaseModel, Field, ValidationError
+from instructor.exceptions import InstructorRetryException
 from utils import * 
 from typing import List
 from dotenv import load_dotenv
-import os
 
+
+from anthropic import AnthropicBedrock
+# import boto3
+import base64
 load_dotenv()
 
+'''
+This script uses the Instructor library to analyze web design suggestions based on a webpage screenshot and layout guidelines.
 
-openai_client = OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
-client = instructor.from_openai(openai_client)
+When using claude models via Bedrock, a base64 encoding is required to process the image. 
+Directly passing the s3_url or image will not work. 
+
+'''
+
+
+# openai_client = OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
+# client = instructor.from_openai(openai_client)
+
+client = instructor.from_anthropic(AnthropicBedrock())
+# s3_client = boto3.client('s3')
+model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"
 
 
 class WebSuggestion(BaseModel):
@@ -17,9 +33,17 @@ class WebSuggestion(BaseModel):
     area: str = Field(...,description="A short, descriptive label for the area the suggestion applies to (e.g., 'Homepage').")
     suggestion: str = Field(...,description="A specific suggestion for improving the web design, such as 'Add a clear call-to-action button'.")
     reason: str = Field(...,description="A brief explanation of why this suggestion is important, such as 'Improves user engagement and guides users to key content.'")
-    
 
-layout_guidleines = read_file_text("contentlayoutguide.txt")
+
+def encode_image_to_base64(image_path):
+    """
+    Reads an image file and returns a base64-encoded string.
+    """
+    with open(image_path, "rb") as image_file:
+        encoded_bytes = base64.b64encode(image_file.read())
+        encoded_string = encoded_bytes.decode("utf-8")
+    return encoded_string
+
 
 def analyze_webdesign(url, Layout_guidelines): 
     """Using the OpenAI API, analyze the webpage screenshot and provide suggestions for improving the web design.
@@ -44,37 +68,73 @@ def analyze_webdesign(url, Layout_guidelines):
                             suggestion: 'Add a clear call-to-action button',
                             reason: 'Improves user engagement and guides users to key content.',
                         }},"""
-    
+
     screenshot_path = capture_screenshot(url)
     s3_url = upload_to_s3(screenshot_path, S3_BUCKET_NAME)
+    image_base64 = encode_image_to_base64(screenshot_path)
 
-    resp = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            #if I wanted to add text guidlines, would i edit this or input text
-            {"role": "system", "content": "You are an AI expert in web accessibility. Analyze the image and provide WCAG-compliant suggestions."},
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": input_message},
-                    {"type": "image_url", "image_url": {"url": s3_url}}
-                ],
-            },
-        ], 
-        response_model = List[WebSuggestion],
-    )
+    image_payload = {
+    "type": "image",
+    "source": {
+        "type": "base64",
+        "media_type": "image/png",  
+        "data": image_base64
+    }
+}
+    try: 
 
-    output = []
-    for item in resp:
-        assert isinstance(item, WebSuggestion)
-        output.append({"key": item.key,
-                        "area": item.area,
-                        "suggestion": item.suggestion,
-                        "reason": item.reason})
+        resp = client.messages.create(
+            model= model_id,
+            max_tokens= 5000,
+            messages=[
+                #if I wanted to add text guidlines, would i edit this or input text
+                {"role": "system", "content": "You are an AI expert in web accessibility. Analyze the image and provide WCAG-compliant suggestions."},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": input_message},
+                        image_payload
+                    ],
+                },
+            ], 
+            response_model = List[WebSuggestion],
+        )
 
-   
-    return output
+    # resp = client.chat.completions.create(
+    #     model="gpt-4o",
+    #     messages=[
+    #         #if I wanted to add text guidlines, would i edit this or input text
+    #         {"role": "system", "content": "You are an AI expert in web accessibility. Analyze the image and provide WCAG-compliant suggestions."},
+    #         {
+    #             "role": "user",
+    #             "content": [
+    #                 {"type": "text", "text": input_message},
+    #                 {"type": "image_url", "image_url": {"url": s3_url}}
+    #             ],
+    #         },
+    #     ], 
+    #     response_model = List[WebSuggestion],
+    # )
 
-    
+      # Check response type
+        if not isinstance(resp, list):
+                raise TypeError(f"Expected list, got {type(resp)}")
+        
+        #if the response is a list, check each item type for instance of ContentSuggestion
+        else: 
+            output = []
+            for item in resp:
+                assert isinstance(item, WebSuggestion)
+                output.append({"key": item.key,
+                                "area": item.area,
+                                "suggestion": item.suggestion,
+                                "reason": item.reason})
+
+        
+            return output
+    except (ValidationError, InstructorRetryException, TypeError) as e:
+            print(f"Error processing Claude response:{e} ")
+            return []
+
 
     
