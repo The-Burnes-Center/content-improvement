@@ -3,6 +3,8 @@
 
 This is a website content improvement and analysis tool developed for the New Jersey Division of Elections and Office of Innovation. 
 
+Demo and Pitch: https://northeastern.zoom.us/rec/share/Q0039igVB9_HoQ50_khYw43a-3aOsxfro8i1f581PoRSYdMOcGseiMP8RaVhmyTC.jTLrM6quhATrUCvw
+
 ---
 
 ## What It Does
@@ -24,14 +26,10 @@ This is a website content improvement and analysis tool developed for the New Je
 
 ## Architecture
 
-![System Architecture](./architecture.png)
-
-- Brief overview of the architecture or workflow.
-- Use diagrams to explain data flow, tools, and modular pieces.
-- Example:
+![AWS Diagram](https://github.com/user-attachments/assets/ab7c4c4d-8f53-4ff8-ab02-7a4fdb64d7cc)
 
 ```
-[Upload] → [OCR/Text Preprocessing] → [LLM Agent Analysis] → [Summarization + Translation] → [Frontend Display]
+[Website is scrapped] → [Website is evaluated for content clarity, web design, and code best practices by an LLM] → [Frontend Display]
 ```
 
 ---
@@ -71,13 +69,13 @@ npm run dev
 ```
 
 .env format: 
-
+```
 MYSQL_DATABASE_USER=
 MYSQL_DATABASE_PASSWORD=
 MYSQL_DATABASE_DB=
 MYSQL_DATABASE_HOST=
 OPENAI_API_KEY=
-
+```
 Run an instance of mysql locally. 
 
 <!-- ---
