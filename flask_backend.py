@@ -462,6 +462,96 @@ def delete():
     return "Failed to delete project", 400
 
 
+## ROUTE 4 - Audience ##
+
+def generate_user_persona(url):
+    if url:
+
+        generate_user_persona = get_pred(url,
+                    f"""Based on the url provided, please create one user persona of someone who would navigate the website. 
+                        Include their age, gender, occupation, income level, education level, tech savviness, needs or end goals from the website, 
+                        challenges they may have using the website.
+                    
+
+                        An example of a user persona and formatting is: 
+
+                        Name: '  '
+                        Age: ' '
+                        Gender: '  '
+                        Occupation:  ''
+                        Income Level:  XX per year
+                        Education Level: '   '
+                        Tech Savviness: Beginner/ Moderate / Intermediate / Advance 
+
+                        Example Goals and Needs: 
+
+                        Goals and Needs: 
+                        1. Register to vote in New Jersey
+                        2. Check voter registration status
+                        3. Find the polling place
+                        4. Understand early voting options
+                        5. Request and submit a mail-in ballot
+
+                        Example Challenges Using the Website:
+
+                        Challenges Using the Website: 
+                        1. Navigating through multiple pages to find specific information
+                        2. Understanding legal or technical terminology related to voting procedures
+                        3. Locating and downloading necessary forms for voter registration or mail-in ballots
+                        4. Identifying the most up-to-date information, especially if there are changes to voting procedures
+                        5. Finding clear instructions on how to complete and submit various forms
+                        6. Accessing mobile-friendly versions of the website while using her smartphone
+
+                        Example Summary: 
+                        X  wants to ensure they are properly registered and informed about the voting process in New Jersey. 
+                        They are civic-minded and wants to participate in elections but may struggle with finding time to thoroughly research voting procedures. 
+                        They would benefit from clear, concise information and easy-to-follow instructions on the website.
+
+                                
+                                 
+                        """ )
+        
+        
+        return generate_user_persona
+
+@app.route('/audience-audit', methods=['POST', 'OPTIONS'])
+def audience_audit():
+    data = request.get_json()
+    name = data.get('name')
+    projectId = data.get('projectId')
+    url = data.get('url')
+    usePersonaGenerator = data.get('usePersonaGenerator', False)
+
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO PersonaAudit (name, projectId) VALUES (%s, %s)", (name, projectId))
+
+    conn.commit()
+    personaAuditId = cursor.lastrowid
+    
+    cursor.close()
+
+    if (usePersonaGenerator):
+        persona = usePersonaGenerator(url)
+    else:
+        persona = data.get('persona')
+    
+    if url and persona:
+        positives = audience_page_postives(get_pure_source(url), persona)  
+        challenges = audience_page_challenges(get_pure_source(url), persona)
+
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE PersonaAudit SET persona = %s, positives = %s,  challenges = %s WHERE personaAuditId = %s", (persona, positives, challenges, personaAuditId))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return {"positives": positives, "challenges": challenges, "id": personaAuditId}, 200
+    else:
+        return "No URL or persona provided", 400
+
+
 ##############################
 
 ## Generative AI Endpoints ##

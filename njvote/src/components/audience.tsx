@@ -102,21 +102,25 @@ const Audience = (props: AudienceProps) => {
     }
   };
 
- const analyzePersona = async (key: string ,personaName: string, personaContent: string ) => {
+ const analyzePersona = async (personaName: string, personaContent: string ) => {
+  let newId = "-1";
   try {
     
-    const response = await fetch('/api/audience', {
+    const response = await fetch('/api/audience-audit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url: props.url,
         persona: personaContent,
-        personaAuditId: key,
+        name: personaName,
+        projectId: props.projectId,
+        usePersonaGenerator: useAIPersonaGen
       }),
     });
 
     const text = await response.json();
-    const newPersona = { key: key, label: personaName, persona: personaContent, positives: text.positives, challenges: text.challenges };
+    newId = text[2];
+    const newPersona = { key: newId, label: personaName, persona: personaContent, positives: text.positives, challenges: text.challenges };
     setPersonas((prevPersonas) => [
                   ...(prevPersonas ?? []).slice(0, -1), // Exclude the last two items (divider and "New User Persona")
                   newPersona,
@@ -126,7 +130,7 @@ const Audience = (props: AudienceProps) => {
     setLoading(false);
   } catch (err) {
     console.error(err);
-    updatePersonaField(parseInt(key), 'output', 'Error fetching data from API.');
+    updatePersonaField(parseInt(newId), 'output', 'Error fetching data from API.');
     setLoading(false);
   }
 };
@@ -137,36 +141,11 @@ const Audience = (props: AudienceProps) => {
     setUseAIPersonaGen(false)
     setLoading(true);
     try {
-      let text = "";
-      
-      if (useAIPersonaGen) {
-        const res = await fetch(`/api/generate-sample-persona?url=${props.personas}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        text = await res.text();
-        setPersonaContent(text);
-      }
-      else {
-        text = personaContent;
-      }
-        const res = await fetch('/api/create_persona_audit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: personaName, projectId: props.projectId }),
-      });
-
-      if (res.ok) {
-        message.success('Persona created successfully!');
-        const data = await res.json()
-        closePersonaModal();
-
-        await analyzePersona(data.id ,personaName, text);
 
 
-      } else {
-        message.error('Failed to create persona.');
-      }
+      await analyzePersona(personaName, personaContent);
+      closePersonaModal();
+
 
     } catch (err) {
       console.error(err);
