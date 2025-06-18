@@ -52,41 +52,41 @@ function App({ user }: WithAuthenticatorProps) {
     }
   };
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const response = await fetch(`https://a8b6filf5e.execute-api.us-east-1.amazonaws.com/fetch_projects?userId=${user?.userId}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch(`https://a8b6filf5e.execute-api.us-east-1.amazonaws.com/fetch_projects?userId=${user?.userId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
 
-        if (!response.ok) throw new Error('Failed to fetch projects');
+      if (!response.ok) throw new Error('Failed to fetch projects');
 
-        const data = await response.json();
+      const data = await response.json();
 
-        console.log('Fetched projects:', data);
+      console.log('Fetched projects:', data);
 
-        const menuItemsTemp = data.projects.map((item: any) => ({
-          key: item[0],
-          label: item[3],
-        }));
+      const menuItemsTemp = data.projects.map((item: any) => ({
+        key: item[0],
+        label: item[3],
+      }));
 
-        setMenuItems(menuItemsTemp);
-        setAllProjects(data.projects);
-        if (menuItemsTemp.length > 0) {
-          setSelectedProjectId(Number(menuItemsTemp[0].key));
-        }
-
-        setContentClaritySuggestions(data.content_suggestions || []);
-        setWebDesignSuggestions(data.web_design_suggestions || []);
-        setAccessibilitySuggestions(data.accessibility_suggestions || []);
-        setAudienceData(data.audience_data || []);
-
-      } catch (err) {
-        console.error(err);
+      setMenuItems(menuItemsTemp);
+      setAllProjects(data.projects);
+      if (menuItemsTemp.length > 0) {
+        setSelectedProjectId(Number(menuItemsTemp[0].key));
       }
-    };
 
+      setContentClaritySuggestions(data.content_suggestions || []);
+      setWebDesignSuggestions(data.web_design_suggestions || []);
+      setAccessibilitySuggestions(data.accessibility_suggestions || []);
+      setAudienceData(data.audience_data || []);
+
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
     fetchProjects();
   }, []);
 
@@ -131,30 +131,14 @@ function App({ user }: WithAuthenticatorProps) {
       if (!response.ok) throw new Error('Failed to create project');
 
       const data = await response.json();
-      console.log('Project created:', data);
-      const newProjectId = data.project[0]['project'][0];
-
-      // Refresh project list
-      const updatedProjects = await fetch(`https://a8b6filf5e.execute-api.us-east-1.amazonaws.com/fetch_projects?userId=1`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (updatedProjects.ok) {
-        const updatedData = await updatedProjects.json();
-        const menuItemsTemp = updatedData.projects.map((item: any) => ({
-          key: item[0],
-          label: item[3],
-        }));
-        setMenuItems(menuItemsTemp);
-        setAllProjects(updatedData.projects);
-      }
-
+      const newProjectId = data[0]['project'][0]['project'][0];
+      await fetchProjects();
+      setSelectedProjectId(newProjectId);
       setLoadingPercent(100);
       setLoadingText('Done');
       setIsDoneCreatingProject(true);
       setIsLoadingNewProj(false);
-      setSelectedProjectId(newProjectId);
+      closeProjModal();
     } catch (err) {
       console.error('Error creating project or analyzing:', err);
       setIsLoadingNewProj(false);
@@ -264,7 +248,8 @@ function App({ user }: WithAuthenticatorProps) {
               {tab === "audience" && <Audience
                 projectId={selectedProjectId} 
                 url={allProjects.find((project) => project[0] === selectedProjectId)?.[2] || "No URL available"}
-                personas={audienceData[selectedProjectId]}/>}
+                personas={audienceData[selectedProjectId]}
+                setAudienceData={setAudienceData}/>}
               {tab === "clarity" && <ContentClarity suggestions={contentClaritySuggestions[selectedProjectId]} />}
               {tab === "design" && <WebDesign suggestions={webDesignSuggestions[selectedProjectId]} />}
               {tab === "accessibility" && <Accessibility suggestions={accessibilitySuggestions[selectedProjectId]} />}

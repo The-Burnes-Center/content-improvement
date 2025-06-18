@@ -7,7 +7,8 @@ import { Space, Dropdown, MenuProps, Modal, Button, Input, Checkbox, message, Po
 interface AudienceProps {
   personas: Persona[];
   url: string;
-  projectId: number | null
+  projectId: number | null,
+  setAudienceData: (data: any) => void;
 }
 
 interface Persona {
@@ -119,6 +120,7 @@ const Audience = (props: AudienceProps) => {
     });
 
     const text = await response.json();
+    console.log(text);
     newId = text[2];
     const newPersona = { key: newId, label: personaName, persona: personaContent, positives: text.positives, challenges: text.challenges };
     setPersonas((prevPersonas) => [
@@ -126,6 +128,13 @@ const Audience = (props: AudienceProps) => {
                   newPersona,
                   { key: 'new', label: 'New User Persona', persona: '', positives: '', challenges: '' },
                 ]);
+    props.setAudienceData((prev: any) => ({
+      ...(prev || {}),
+      personas: [
+        ...((prev && prev.personas) || []),
+        newPersona
+      ]
+    }));
     setSelectedPersona(newPersona);
     setLoading(false);
   } catch (err) {
