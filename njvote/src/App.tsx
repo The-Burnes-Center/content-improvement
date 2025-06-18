@@ -119,7 +119,7 @@ function App() {
       setLoadingText('Creating project and analyzing...');
       setLoadingPercent(10);
 
-      const response = await fetch('/api/create-project', {
+      const response = await fetch('https://a8b6filf5e.execute-api.us-east-1.amazonaws.com/create-project', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: 1, url, name }),
