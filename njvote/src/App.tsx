@@ -1,20 +1,24 @@
 import './App.css';
 import { useEffect, useState } from 'react';
 import { Input, Layout, Menu, Radio, Modal, Button, Progress, Popconfirm } from "antd";
-import { PlusSquareOutlined, CloseOutlined, HomeFilled } from '@ant-design/icons';
+import { PlusSquareOutlined, CloseOutlined, HomeFilled, LogoutOutlined } from '@ant-design/icons';
 
 import Audience from './components/audience';
 import ContentClarity from './components/contentclarity';
 import WebDesign from './components/webdesign';
 import Accessibility from './components/accessibility';
 import GettingStarted from './components/gettingStarted';
+import { withAuthenticator } from '@aws-amplify/ui-react';
+import { signOut } from '@aws-amplify/auth';
+import type { AuthUser } from 'aws-amplify/auth';
+
 
 interface MenuProps {
   key: number;
   label: string;
 }
 
-function App() {
+function App({ user }: { user: AuthUser }) {
   const { Header, Content, Sider } = Layout;
 
   const [openProjModal, setProjModalOpen] = useState(false);
@@ -52,7 +56,7 @@ function App() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch(`https://a8b6filf5e.execute-api.us-east-1.amazonaws.com/fetch_projects?userId=1`, {
+        const response = await fetch(`https://a8b6filf5e.execute-api.us-east-1.amazonaws.com/fetch_projects?userId=${user.userId}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -122,12 +126,13 @@ function App() {
       const response = await fetch('https://a8b6filf5e.execute-api.us-east-1.amazonaws.com/create-project', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: 1, url, name }),
+        body: JSON.stringify({ userId: user.userId, url, name }),
       });
 
       if (!response.ok) throw new Error('Failed to create project');
 
       const data = await response.json();
+      console.log('Project created:', data);
       const newProjectId = data.project[0]['project'][0];
 
       // Refresh project list
@@ -158,6 +163,10 @@ function App() {
     }
   };
 
+  const signOutUser = async () => {
+    await signOut();
+  }
+
   return (
     <>
       <Layout style={{ height: '100vh' }}>
@@ -167,9 +176,18 @@ function App() {
             <h1 style={{ color: 'white', margin: 0 }}>Machine Assistant for eXperience (MAX)</h1>
           </div>
         </Header>
-        <HomeFilled style={{ color: 'white', position: 'absolute', right: '0', padding: '1.5rem', fontSize: '1.5rem', cursor: 'pointer' }} 
-          onClick ={() => setSelectedProjectId(null)}>
-        </HomeFilled>
+        <div style={{ position: 'absolute', top: 0, right: 0, display: 'flex', gap: '1rem', padding: '1.5rem' }}>
+          <HomeFilled
+            style={{ color: 'white', fontSize: '1.5rem', cursor: 'pointer' }}
+            onClick={() => setSelectedProjectId(null)}
+          />
+          <LogoutOutlined
+            style={{ color: 'white', fontSize: '1.5rem', cursor: 'pointer' }}
+            onClick={() => signOutUser()}
+          />
+        </div>
+
+        
 
         <Layout style={{ height: '100vh' }}>
           <Sider width={200} className="site-layout-background" theme="light">
@@ -299,4 +317,4 @@ function App() {
   );
 }
 
-export default App;
+export default withAuthenticator(App);
