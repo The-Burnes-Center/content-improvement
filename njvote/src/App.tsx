@@ -52,7 +52,7 @@ function App() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch(`/api/fetch_projects?userId=1`, {
+        const response = await fetch(`https://a8b6filf5e.execute-api.us-east-1.amazonaws.com/fetch_projects?userId=1`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -90,7 +90,7 @@ function App() {
   const handleDeleteProject = async (e: React.MouseEvent, projectId: number) => {
     e.stopPropagation(); // prevent triggering `onClick` for the Menu.Item
     try {
-      const response = await fetch('/api/delete', {
+      const response = await fetch('https://a8b6filf5e.execute-api.us-east-1.amazonaws.com/delete', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: projectId, toDelete: 'project' }),
@@ -131,7 +131,7 @@ function App() {
       const newProjectId = data.project[0]['project'][0];
 
       // Refresh project list
-      const updatedProjects = await fetch(`api/get_projects?userId=1`, {
+      const updatedProjects = await fetch(`https://a8b6filf5e.execute-api.us-east-1.amazonaws.com/fetch_projects?userId=1`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });

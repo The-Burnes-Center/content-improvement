@@ -70,7 +70,7 @@ const ContentClarity = (props: ContentClarityProps) => {
 
   const handleDelete = (areaToDelete: number) => {
     setSuggestions(prev => prev.filter(item => item.key !== areaToDelete));
-    fetch('/api/delete', {
+    fetch('https://a8b6filf5e.execute-api.us-east-1.amazonaws.com/delete', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contentClaritySuggestionId: areaToDelete, toDelete: "content_suggestion" }),

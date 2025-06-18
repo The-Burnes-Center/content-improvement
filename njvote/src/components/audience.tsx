@@ -106,7 +106,7 @@ const Audience = (props: AudienceProps) => {
   let newId = "-1";
   try {
     
-    const response = await fetch('/api/audience', {
+    const response = await fetch('https://a8b6filf5e.execute-api.us-east-1.amazonaws.com/audience', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
