@@ -8,7 +8,7 @@ import ContentClarity from './components/contentclarity';
 import WebDesign from './components/webdesign';
 import Accessibility from './components/accessibility';
 import GettingStarted from './components/gettingStarted';
-import { withAuthenticator } from '@aws-amplify/ui-react';
+import { withAuthenticator, WithAuthenticatorProps } from '@aws-amplify/ui-react';
 import { signOut } from '@aws-amplify/auth';
 import type { AuthUser } from 'aws-amplify/auth';
 
@@ -18,7 +18,7 @@ interface MenuProps {
   label: string;
 }
 
-function App({ user }: { user: AuthUser }) {
+function App({ user }: WithAuthenticatorProps) {
   const { Header, Content, Sider } = Layout;
 
   const [openProjModal, setProjModalOpen] = useState(false);
@@ -56,7 +56,7 @@ function App({ user }: { user: AuthUser }) {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch(`https://a8b6filf5e.execute-api.us-east-1.amazonaws.com/fetch_projects?userId=${user.userId}`, {
+        const response = await fetch(`https://a8b6filf5e.execute-api.us-east-1.amazonaws.com/fetch_projects?userId=${user?.userId}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -126,7 +126,7 @@ function App({ user }: { user: AuthUser }) {
       const response = await fetch('https://a8b6filf5e.execute-api.us-east-1.amazonaws.com/create-project', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.userId, url, name }),
+        body: JSON.stringify({ userId: user?.userId, url, name }),
       });
 
       if (!response.ok) throw new Error('Failed to create project');
