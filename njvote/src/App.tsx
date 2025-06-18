@@ -10,7 +10,6 @@ import Accessibility from './components/accessibility';
 import GettingStarted from './components/gettingStarted';
 import { withAuthenticator, WithAuthenticatorProps } from '@aws-amplify/ui-react';
 import { signOut } from '@aws-amplify/auth';
-import type { AuthUser } from 'aws-amplify/auth';
 
 
 interface MenuProps {
