@@ -13,10 +13,13 @@ S3_BUCKET_NAME = "nj-ai-votes-image"
 ANTHROPIC_VERSION = "bedrock-2023-05-31"
 BOTO3_CLIENT = boto3.client("bedrock-runtime", region_name="us-east-1")
 OPEN_AI_CLIENT = OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
+S3_CLIENT = boto3.client("s3", region_name="us-east-1")
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1") 
+SCREENSHOTAPI_API_KEY = os.getenv("SCREENSHOTAPI_API_KEY")  
 
 
 # Model Selection
-MODEL_SELECTION = False  
+MODEL_SELECTION = False    
  # using Claude 3.5 sonnet via Bedrock 
 if (MODEL_SELECTION): 
     print("Using Bedrock Claude model..")

@@ -4,10 +4,12 @@ from instructor.exceptions import InstructorRetryException
 from utils import * 
 from typing import List
 from dotenv import load_dotenv
-from anthropic import AnthropicBedrock
 import base64
 
 from constants import MODEL_SELECTION, INSTRUCTOR_CLIENT, S3_BUCKET_NAME, MODEL_ID, MAX_TOKENS
+
+from screenshot_functions import screenshotapinet
+
 load_dotenv()
 
 '''
@@ -60,7 +62,8 @@ def analyze_webdesign(url, Layout_guidelines):
                             reason: 'Improves user engagement and guides users to key content.',
                         }},"""
 
-    screenshot_path = capture_screenshot(url)
+    #screenshot_path = capture_screenshot(url)
+    screenshot_path = screenshotapinet(url)
 
     if MODEL_SELECTION: 
         #Using claude model 

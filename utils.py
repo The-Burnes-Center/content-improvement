@@ -8,19 +8,20 @@ from openai import OpenAI
 import re 
 import tiktoken
 
+from constants import S3_CLIENT, AWS_REGION, ANTHROPIC_VERSION, MAX_TOKENS, MODEL_SELECTION
+from constants import BOTO3_CLIENT, OPEN_AI_CLIENT, MODEL_ID
 
 
-bedrock_client = boto3.client("bedrock-runtime", region_name="us-east-1")
-model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"
 
-AWS_REGION = os.getenv("AWS_REGION", "us-east-1") 
-S3_BUCKET_NAME = "nj-ai-votes-image"
 
-s3_client = boto3.client("s3", region_name="us-east-1")
+# bedrock_client = boto3.client("bedrock-runtime", region_name="us-east-1")
+# model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"
+
+
 tokenizer = tiktoken.get_encoding('cl100k_base')
 
 def get_pred(scrapped_data, prompt):
-    """Using the Bedrock API, analyze the webpage source code and provide suggestions for improving the web design.
+    """Analyzing the webpage source code and provide suggestions for improving the web design.
     Args:
         scrapped_data (str): The source code of the webpage to analyze.
         prompt (str): The prompt to guide the analysis.
@@ -29,39 +30,57 @@ def get_pred(scrapped_data, prompt):
     """
 
     summary = f"Look at the following website source code: {scrapped_data}. {prompt}"
-    input_data = {
-        "anthropic_version": "bedrock-2023-05-31",
-        "messages": [
-            {"role": "user", "content": summary}  # Directly set the user input
-        ],
-        "max_tokens": 2048,  # Use `max_tokens` instead of `max_tokens_to_sample`
-        "temperature": 0,
-    }
 
-    response = bedrock_client.invoke_model_with_response_stream(
-        modelId=model_id,
-        body=json.dumps(input_data),
-        contentType="application/json"
-    )
+    if MODEL_SELECTION:
 
-    event_stream = response["body"]
+        body = {
+            "anthropic_version": ANTHROPIC_VERSION,
+            "messages": [
+                { "role": "user", "content": summary }
+                ],
+            "max_tokens": MAX_TOKENS,
+            "temperature": 0,
+
+            }
+        
     
-    assistant_response = ""
+        resp = BOTO3_CLIENT.invoke_model(
+            modelId=MODEL_ID,
+            body=json.dumps(body),
+            contentType="application/json"
+        ) 
     
-    for event in event_stream:
-        event_str = event['chunk']['bytes'].decode()
-        if 'delta' in event_str:
-            try:
-                delta_index = event_str.index('text\":')
-                str = event_str[delta_index:][7:-3]
-                str = str.replace("\\n", "\n")
-                str = str.replace("\\\"", "\"")
-                str = str.replace("•", "\n•\n")
-                assistant_response += str
-            except:
-                pass
-            
-    return assistant_response
+
+
+        # Read the response
+        response_body = json.loads(resp["body"].read())
+        assistant_response = response_body["content"][0]["text"]
+       
+
+        return assistant_response
+        
+    else: 
+        #using open AI Model 
+        body = {
+            "messages": [
+                { "role": "user", "content": summary }
+                ],
+            "max_tokens": MAX_TOKENS,
+            "temperature": 0,
+
+            }
+        
+    
+        resp = OPEN_AI_CLIENT.chat.completions.create(
+            model=MODEL_ID,
+            messages= body["messages"],
+            max_tokens= body["max_tokens"],
+            temperature= body["temperature"],
+        ) 
+
+        assistant_response = resp.choices[0].message.content 
+
+        return assistant_response
 
 
 def read_file_text(file_path):
@@ -101,7 +120,7 @@ def upload_to_s3(file_path, bucket_name, object_name=None):
     if object_name is None:
         object_name = os.path.basename(file_path)
 
-    s3_client.upload_file(file_path, bucket_name, object_name, ExtraArgs={'ACL': 'public-read'})  
+    S3_CLIENT.upload_file(file_path, bucket_name, object_name, ExtraArgs={'ACL': 'public-read'})  
     s3_url = f"https://{bucket_name}.s3.{AWS_REGION}.amazonaws.com/{object_name}"
     return s3_url
 
@@ -196,5 +215,6 @@ def chunk_html_text(url, max_tokens=5000):
             chunks.extend(chunk_element(elem, max_tokens))
     
     return chunks
+
 
 

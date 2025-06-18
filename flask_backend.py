@@ -65,7 +65,7 @@ def generate_sample_persona():
     # should format 
     if url:
 
-        generate_user_persona = get_pred(url,
+        generate_user_persona = get_pred(get_pure_source(url),
                     f"""Based on the url provided, please create one user persona of someone who would navigate the website. 
                         Include their age, gender, occupation, income level, education level, tech savviness, needs or end goals from the website, 
                         challenges they may have using the website.

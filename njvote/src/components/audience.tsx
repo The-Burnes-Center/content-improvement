@@ -103,11 +103,15 @@ const Audience = ({ projectId, url }: AudienceProps) => {
       setPersonaContent('');
       showPersonaModal();
     } else if (selectedItem && 'label' in selectedItem) {
+
       setSelectedPersona(selectedItem);
       setIsEditMode(true);
       setPersonaName(selectedItem.label);         
       setPersonaContent(selectedItem.persona);    
       showPersonaModal()
+      console.log('Selected Persona:', selectedItem);
+      console.log('persona', selectedItem.persona)
+
     }
   };
 

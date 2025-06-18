@@ -6,8 +6,7 @@ from constants import MODEL_SELECTION, ANTHROPIC_VERSION, MAX_TOKENS, BOTO3_CLIE
 '''
 This script uses the Bedrock API to analyze a webpage's source code and provide feedback on the positives and challenges of user interaction with the website.
 '''
-client  = boto3.client("bedrock-runtime", region_name="us-east-1")
-model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"
+
 
 
 '''
