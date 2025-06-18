@@ -19,44 +19,17 @@ interface WebDesignSuggestion {
 }
 
 export interface WebDesignProps {
-  projectId: number | null;
+  suggestions: WebDesignSuggestion[];
 }
 
-const WebDesign = ({ projectId }: WebDesignProps) => {
+const WebDesign = (props: WebDesignProps) => {
   const [suggestions, setSuggestions] = useState<WebDesignSuggestion[]>([]);
 
   const fetchWebDevSuggestions = async () => {
     setSuggestions([]);
     try {
-      const auditResponse = await fetch(`api/get_webdesign_audit?projectId=${projectId}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (!auditResponse.ok) {
-        console.error('Failed to fetch web design audit.');
-        return;
-      }
-
-      const auditData = await auditResponse.json();
-      const webDesignAuditId = auditData['web_design_audit'][0];
-
-      const suggestionsResponse = await fetch(
-        `api/get_webdesign_suggestions?webDesignAuditId=${webDesignAuditId}`,
-        {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-
-      if (!suggestionsResponse.ok) {
-        console.error('Failed to fetch web design suggestions.');
-        return;
-      }
-
-      const suggestionData = await suggestionsResponse.json();
-
-      const formattedSuggestions = suggestionData['suggestions'].map((item: any) => ({
+  
+      const formattedSuggestions = props.suggestions.map((item: any) => ({
         key: item[0],
         label: item[0],
         area: item[2],
@@ -72,17 +45,15 @@ const WebDesign = ({ projectId }: WebDesignProps) => {
   };
 
   useEffect(() => {
-    if (projectId !== null) {
-      fetchWebDevSuggestions();
-    }
-  }, [projectId]);
+    fetchWebDevSuggestions();
+  }, [props.suggestions]);
 
   const handleDelete = (key: number) => {
     setSuggestions(prev => prev.filter(item => item.key !== key));
     fetch('api/delete_webdesign_suggestion', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ webDesignSuggestionId: key }),
+      body: JSON.stringify({ webDesignSuggestionId: key, toDelete: "web_design_suggestion" }),
     })
       .then(response => {
         if (!response.ok) {

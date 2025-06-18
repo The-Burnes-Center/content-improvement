@@ -4,23 +4,22 @@ import { useState, useEffect } from 'react';
 import type { ColumnsType } from 'antd/es/table';
 import { DeleteOutlined } from '@ant-design/icons';
 
-
-
 const { Paragraph } = Typography;
+
+interface Content {
+  key: number;
+  area: string;
+  original: string;
+  suggestion: string;
+}
 
 // Props interface definition
 export interface ContentClarityProps {
-  projectId: number | null;
+  suggestions?: Content[];
 }
 
-const ContentClarity = ({ projectId }: ContentClarityProps) => {
+const ContentClarity = (props: ContentClarityProps) => {
   // Local interface to shape suggestion data
-  interface Content {
-    key: number;
-    area: string;
-    original: string;
-    suggestion: string;
-  }
 
   // State to hold fetched suggestions
   const [suggestions, setSuggestions] = useState<Content[]>([]);
@@ -32,41 +31,8 @@ const ContentClarity = ({ projectId }: ContentClarityProps) => {
     setSuggestions([]);
 
     try {
-      // First, get the audit ID for the current project
-      const auditResponse = await fetch(
-        `api/get_content_clarity_audit?projectId=${projectId}`,
-        {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-
-      if (!auditResponse.ok) {
-        console.error('Failed to fetch content clarity audit.');
-        return;
-      }
-
-      const auditData = await auditResponse.json();
-      const contentClarityAuditId = auditData['content_clarity_audit'][0];
-
-      // Then, use the audit ID to get the suggestions
-      const response = await fetch(
-        `api/get_content_clarity_suggestions?contentClarityAuditId=${contentClarityAuditId}`,
-        {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-
-      if (!response.ok) {
-        console.error('Failed to fetch content clarity suggestions.');
-        return;
-      }
-
-      const data = await response.json();
-
       // Transform raw API response into component-friendly structure
-      const transformed = data['suggestions'].map((item: any) => ({
+      const transformed = props.suggestions?.map((item: any) => ({
         key: item[0],
         original: item[2],
         suggestion: item[3],
@@ -74,7 +40,7 @@ const ContentClarity = ({ projectId }: ContentClarityProps) => {
         dismissed: item[1],
       }));
 
-      setSuggestions(transformed);
+      setSuggestions(transformed ? transformed : []);
     } catch (err) {
       console.error('An error occurred while fetching content clarity suggestions.', err);
     }
@@ -104,10 +70,10 @@ const ContentClarity = ({ projectId }: ContentClarityProps) => {
 
   const handleDelete = (areaToDelete: number) => {
     setSuggestions(prev => prev.filter(item => item.key !== areaToDelete));
-    fetch('/api/delete_content_clarity_suggestion', {
+    fetch('https://a8b6filf5e.execute-api.us-east-1.amazonaws.com/delete', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contentClaritySuggestionId: areaToDelete }),
+      body: JSON.stringify({ contentClaritySuggestionId: areaToDelete, toDelete: "content_suggestion" }),
     })
       .then((res) => {
       if (!res.ok) {

@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { DownOutlined, InfoCircleFilled, InfoCircleTwoTone } from '@ant-design/icons';
+import { DownOutlined, InfoCircleFilled } from '@ant-design/icons';
 import PersonaDisplay from './personaDisplay';
 import { Space, Dropdown, MenuProps, Modal, Button, Input, Checkbox, message, Popover} from 'antd'; 
 
 
 interface AudienceProps {
-  projectId: number | null;
+  personas: Persona[];
   url: string;
+  projectId: number | null
 }
 
 interface Persona {
@@ -17,7 +18,7 @@ interface Persona {
   challenges: string;
 }
 
-const Audience = ({ projectId, url }: AudienceProps) => {
+const Audience = (props: AudienceProps) => {
 
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(personas[0] || null);
@@ -51,25 +52,15 @@ const Audience = ({ projectId, url }: AudienceProps) => {
     const fetchPersonas = async () => {
       try {
         let personaItems: MenuProps['items'] = [];
-        const response = await fetch(`http://127.0.0.1:5000/get_personas?projectId=${projectId}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        const data = await response.json();
-        console.log(data);
-        if (response.ok) {
-          personaItems = data['personas'].map((item: any) => ({
-            key: String(item[0]),
-            label: item[1],
-            persona: item[3],
-            positives: item[4],
-            challenges: item[5],
-          }));
-          personaItems?.push({ type: 'divider' });
-          personaItems?.push({ key: 'new', label: 'New User Persona' });
-        } else {
-          message.error('Failed to fetch personas.');
-        }
+        personaItems = props.personas.map((item: any) => ({
+          key: String(item[0]),
+          label: item[1],
+          persona: item[3],
+          positives: item[4],
+          challenges: item[5],
+        }));
+        personaItems?.push({ type: 'divider' });
+        personaItems?.push({ key: 'new', label: 'New User Persona' });
         setPersonas((personaItems || []).filter((item): item is Persona => !!item && 'key' in item && 'label' in item));
         const firstPersona = personaItems?.find((item): item is Persona => !!item && 'label' in item);
         setSelectedPersona(firstPersona || null);
@@ -79,7 +70,7 @@ const Audience = ({ projectId, url }: AudienceProps) => {
       }
     };
     fetchPersonas();
-  }, [projectId]);
+  }, [props.personas, props.url]);
 
   const toggleUseAIPersonaGen = () => {
     setUseAIPersonaGen(!useAIPersonaGen);
@@ -115,21 +106,25 @@ const Audience = ({ projectId, url }: AudienceProps) => {
     }
   };
 
- const analyzePersona = async (key: string ,personaName: string, personaContent: string ) => {
+ const analyzePersona = async (personaName: string, personaContent: string ) => {
+  let newId = "-1";
   try {
     
-    const response = await fetch('/api/audience', {
+    const response = await fetch('https://a8b6filf5e.execute-api.us-east-1.amazonaws.com/audience', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        url: url,
+        url: props.url,
         persona: personaContent,
-        personaAuditId: key,
+        name: personaName,
+        projectId: props.projectId,
+        usePersonaGenerator: useAIPersonaGen
       }),
     });
 
     const text = await response.json();
-    const newPersona = { key: key, label: personaName, persona: personaContent, positives: text.positives, challenges: text.challenges };
+    newId = text[2];
+    const newPersona = { key: newId, label: personaName, persona: personaContent, positives: text.positives, challenges: text.challenges };
     setPersonas((prevPersonas) => [
                   ...(prevPersonas ?? []).slice(0, -1), // Exclude the last two items (divider and "New User Persona")
                   newPersona,
@@ -139,7 +134,7 @@ const Audience = ({ projectId, url }: AudienceProps) => {
     setLoading(false);
   } catch (err) {
     console.error(err);
-    updatePersonaField(parseInt(key), 'output', 'Error fetching data from API.');
+    updatePersonaField(parseInt(newId), 'output', 'Error fetching data from API.');
     setLoading(false);
   }
 };
@@ -150,36 +145,11 @@ const Audience = ({ projectId, url }: AudienceProps) => {
     setUseAIPersonaGen(false)
     setLoading(true);
     try {
-      let text = "";
-      
-      if (useAIPersonaGen) {
-        const res = await fetch(`/api/generate-sample-persona?url=${url}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        text = await res.text();
-        setPersonaContent(text);
-      }
-      else {
-        text = personaContent;
-      }
-        const res = await fetch('/api/create_persona_audit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: personaName, projectId }),
-      });
-
-      if (res.ok) {
-        message.success('Persona created successfully!');
-        const data = await res.json()
-        closePersonaModal();
-
-        await analyzePersona(data.id ,personaName, text);
 
 
-      } else {
-        message.error('Failed to create persona.');
-      }
+      await analyzePersona(personaName, personaContent);
+      closePersonaModal();
+
 
     } catch (err) {
       console.error(err);
