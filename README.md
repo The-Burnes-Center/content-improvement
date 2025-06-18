@@ -19,7 +19,7 @@ Demo and Pitch: https://northeastern.zoom.us/rec/share/Q0039igVB9_HoQ50_khYw43a-
 - **Feature 3**: Web Design
   Improve the visual layout of your website for increased usability.
 
-- **Feature 3**: Code Best Practices
+- **Feature 4**: Code Best Practices
   Ensure that your HTML code is aligned with Web Content Accessibility Guidelines (WCAG) for maximum accessibility and usability. 
 
 ---
