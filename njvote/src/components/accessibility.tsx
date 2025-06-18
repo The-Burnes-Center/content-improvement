@@ -45,7 +45,7 @@ const Accessibility = (props: AccessibilityProps) => {
 
   const handleDelete = (key: number) => {
     setSuggestions(prev => prev.filter(s => s.key !== key));
-    fetch('/api/delete_accessibility_suggestion', {
+    fetch('/api/delete', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ accessibilitySuggestionId: key, toDelete: "accessibility_suggestion" }),

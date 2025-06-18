@@ -106,7 +106,7 @@ const Audience = (props: AudienceProps) => {
   let newId = "-1";
   try {
     
-    const response = await fetch('/api/audience-audit', {
+    const response = await fetch('/api/audience', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
